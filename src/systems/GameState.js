@@ -4,6 +4,7 @@ import HeroManager, { HeroInstance } from './HeroManager.js';
 import GearManager from './GearManager.js';
 import SummonManager from './SummonManager.js';
 import IdleManager from './IdleManager.js';
+import EndlessTowerManager from './EndlessTowerManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY } from '../data/constants.js';
 
@@ -63,6 +64,7 @@ const GameState = {
       heroes:           HeroManager.toJSON(),
       gear:             GearManager.toJSON(),
       summon:           SummonManager.toJSON(),
+      endlessTower:     EndlessTowerManager.toJSON(),
       lastSaveTime:     Date.now()
     };
   },
@@ -72,10 +74,11 @@ const GameState = {
     this.campaignProgress = data.campaignProgress || { regionCleared: 0, stageCleared: null };
     this.unlockedSystems  = new Set(data.unlockedSystems || []);
     this.lastSaveTime     = data.lastSaveTime     || Date.now();
-    if (data.currencies) CurrencyManager.fromJSON(data.currencies);
-    if (data.heroes)     HeroManager.fromJSON(data.heroes);
-    if (data.gear)       GearManager.fromJSON(data.gear);
-    if (data.summon)     SummonManager.fromJSON(data.summon);
+    if (data.currencies)   CurrencyManager.fromJSON(data.currencies);
+    if (data.heroes)       HeroManager.fromJSON(data.heroes);
+    if (data.gear)         GearManager.fromJSON(data.gear);
+    if (data.summon)       SummonManager.fromJSON(data.summon);
+    if (data.endlessTower) EndlessTowerManager.fromJSON(data.endlessTower);
     // Migration: grant starter crystals and BASIC_SUMMON to existing saves that lack them
     if (!this.unlockedSystems.has('BASIC_SUMMON')) {
       this.unlockedSystems.add('BASIC_SUMMON');

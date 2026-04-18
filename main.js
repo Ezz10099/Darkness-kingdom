@@ -1,9 +1,10 @@
-import BootScene    from './src/scenes/BootScene.js';
-import PreloadScene from './src/scenes/PreloadScene.js';
-import MainHubScene from './src/scenes/MainHubScene.js';
-import CampaignScene from './src/scenes/CampaignScene.js';
-import RosterScene  from './src/scenes/RosterScene.js';
-import SummonScene  from './src/scenes/SummonScene.js';
+import BootScene          from './src/scenes/BootScene.js';
+import PreloadScene       from './src/scenes/PreloadScene.js';
+import MainHubScene       from './src/scenes/MainHubScene.js';
+import CampaignScene      from './src/scenes/CampaignScene.js';
+import RosterScene        from './src/scenes/RosterScene.js';
+import SummonScene        from './src/scenes/SummonScene.js';
+import EndlessTowerScene  from './src/scenes/EndlessTowerScene.js';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -11,7 +12,7 @@ new Phaser.Game({
   height: 854,
   backgroundColor: '#0a0a1a',
   parent: 'game-container',
-  scene: [BootScene, PreloadScene, MainHubScene, CampaignScene, RosterScene, SummonScene],
+  scene: [BootScene, PreloadScene, MainHubScene, CampaignScene, RosterScene, SummonScene, EndlessTowerScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
