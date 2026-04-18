@@ -25,11 +25,12 @@ export default class MainHubScene extends Phaser.Scene {
 
     // Nav buttons
     const navItems = [
-      { label: '⚔  CAMPAIGN',       y: 230, scene: 'Campaign'     },
-      { label: '\u221e  ENDLESS TOWER', y: 310, scene: 'EndlessTower' },
-      { label: '✦  SUMMON',         y: 390, scene: 'Summon'       },
-      { label: '⚑  ROSTER',         y: 470, scene: 'Roster'       },
-      { label: '⚙  SETTINGS',       y: 550, scene: 'Settings'     }
+      { label: '⚔  CAMPAIGN',       y: 210, scene: 'Campaign'     },
+      { label: '\u221e  ENDLESS TOWER', y: 280, scene: 'EndlessTower' },
+      { label: '\u2694  WORLD BOSS',    y: 350, scene: 'WorldBoss'    },
+      { label: '✦  SUMMON',         y: 420, scene: 'Summon'       },
+      { label: '⚑  ROSTER',         y: 490, scene: 'Roster'       },
+      { label: '⚙  SETTINGS',       y: 560, scene: 'Settings'     }
     ];
     for (const item of navItems) this._makeNavButton(item, W);
 

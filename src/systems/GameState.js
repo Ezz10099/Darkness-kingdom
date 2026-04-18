@@ -5,6 +5,7 @@ import GearManager from './GearManager.js';
 import SummonManager from './SummonManager.js';
 import IdleManager from './IdleManager.js';
 import EndlessTowerManager from './EndlessTowerManager.js';
+import WorldBossManager from './WorldBossManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY } from '../data/constants.js';
 
@@ -65,6 +66,7 @@ const GameState = {
       gear:             GearManager.toJSON(),
       summon:           SummonManager.toJSON(),
       endlessTower:     EndlessTowerManager.toJSON(),
+      worldBoss:        WorldBossManager.toJSON(),
       lastSaveTime:     Date.now()
     };
   },
@@ -79,6 +81,7 @@ const GameState = {
     if (data.gear)         GearManager.fromJSON(data.gear);
     if (data.summon)       SummonManager.fromJSON(data.summon);
     if (data.endlessTower) EndlessTowerManager.fromJSON(data.endlessTower);
+    if (data.worldBoss)    WorldBossManager.fromJSON(data.worldBoss);
     // Migration: grant starter crystals and BASIC_SUMMON to existing saves that lack them
     if (!this.unlockedSystems.has('BASIC_SUMMON')) {
       this.unlockedSystems.add('BASIC_SUMMON');
