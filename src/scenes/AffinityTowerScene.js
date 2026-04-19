@@ -3,6 +3,7 @@ import HeroManager from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import AffinityTowerManager from '../systems/AffinityTowerManager.js';
+import DailyCodexManager from '../systems/DailyCodexManager.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
@@ -405,6 +406,10 @@ export default class AffinityTowerScene extends Phaser.Scene {
       if (ms?.crystals) CurrencyManager.add(CURRENCY.CRYSTALS, ms.crystals);
     }
     AffinityTowerManager.recordFloorClear(aff, floor);
+    DailyCodexManager.increment('CLIMB_AFFINITY');
+    // Update weekly task with highest floor across all towers
+    const highestAny = Math.max(...Object.values(AffinityTowerManager.towers).map(t => t.highestFloor));
+    DailyCodexManager.updateWeeklyFloor(highestAny);
     GameState.save();
     this._showTowerHub();
   }

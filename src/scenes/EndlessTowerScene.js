@@ -3,6 +3,7 @@ import HeroManager from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import EndlessTowerManager from '../systems/EndlessTowerManager.js';
+import DailyCodexManager from '../systems/DailyCodexManager.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
@@ -310,6 +311,7 @@ export default class EndlessTowerScene extends Phaser.Scene {
     if (reward.crystals > 0) CurrencyManager.add(CURRENCY.CRYSTALS, reward.crystals);
     if (reward.shards   > 0) CurrencyManager.add(CURRENCY.AWAKENING_SHARDS, reward.shards);
     EndlessTowerManager.recordFloorClear(floor);
+    DailyCodexManager.increment('CLIMB_ENDLESS');
     GameState.save();
     this._showTowerHub();
   }

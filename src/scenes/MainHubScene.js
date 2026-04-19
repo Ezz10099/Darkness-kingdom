@@ -32,7 +32,8 @@ export default class MainHubScene extends Phaser.Scene {
       { label: '✦  SUMMON',            y: 490, scene: 'Summon'       },
       { label: '⚑  ROSTER',            y: 560, scene: 'Roster'       },
       { label: '\u25c6  AFFINITY TOWERS', y: 630, scene: 'AffinityTowerSelection' },
-      { label: '⚙  SETTINGS',          y: 700, scene: 'Settings'     }
+      { label: '\u2295  DAILY CODEX',   y: 700, scene: 'DailyCodex'             },
+      { label: '⚙  SETTINGS',          y: 770, scene: 'Settings'               }
     ];
     for (const item of navItems) this._makeNavButton(item, W);
 

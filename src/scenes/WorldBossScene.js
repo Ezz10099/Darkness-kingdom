@@ -3,6 +3,7 @@ import HeroManager      from '../systems/HeroManager.js';
 import CurrencyManager  from '../systems/CurrencyManager.js';
 import BattleEngine     from '../systems/BattleEngine.js';
 import WorldBossManager, { TIER_CONFIG } from '../systems/WorldBossManager.js';
+import DailyCodexManager from '../systems/DailyCodexManager.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
@@ -361,6 +362,8 @@ export default class WorldBossScene extends Phaser.Scene {
       if (mr.shards) CurrencyManager.add(CURRENCY.AWAKENING_SHARDS, mr.shards);
     }
 
+    DailyCodexManager.increment('ATTACK_BOSS');
+    DailyCodexManager.increment('BOSS_TWICE');
     GameState.save();
     this._showBossHub();
   }

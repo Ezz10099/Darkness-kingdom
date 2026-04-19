@@ -3,6 +3,7 @@ import HeroManager from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import ArenaManager, { RANK_CONFIG, MAX_ATTEMPTS } from '../systems/ArenaManager.js';
+import DailyCodexManager from '../systems/DailyCodexManager.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
@@ -282,6 +283,8 @@ export default class ArenaScene extends Phaser.Scene {
 
     const entry = ArenaManager.recordBattle(this._selectedOpponent.id, isWin);
     CurrencyManager.add(CURRENCY.ARENA_TOKENS, entry.tokens);
+    DailyCodexManager.increment('ARENA_FIGHTS');
+    if (isWin) DailyCodexManager.increment('WIN_ARENA');
     GameState.save();
 
     const newRankCfg = ArenaManager.getRankConfig();

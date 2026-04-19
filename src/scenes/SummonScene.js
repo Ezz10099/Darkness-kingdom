@@ -1,6 +1,7 @@
 import GameState from '../systems/GameState.js';
 import SummonManager from '../systems/SummonManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
+import DailyCodexManager from '../systems/DailyCodexManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY } from '../data/constants.js';
 
@@ -261,6 +262,7 @@ export default class SummonScene extends Phaser.Scene {
       ? [SummonManager.pull(bn.key, HERO_DEFINITIONS)].filter(Boolean)
       : SummonManager.pullMulti(bn.key, HERO_DEFINITIONS, count);
     results.forEach(r => SummonManager.handleResult(r));
+    DailyCodexManager.increment('SUMMON_HERO');
     GameState.save();
     this._lastResults = results;
     this._build();
