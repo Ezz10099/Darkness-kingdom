@@ -7,6 +7,7 @@ import IdleManager from './IdleManager.js';
 import EndlessTowerManager from './EndlessTowerManager.js';
 import WorldBossManager from './WorldBossManager.js';
 import ArenaManager from './ArenaManager.js';
+import AffinityTowerManager from './AffinityTowerManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY } from '../data/constants.js';
 
@@ -69,6 +70,7 @@ const GameState = {
       endlessTower:     EndlessTowerManager.toJSON(),
       worldBoss:        WorldBossManager.toJSON(),
       arena:            ArenaManager.toJSON(),
+      affinityTower:    AffinityTowerManager.toJSON(),
       lastSaveTime:     Date.now()
     };
   },
@@ -84,7 +86,8 @@ const GameState = {
     if (data.summon)       SummonManager.fromJSON(data.summon);
     if (data.endlessTower) EndlessTowerManager.fromJSON(data.endlessTower);
     if (data.worldBoss)    WorldBossManager.fromJSON(data.worldBoss);
-    if (data.arena)        ArenaManager.fromJSON(data.arena);
+    if (data.arena)         ArenaManager.fromJSON(data.arena);
+    if (data.affinityTower) AffinityTowerManager.fromJSON(data.affinityTower);
     // Migration: grant starter crystals and BASIC_SUMMON to existing saves that lack them
     if (!this.unlockedSystems.has('BASIC_SUMMON')) {
       this.unlockedSystems.add('BASIC_SUMMON');
