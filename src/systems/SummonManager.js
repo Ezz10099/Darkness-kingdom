@@ -111,7 +111,10 @@ const SummonManager = {
         heroDefId, name: def.name, title: def.title || null,
         heroClass: def.heroClass || def.class, affinity: def.affinity,
         rarity: def.rarity, originRarity: def.rarity,
-        baseStats: def.baseStats
+        baseStats: def.baseStats,
+        normalAbilityIds:   def.normalAbilityIds   || [],
+        ultimateAbilityId:  def.ultimateAbilityId  || null,
+        ultimateAbilityId2: def.ultimateAbilityId2 || null
       });
       HeroManager.addHero(hero);
     }
