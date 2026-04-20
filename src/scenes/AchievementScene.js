@@ -19,14 +19,9 @@ export default class AchievementScene extends Phaser.Scene {
 
     this._buildHeader(W);
 
-    // Scrollable content container
+    // Scrollable content container (header has depth 10+ so it covers scrolled content naturally)
     this._cont = this.add.container(0, HEADER_H);
     this._buildContent(W);
-
-    // Clip content below header
-    const maskGfx = this.add.graphics();
-    maskGfx.fillRect(0, HEADER_H, W, H - HEADER_H);
-    this._cont.setMask(maskGfx.createGeometryMask());
 
     // Drag-to-scroll
     this.input.on('pointerdown', p => { this._dragStart = { py: p.y, sy: this._scrollY }; });
