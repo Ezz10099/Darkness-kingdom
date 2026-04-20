@@ -1,6 +1,7 @@
 import { RARITY, AFFINITY, CURRENCY, RARITY_ORDER } from '../data/constants.js';
 import CurrencyManager from './CurrencyManager.js';
 import HeroManager, { HeroInstance } from './HeroManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 
 const SHARD_VALUES = {
   COMMON: 1, UNCOMMON: 2, RARE: 5, EPIC: 15, LEGENDARY: 50, MYTHIC: 150, ASCENDED: 300
@@ -103,9 +104,11 @@ const SummonManager = {
     if (!result) return;
     const { heroDefId, rarity, isNew, def } = result;
     if (!isNew) {
-      CurrencyManager.add(CURRENCY.AWAKENING_SHARDS, SHARD_VALUES[rarity] || 1);
+      const baseShards = SHARD_VALUES[rarity] || 1;
+      const shards = Math.floor(baseShards * (1 + ElderTreeManager.getShardBonus()));
+      CurrencyManager.add(CURRENCY.AWAKENING_SHARDS, shards);
       const existing = HeroManager.getAllHeroes().find(h => h.heroDefId === heroDefId);
-      if (existing) existing.awakeningShards += SHARD_VALUES[rarity] || 1;
+      if (existing) existing.awakeningShards += shards;
     } else {
       const hero = new HeroInstance({
         heroDefId, name: def.name, title: def.title || null,

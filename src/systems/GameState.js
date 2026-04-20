@@ -13,6 +13,7 @@ import GuildManager from './GuildManager.js';
 import GuildShopManager from './GuildShopManager.js';
 import AcademyGroundsManager from './AcademyGroundsManager.js';
 import AchievementManager from './AchievementManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY } from '../data/constants.js';
 
@@ -81,6 +82,7 @@ const GameState = {
       guildShop:        GuildShopManager.toJSON(),
       academyGrounds:   AcademyGroundsManager.toJSON(),
       achievements:     AchievementManager.toJSON(),
+      elderTree:        ElderTreeManager.toJSON(),
       lastSaveTime:     Date.now()
     };
   },
@@ -104,7 +106,8 @@ const GameState = {
     if (data.guild)          GuildManager.fromJSON(data.guild);
     if (data.guildShop)      GuildShopManager.fromJSON(data.guildShop);
     if (data.academyGrounds) AcademyGroundsManager.fromJSON(data.academyGrounds);
-    if (!data.achievements)  AchievementManager.fromJSON(null); // ensure clean state on old saves
+    if (!data.achievements)  AchievementManager.fromJSON(null);
+    if (data.elderTree)      ElderTreeManager.fromJSON(data.elderTree);
     // Migration: grant starter crystals and BASIC_SUMMON to existing saves that lack them
     if (!this.unlockedSystems.has('BASIC_SUMMON')) {
       this.unlockedSystems.add('BASIC_SUMMON');

@@ -24,19 +24,20 @@ export default class MainHubScene extends Phaser.Scene {
     this._premText    = this.add.text(20, 134, 'Prem.Crystals: 0',{ font: '13px monospace', fill: '#cc88ff' });
     this._rateText    = this.add.text(20, 154, '+0/s',            { font: '13px monospace', fill: '#888888' });
 
-    // Nav buttons (11 items, 60px spacing from y=200)
+    // Nav buttons (12 items, 54px spacing from y=200)
     const navItems = [
       { label: '\u2694  CAMPAIGN',         y: 200, scene: 'Campaign'              },
-      { label: '\u221e  ENDLESS TOWER',    y: 260, scene: 'EndlessTower'          },
-      { label: '\u2605  WORLD BOSS',       y: 320, scene: 'WorldBoss'             },
-      { label: '\u2663  ARENA',            y: 380, scene: 'Arena'                 },
-      { label: '\u2734  SUMMON',           y: 440, scene: 'Summon'                },
-      { label: '\u2691  ROSTER',           y: 500, scene: 'Roster'                },
-      { label: '\u25c6  AFFINITY TOWERS',  y: 560, scene: 'AffinityTowerSelection'},
-      { label: '\u2295  DAILY CODEX',      y: 620, scene: 'DailyCodex'            },
-      { label: '\u26e8  GUILD',            y: 680, scene: 'Guild'                 },
+      { label: '\u221e  ENDLESS TOWER',    y: 254, scene: 'EndlessTower'          },
+      { label: '\u2605  WORLD BOSS',       y: 308, scene: 'WorldBoss'             },
+      { label: '\u2663  ARENA',            y: 362, scene: 'Arena'                 },
+      { label: '\u2734  SUMMON',           y: 416, scene: 'Summon'                },
+      { label: '\u2691  ROSTER',           y: 470, scene: 'Roster'                },
+      { label: '\u25c6  AFFINITY TOWERS',  y: 524, scene: 'AffinityTowerSelection'},
+      { label: '\u2295  DAILY CODEX',      y: 578, scene: 'DailyCodex'            },
+      { label: '\u26e8  GUILD',            y: 632, scene: 'Guild'                 },
+      { label: '\u2767  ELDER TREE',       y: 686, scene: 'ElderTree'             },
       { label: '\u2318  ACHIEVEMENTS',     y: 740, scene: 'Achievement'           },
-      { label: '\u2699  SETTINGS',         y: 800, scene: 'Settings'              },
+      { label: '\u2699  SETTINGS',         y: 794, scene: 'Settings'              },
     ];
     for (const item of navItems) this._makeNavButton(item, W);
 

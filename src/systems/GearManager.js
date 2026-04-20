@@ -2,6 +2,7 @@ import { GEAR_SLOT, RARITY, RARITY_ORDER, CURRENCY } from '../data/constants.js'
 import CurrencyManager from './CurrencyManager.js';
 import HeroManager from './HeroManager.js';
 import AchievementManager from './AchievementManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 
 const RARITY_MULT = {
   COMMON: 1, UNCOMMON: 1.5, RARE: 2.5, EPIC: 4, LEGENDARY: 6, MYTHIC: 10, ASCENDED: 15
@@ -34,7 +35,10 @@ class GearInstance {
     };
   }
 
-  upgradeCost() { return Math.floor(100 * (this.level + 1) * RARITY_MULT[this.rarity]); }
+  upgradeCost() {
+    const base = Math.floor(100 * (this.level + 1) * RARITY_MULT[this.rarity]);
+    return Math.floor(base * ElderTreeManager.getGearCostMult());
+  }
 
   upgrade() {
     if (!CurrencyManager.spend(CURRENCY.GOLD, this.upgradeCost())) return false;

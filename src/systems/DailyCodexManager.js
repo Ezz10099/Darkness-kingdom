@@ -1,3 +1,5 @@
+import ElderTreeManager from './ElderTreeManager.js';
+
 const TASK_POOL = [
   { id: 'WIN_ARENA',      label: 'Win 2 Arena battles',             target: 2, scene: 'Arena'                 },
   { id: 'ATTACK_BOSS',    label: 'Attack the World Boss once',       target: 1, scene: 'WorldBoss'             },
@@ -96,7 +98,15 @@ const DailyCodexManager = {
     return this.dailyTasks.length > 0 && this.dailyTasks.every(t => t.completed);
   },
 
-  getDailyChestReward()  { return { ...DAILY_CHEST  }; },
+  getDailyChestReward() {
+    const bonus = ElderTreeManager.getCodexQualityBonus();
+    if (!bonus) return { ...DAILY_CHEST };
+    return {
+      gold:     Math.floor(DAILY_CHEST.gold     * (1 + bonus)),
+      crystals: Math.floor(DAILY_CHEST.crystals * (1 + bonus)),
+      shards:   Math.floor(DAILY_CHEST.shards   * (1 + bonus)),
+    };
+  },
   getWeeklyChestReward() { return { ...WEEKLY_CHEST }; },
 
   // Increment progress for a task type. Idempotent on already-completed tasks.
