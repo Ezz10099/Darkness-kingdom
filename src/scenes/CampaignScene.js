@@ -3,7 +3,7 @@ import HeroManager, { HeroInstance } from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import AchievementManager from '../systems/AchievementManager.js';
-import STAGE_DEFINITIONS from '../data/stageDefinitions.js';
+import STAGE_DEFINITIONS, { getCampaignRegions } from '../data/stageDefinitions.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
 
@@ -23,6 +23,7 @@ export default class CampaignScene extends Phaser.Scene {
     this._logText     = null;
     this._logBuf      = [];
     this._curStage    = null;
+    this._selectedRegion = 1;
     this._root        = this.add.container(0, 0);
     this._showStageSelect();
   }
@@ -51,7 +52,10 @@ export default class CampaignScene extends Phaser.Scene {
 
   _showStageSelect() {
     this._reset();
-    const c = this._root, W = 480, lastIdx = this._lastClearedIdx();
+    const c = this._root;
+    const W = 480;
+    const lastIdx = this._lastClearedIdx();
+    const allRegions = getCampaignRegions();
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
     c.add(this.add.text(W / 2, 40, 'CAMPAIGN', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
@@ -59,38 +63,69 @@ export default class CampaignScene extends Phaser.Scene {
       .setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.scene.start('MainHub')));
 
-    STAGE_DEFINITIONS.forEach((stage, i) => {
-      const cleared  = i <= lastIdx;
-      const unlocked = i <= lastIdx + 1;
-      const y        = 105 + i * 86;
-      const bgColor  = cleared ? 0x0a260a : 0x111128;
-      const alpha    = unlocked ? 1 : 0.4;
+    const unlockedRegion = Math.max(1, STAGE_DEFINITIONS[Math.max(0, Math.min(lastIdx + 1, STAGE_DEFINITIONS.length - 1))]?.region || 1);
+    allRegions.forEach((regionCfg, idx) => {
+      const x = 48 + idx * 96;
+      const isActive = regionCfg.region === this._selectedRegion;
+      const isUnlocked = regionCfg.region <= unlockedRegion;
+      const bg = this.add.rectangle(x, 78, 86, 28, isActive ? 0x332200 : 0x1a1a33)
+        .setStrokeStyle(1, isUnlocked ? 0x887744 : 0x444466)
+        .setAlpha(isUnlocked ? 1 : 0.4);
+      c.add(bg);
+      c.add(this.add.text(x, 78, `R${regionCfg.region}`, { font: '12px monospace', fill: '#ffd700' }).setOrigin(0.5).setAlpha(isUnlocked ? 1 : 0.4));
+      if (isUnlocked) {
+        bg.setInteractive({ useHandCursor: true }).on('pointerup', () => {
+          this._selectedRegion = regionCfg.region;
+          this._showStageSelect();
+        });
+      }
+    });
 
-      const bg = this.add.rectangle(W / 2, y, 436, 60, bgColor)
+    const stageList = STAGE_DEFINITIONS.filter(stage => stage.region === this._selectedRegion);
+    stageList.forEach((stage, localIdx) => {
+      const globalIdx = this._stageIdx(stage.id);
+      const cleared = globalIdx <= lastIdx;
+      const unlocked = globalIdx <= lastIdx + 1;
+      const y = 128 + localIdx * 34;
+      const bgColor = cleared ? 0x0a260a : 0x111128;
+      const alpha = unlocked ? 1 : 0.4;
+
+      const bg = this.add.rectangle(W / 2, y, 436, 28, bgColor)
         .setStrokeStyle(1, cleared ? 0x44bb44 : 0x333366)
         .setAlpha(alpha);
       c.add(bg);
 
       const icon = cleared ? '✓' : (unlocked ? '▶' : '🔒');
-      c.add(this.add.text(48, y, `${icon} ${stage.id}  ${stage.name}`,
-        { font: '15px monospace', fill: cleared ? '#66ff66' : '#ffffff' })
+      c.add(this.add.text(38, y, `${icon} ${stage.id} ${stage.name}`,
+        { font: '12px monospace', fill: cleared ? '#66ff66' : '#ffffff' })
         .setOrigin(0, 0.5).setAlpha(alpha));
-      c.add(this.add.text(W - 36, y, `+${stage.rewards.gold}g`,
-        { font: '13px monospace', fill: '#ffd700' }).setOrigin(1, 0.5).setAlpha(alpha));
-
-      if (stage.milestoneRewards.length) {
-        c.add(this.add.text(W / 2, y + 28,
-          '★ ' + stage.milestoneRewards.map(m => m.hint).join('  '),
-          { font: '11px monospace', fill: '#ffaa44' }).setOrigin(0.5).setAlpha(alpha));
-      }
+      c.add(this.add.text(392, y, `+${stage.rewards.gold}g`, { font: '11px monospace', fill: '#ffd700' }).setOrigin(1, 0.5).setAlpha(alpha));
 
       if (unlocked && !cleared) {
-        bg.setInteractive({ useHandCursor: true })
-          .on('pointerdown', () => bg.setFillStyle(0x07071a))
-          .on('pointerout',  () => bg.setFillStyle(bgColor))
-          .on('pointerup',   () => this._startBattle(stage));
+        bg.setInteractive({ useHandCursor: true }).on('pointerup', () => this._startBattle(stage));
+      }
+      if (cleared) {
+        const skipCost = this._getStageSkipCost(stage);
+        const skipBtn = this.add.rectangle(430, y, 44, 18, 0x2e2400).setStrokeStyle(1, 0xaa8833);
+        c.add(skipBtn);
+        c.add(this.add.text(430, y, `${skipCost}g`, { font: '9px monospace', fill: '#ffdd88' }).setOrigin(0.5));
+        skipBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => this._skipStage(stage));
       }
     });
+  }
+
+  _getStageSkipCost(stage) {
+    const base = Math.max(20, Math.floor(stage.rewards.gold * 0.25));
+    return Math.floor(base);
+  }
+
+  _skipStage(stage) {
+    const cost = this._getStageSkipCost(stage);
+    if (!CurrencyManager.spend(CURRENCY.GOLD, cost)) return;
+    CurrencyManager.add(CURRENCY.GOLD, stage.rewards.gold);
+    HeroManager.getAllHeroes().forEach(h => h.addXP(stage.rewards.xp));
+    GameState.save();
+    this._showStageSelect();
   }
 
   // ─── BATTLE ─────────────────────────────────────────────────────────────────
@@ -267,8 +302,8 @@ export default class CampaignScene extends Phaser.Scene {
 
     if (this._stageIdx(stage.id) > this._lastClearedIdx()) {
       GameState.campaignProgress.stageCleared = stage.id;
+      GameState.campaignProgress.regionCleared = Math.max(GameState.campaignProgress.regionCleared || 0, stage.region || 0);
       stage.milestoneRewards.forEach(m => this._applyMilestone(m));
-      if (stage.id === '1-5') GameState.addUnlockedSystem('BASIC_SUMMON');
       if (stage.region) AchievementManager.checkRegionReached(stage.region);
     }
     GameState.save();
