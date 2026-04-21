@@ -44,7 +44,10 @@ const PRESET_STAGE_OVERRIDES = {
     { ...ENEMY_ARCHETYPES[1], id: 'e_1_5_a', stats: { hp: 265, defense: 32, damage: 16 }, ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[0], id: 'e_1_5_b', stats: { hp: 175, defense: 18, damage: 22 }, abilityIds: ['wa_slash', 'aff_burning_touch'], ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[3], id: 'e_1_5_c', stats: { hp: 95, defense: 10, damage: 30 }, abilityIds: ['mg_arcane_bolt', 'aff_burning_touch'], affinity: 'FIRE', ultimateCharge: 0 }
-  ], milestoneRewards: [{ type: 'giftHero', heroDefId: 'hero_sylva', hint: 'Sylva joins your team!' }] }
+  ], milestoneRewards: [
+    { type: 'giftHero', heroDefId: 'hero_sylva', hint: 'Sylva joins your team!' },
+    { type: 'unlockSystem', system: 'BASIC_SUMMON', hint: 'Basic Summon unlocked!' }
+  ] }
 };
 
 function makeEnemy(region, stage, slot, power) {

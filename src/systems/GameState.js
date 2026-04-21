@@ -38,9 +38,9 @@ const GameState = {
   _seedDefaults() {
     this.activeSquad      = [];
     this.campaignProgress = { regionCleared: 0, stageCleared: null };
-    this.unlockedSystems  = new Set(['BASIC_SUMMON']);
+    this.unlockedSystems  = new Set();
     this.lastSaveTime     = Date.now();
-    // Starting currencies so new players can test Basic Summon immediately
+    // Starting currencies for early progression spend
     CurrencyManager.add(CURRENCY.CRYSTALS, 500);
     CurrencyManager.add(CURRENCY.PREMIUM_CRYSTALS, 300);
     // Grant starter hero
@@ -108,10 +108,7 @@ const GameState = {
     if (data.academyGrounds) AcademyGroundsManager.fromJSON(data.academyGrounds);
     if (!data.achievements)  AchievementManager.fromJSON(null);
     if (data.elderTree)      ElderTreeManager.fromJSON(data.elderTree);
-    // Migration: grant starter crystals and BASIC_SUMMON to existing saves that lack them
-    if (!this.unlockedSystems.has('BASIC_SUMMON')) {
-      this.unlockedSystems.add('BASIC_SUMMON');
-    }
+    // Migration: grant starter crystals to existing saves that lack them
     if (CurrencyManager.get(CURRENCY.CRYSTALS) === 0) {
       CurrencyManager.add(CURRENCY.CRYSTALS, 500);
     }

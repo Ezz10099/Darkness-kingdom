@@ -54,7 +54,15 @@ export default class MainHubScene extends Phaser.Scene {
 
   _makeNavButton({ label, y, scene }, W) {
     const sceneExists = this.scene.manager.getScene(scene) !== null;
-    const alpha = sceneExists ? 1 : 0.45;
+    const unlockByScene = {
+      Summon: 'BASIC_SUMMON',
+      Arena: 'ARENA',
+      AffinityTowerSelection: 'AFFINITY_TOWERS',
+      Guild: 'GUILD'
+    };
+    const unlockKey = unlockByScene[scene];
+    const isUnlocked = !unlockKey || GameState.isUnlocked(unlockKey);
+    const alpha = sceneExists && isUnlocked ? 1 : 0.45;
 
     const bg = this.add.rectangle(W / 2, y, BTN_W, BTN_H, BTN_COLOR)
       .setStrokeStyle(1, 0x3a3a6a)
@@ -64,7 +72,7 @@ export default class MainHubScene extends Phaser.Scene {
       font: '20px monospace', fill: '#ffffff'
     }).setOrigin(0.5).setAlpha(alpha);
 
-    if (!sceneExists) return;
+    if (!sceneExists || !isUnlocked) return;
 
     bg.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => bg.setFillStyle(BTN_COLOR_DOWN))
