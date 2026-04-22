@@ -28,6 +28,10 @@ export default class RosterScene extends Phaser.Scene {
 
   _reset() { this._root.removeAll(true); }
 
+  _isActive(heroId) {
+    return GameState.getActiveSquadEntries().some(entry => entry.heroId === heroId);
+  }
+
   // ─── LIST ────────────────────────────────────────────────────────────────────
 
   _showList() {
@@ -58,7 +62,7 @@ export default class RosterScene extends Phaser.Scene {
     const W = 480, stats = hero.computeStats();
     const maxStars = RARITY_CONFIG[hero.rarity].maxStars;
     const stars    = '★'.repeat(hero.stars) + '☆'.repeat(maxStars - hero.stars);
-    const isActive = GameState.activeSquad.includes(hero.id);
+    const isActive = this._isActive(hero.id);
 
     const bg = this.add.rectangle(W / 2, y, 446, 80,
       CLASS_COLORS[hero.heroClass] || 0x333344)
@@ -164,7 +168,7 @@ export default class RosterScene extends Phaser.Scene {
       { font: '11px monospace', fill: '#666688' }).setOrigin(1, 0.5));
 
     // Training info for benched heroes
-    const isActive = GameState.activeSquad.includes(hero.id);
+    const isActive = this._isActive(hero.id);
     if (!isActive) {
       const xpRate  = AcademyGroundsManager.getXpRate(GameState.campaignProgress).toFixed(1);
       const capLvl  = AcademyGroundsManager.getCapLevel(GameState.activeSquad);

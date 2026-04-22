@@ -14,15 +14,19 @@ const AcademyGroundsManager = {
     return this.BASE_XP_RATE * (1 + regions * 0.3) * this.academyBoostMultiplier;
   },
 
+  _extractHeroIds(activeSquad) {
+    return (activeSquad || []).map(entry => (typeof entry === 'string' ? entry : entry?.heroId)).filter(Boolean);
+  },
+
   getBenchedHeroes(activeSquad) {
-    const squadSet = new Set(activeSquad || []);
+    const squadSet = new Set(this._extractHeroIds(activeSquad));
     return HeroManager.getAllHeroes().filter(h => !squadSet.has(h.id));
   },
 
   // Returns the minimum level among active squad members, or 0 if no squad.
   getCapLevel(activeSquad) {
     if (!activeSquad || activeSquad.length === 0) return 0;
-    const members = activeSquad.map(id => HeroManager.getHero(id)).filter(Boolean);
+    const members = this._extractHeroIds(activeSquad).map(id => HeroManager.getHero(id)).filter(Boolean);
     if (members.length === 0) return 0;
     return Math.min(...members.map(h => h.level));
   },

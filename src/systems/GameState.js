@@ -15,7 +15,7 @@ import AcademyGroundsManager from './AcademyGroundsManager.js';
 import AchievementManager from './AchievementManager.js';
 import ElderTreeManager from './ElderTreeManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
-import { CURRENCY } from '../data/constants.js';
+import { CLASS_DEFAULTS, CURRENCY, FORMATION_ROW } from '../data/constants.js';
 
 const GameState = {
   activeSquad: [],
@@ -64,6 +64,62 @@ const GameState = {
   addUnlockedSystem(name) { this.unlockedSystems.add(name); this.save(); },
   isUnlocked(name)        { return this.unlockedSystems.has(name); },
 
+  _normalizeSquadEntry(entry) {
+    if (!entry) return null;
+    const heroId = typeof entry === 'string' ? entry : entry.heroId;
+    if (!heroId) return null;
+    const hero = HeroManager.getHero(heroId);
+    if (!hero) return null;
+    const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || FORMATION_ROW.FRONT;
+    const row = (typeof entry === 'object' && entry.row === FORMATION_ROW.BACK)
+      ? FORMATION_ROW.BACK
+      : defaultRow;
+    return { heroId, row };
+  },
+
+  getActiveSquadEntries() {
+    const normalized = (this.activeSquad || [])
+      .map(entry => this._normalizeSquadEntry(entry))
+      .filter(Boolean);
+    const used = new Set();
+    const rowCount = { FRONT: 0, BACK: 0 };
+    const out = [];
+    for (const entry of normalized) {
+      if (used.has(entry.heroId)) continue;
+      if (out.length >= 5) break;
+      if (rowCount[entry.row] >= 3) continue;
+      used.add(entry.heroId);
+      rowCount[entry.row]++;
+      out.push(entry);
+    }
+    return out;
+  },
+
+  setActiveSquad(entries) {
+    this.activeSquad = entries;
+    this.activeSquad = this.getActiveSquadEntries();
+    this.save();
+  },
+
+  getBattleSquadEntries() {
+    const valid = this.getActiveSquadEntries();
+    if (valid.length) return valid;
+    const heroes = HeroManager.getAllHeroes().slice().sort((a, b) => a.id.localeCompare(b.id));
+    const fallback = [];
+    const rowCount = { FRONT: 0, BACK: 0 };
+    for (const hero of heroes) {
+      if (fallback.length >= 5) break;
+      const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || FORMATION_ROW.FRONT;
+      const row = rowCount[defaultRow] < 3
+        ? defaultRow
+        : (defaultRow === FORMATION_ROW.FRONT ? FORMATION_ROW.BACK : FORMATION_ROW.FRONT);
+      if (rowCount[row] >= 3) continue;
+      rowCount[row]++;
+      fallback.push({ heroId: hero.id, row });
+    }
+    return fallback;
+  },
+
   toJSON() {
     return {
       activeSquad:      this.activeSquad,
@@ -89,6 +145,7 @@ const GameState = {
 
   fromJSON(data) {
     this.activeSquad      = data.activeSquad      || [];
+    this.activeSquad      = this.getActiveSquadEntries();
     this.campaignProgress = data.campaignProgress || { regionCleared: 0, stageCleared: null };
     this.unlockedSystems  = new Set(data.unlockedSystems || []);
     this.lastSaveTime     = data.lastSaveTime     || Date.now();

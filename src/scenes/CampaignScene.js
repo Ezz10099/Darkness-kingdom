@@ -62,6 +62,10 @@ export default class CampaignScene extends Phaser.Scene {
     c.add(this.add.text(30, 40, '< BACK', { font: '14px monospace', fill: '#aaaaaa' })
       .setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.scene.start('MainHub')));
+    const formationBtn = this.add.rectangle(W - 58, 40, 94, 24, 0x1a1a33).setStrokeStyle(1, 0x887744)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor());
+    c.add(formationBtn);
+    c.add(this.add.text(W - 58, 40, 'FORMATION', { font: '10px monospace', fill: '#ffd700' }).setOrigin(0.5));
 
     const unlockedRegion = Math.max(1, STAGE_DEFINITIONS[Math.max(0, Math.min(lastIdx + 1, STAGE_DEFINITIONS.length - 1))]?.region || 1);
     allRegions.forEach((regionCfg, idx) => {
@@ -102,7 +106,7 @@ export default class CampaignScene extends Phaser.Scene {
       c.add(this.add.text(392, y, `+${stage.rewards.gold}g`, { font: '11px monospace', fill: '#ffd700' }).setOrigin(1, 0.5).setAlpha(alpha));
 
       if (unlocked && !cleared) {
-        bg.setInteractive({ useHandCursor: true }).on('pointerup', () => this._startBattle(stage));
+        bg.setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor(stage));
       }
       if (cleared) {
         const skipCost = this._getStageSkipCost(stage);
@@ -130,11 +134,87 @@ export default class CampaignScene extends Phaser.Scene {
 
   // ─── BATTLE ─────────────────────────────────────────────────────────────────
 
+  _showFormationEditor(stage = null) {
+    this._reset();
+    const c = this._root, W = 480;
+    const heroes = HeroManager.getAllHeroes().slice().sort((a, b) => a.id.localeCompare(b.id));
+    const selected = GameState.getBattleSquadEntries().slice();
+
+    const countByRow = () => ({
+      FRONT: selected.filter(e => e.row === 'FRONT').length,
+      BACK: selected.filter(e => e.row === 'BACK').length
+    });
+    const isSelected = heroId => selected.some(e => e.heroId === heroId);
+
+    const toggleHero = (hero) => {
+      const idx = selected.findIndex(e => e.heroId === hero.id);
+      if (idx >= 0) { selected.splice(idx, 1); this._showFormationEditor(stage); return; }
+      if (selected.length >= 5) return;
+      const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || 'FRONT';
+      const counts = countByRow();
+      const row = counts[defaultRow] < 3 ? defaultRow : (defaultRow === 'FRONT' ? 'BACK' : 'FRONT');
+      if (counts[row] >= 3) return;
+      selected.push({ heroId: hero.id, row });
+      this._showFormationEditor(stage);
+    };
+
+    const toggleRow = (hero) => {
+      const idx = selected.findIndex(e => e.heroId === hero.id);
+      if (idx < 0) return;
+      const current = selected[idx];
+      const nextRow = current.row === 'FRONT' ? 'BACK' : 'FRONT';
+      const counts = countByRow();
+      if (counts[nextRow] >= 3) return;
+      current.row = nextRow;
+      this._showFormationEditor(stage);
+    };
+
+    c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
+    c.add(this.add.text(W / 2, 34, 'FORMATION', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
+    c.add(this.add.text(22, 34, '< MAP', { font: '14px monospace', fill: '#aaaaaa' }).setOrigin(0, 0.5)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showStageSelect()));
+    const counts = countByRow();
+    c.add(this.add.text(W / 2, 64,
+      `Selected ${selected.length}/5  FRONT ${counts.FRONT}/3  BACK ${counts.BACK}/3`,
+      { font: '11px monospace', fill: '#bbbbdd' }).setOrigin(0.5));
+
+    heroes.forEach((hero, i) => {
+      const y = 104 + i * 38;
+      const picked = isSelected(hero.id);
+      const pickedEntry = selected.find(e => e.heroId === hero.id);
+      const row = pickedEntry?.row || '-';
+      const rowColor = row === 'FRONT' ? '#ffb088' : row === 'BACK' ? '#88bbff' : '#666688';
+      const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1c2c1c : 0x121226)
+        .setStrokeStyle(1, picked ? 0x44bb44 : 0x333366)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerup', () => toggleHero(hero));
+      c.add(card);
+      c.add(this.add.text(30, y, hero.name, { font: '12px monospace', fill: '#ffffff' }).setOrigin(0, 0.5));
+      c.add(this.add.text(250, y, hero.heroClass, { font: '10px monospace', fill: '#bbbbbb' }).setOrigin(0.5));
+      const rowBtn = this.add.rectangle(408, y, 62, 22, picked ? 0x22334d : 0x222222).setStrokeStyle(1, 0x555577);
+      c.add(rowBtn);
+      c.add(this.add.text(408, y, row, { font: '10px monospace', fill: rowColor }).setOrigin(0.5));
+      if (picked) rowBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => toggleRow(hero));
+    });
+
+    const saveBtn = this.add.rectangle(W / 2, 760, 220, 44, 0x213321).setStrokeStyle(1, 0x44bb44)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => {
+        GameState.setActiveSquad(selected);
+        if (stage) this._startBattle(stage);
+        else this._showStageSelect();
+      });
+    c.add(saveBtn);
+    c.add(this.add.text(W / 2, 760, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: '#99ff99' }).setOrigin(0.5));
+  }
+
   _startBattle(stage) {
     this._curStage = stage;
-    const squad = HeroManager.getAllHeroes().map(h => ({
-      hero: h, row: CLASS_DEFAULTS[h.heroClass]?.defaultRow || 'FRONT'
-    }));
+    const squad = GameState.getBattleSquadEntries()
+      .map(entry => {
+        const hero = HeroManager.getHero(entry.heroId);
+        return hero ? { hero, row: entry.row } : null;
+      })
+      .filter(Boolean);
     this._engine = new BattleEngine({
       playerSquad: squad,
       enemySquad:  stage.enemies,
