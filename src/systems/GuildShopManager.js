@@ -66,6 +66,10 @@ function generateDailyRotation(daySeed) {
     const extraPool = gear.slice(3).concat(cosmetic.slice(3));
     const extra = shuffle(extraPool, rand).slice(0, extraSlots);
     for (const item of extra) out.push(item);
+  const out = [...gear.slice(0, 3), ...cosmetic.slice(0, 3)];
+  const extraSlots = GuildManager.getGuildShopExtraSlots();
+  if (extraSlots > 0) {
+    out.push(...shuffle([...gear.slice(3), ...cosmetic.slice(3)], rand).slice(0, extraSlots));
   }
   return out;
 }
