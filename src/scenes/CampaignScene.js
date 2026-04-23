@@ -135,11 +135,11 @@ export default class CampaignScene extends Phaser.Scene {
 
   // ─── BATTLE ─────────────────────────────────────────────────────────────────
 
-  _showFormationEditor(stage = null) {
+  _showFormationEditor(stage = null, draftSelected = null) {
     this._reset();
     const c = this._root, W = 480;
     const heroes = HeroManager.getAllHeroes().slice().sort((a, b) => a.id.localeCompare(b.id));
-    const selected = GameState.getBattleSquadEntries().slice();
+    const selected = (draftSelected || GameState.getBattleSquadEntries()).slice();
 
     const countByRow = () => ({
       FRONT: selected.filter(e => e.row === 'FRONT').length,
@@ -149,14 +149,14 @@ export default class CampaignScene extends Phaser.Scene {
 
     const toggleHero = (hero) => {
       const idx = selected.findIndex(e => e.heroId === hero.id);
-      if (idx >= 0) { selected.splice(idx, 1); this._showFormationEditor(stage); return; }
+      if (idx >= 0) { selected.splice(idx, 1); this._showFormationEditor(stage, selected); return; }
       if (selected.length >= 5) return;
       const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || 'FRONT';
       const counts = countByRow();
       const row = counts[defaultRow] < 3 ? defaultRow : (defaultRow === 'FRONT' ? 'BACK' : 'FRONT');
       if (counts[row] >= 3) return;
       selected.push({ heroId: hero.id, row });
-      this._showFormationEditor(stage);
+      this._showFormationEditor(stage, selected);
     };
 
     const toggleRow = (hero) => {
@@ -167,7 +167,7 @@ export default class CampaignScene extends Phaser.Scene {
       const counts = countByRow();
       if (counts[nextRow] >= 3) return;
       current.row = nextRow;
-      this._showFormationEditor(stage);
+      this._showFormationEditor(stage, selected);
     };
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
@@ -204,7 +204,10 @@ export default class CampaignScene extends Phaser.Scene {
       const rowBtn = this.add.rectangle(408, y, 62, 22, picked ? 0x22334d : 0x222222).setStrokeStyle(1, 0x555577);
       c.add(rowBtn);
       c.add(this.add.text(408, y, row, { font: '10px monospace', fill: rowColor }).setOrigin(0.5));
-      if (picked) rowBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => toggleRow(hero));
+      if (picked) rowBtn.setInteractive({ useHandCursor: true }).on('pointerup', (pointer, lx, ly, ev) => {
+        if (ev?.stopPropagation) ev.stopPropagation();
+        toggleRow(hero);
+      });
     });
 
     const saveBtn = this.add.rectangle(W / 2, 778, 220, 44, 0x213321).setStrokeStyle(1, 0x44bb44)

@@ -5,7 +5,7 @@ import BattleEngine from '../systems/BattleEngine.js';
 import ArenaManager, { RANK_CONFIG } from '../systems/ArenaManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
-import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
+import { CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
@@ -147,9 +147,12 @@ export default class ArenaScene extends Phaser.Scene {
     if (!ArenaManager.canAttempt()) return;
     this._selectedOpponent = opponent;
 
-    const playerSquad = HeroManager.getAllHeroes().map(h => ({
-      hero: h, row: CLASS_DEFAULTS[h.heroClass]?.defaultRow || 'FRONT',
-    }));
+    const playerSquad = GameState.getBattleSquadEntries()
+      .map(entry => {
+        const hero = HeroManager.getHero(entry.heroId);
+        return hero ? { hero, row: entry.row } : null;
+      })
+      .filter(Boolean);
 
     this._engine = new BattleEngine({
       playerSquad,
