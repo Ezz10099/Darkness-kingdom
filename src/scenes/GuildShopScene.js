@@ -1,5 +1,6 @@
 import CurrencyManager  from '../systems/CurrencyManager.js';
 import GameState        from '../systems/GameState.js';
+import GuildManager     from '../systems/GuildManager.js';
 import GuildShopManager from '../systems/GuildShopManager.js';
 import { CURRENCY }     from '../data/constants.js';
 
@@ -26,6 +27,9 @@ export default class GuildShopScene extends Phaser.Scene {
       '\u2605 ' + coins.toLocaleString() + ' Guild Coins',
       { font: '16px monospace', fill: '#ffd700' }).setOrigin(0.5));
     const items = GuildShopManager.getItems();
+    const refreshes = GuildManager.getGuildShopRefreshesPerDay();
+    c.add(this.add.text(W / 2, 94,
+      `Refresh: ${refreshes}x/day  \u2022  ${items.length} total items`,
     c.add(this.add.text(W / 2, 94,
       `Rotates daily  \u2022  ${items.length} total items`,
       { font: '11px monospace', fill: '#555577' }).setOrigin(0.5));

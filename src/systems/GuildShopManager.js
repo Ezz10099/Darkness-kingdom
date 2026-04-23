@@ -41,6 +41,12 @@ function getDaySeed() {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 }
 
+function getHalfDaySeed() {
+  const d = new Date();
+  const half = d.getUTCHours() < 12 ? 0 : 1;
+  return (d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate()) * 10 + half;
+}
+
 function shuffle(arr, rand) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -64,19 +70,27 @@ function generateDailyRotation(daySeed) {
 
 const GuildShopManager = {
   purchasedToday: [],
-  lastShopDate:   null,
+  lastShopDate:   null, // tracks current rotation key (day or half-day)
 
-  _todayStr() { return new Date().toISOString().slice(0, 10); },
+  _rotationKey() {
+    const d = new Date().toISOString().slice(0, 10);
+    if (GuildManager.getGuildShopRefreshesPerDay() < 2) return d;
+    return d + (new Date().getUTCHours() < 12 ? '-A' : '-B');
+  },
 
   _checkDailyReset() {
-    const today = this._todayStr();
-    if (this.lastShopDate !== today) {
+    const key = this._rotationKey();
+    if (this.lastShopDate !== key) {
       this.purchasedToday = [];
-      this.lastShopDate   = today;
+      this.lastShopDate   = key;
     }
   },
 
-  getRotation() { return generateDailyRotation(getDaySeed()); },
+  getRotation() {
+    return generateDailyRotation(
+      GuildManager.getGuildShopRefreshesPerDay() < 2 ? getDaySeed() : getHalfDaySeed()
+    );
+  },
 
   getItems() {
     this._checkDailyReset();
