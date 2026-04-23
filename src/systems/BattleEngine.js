@@ -1,5 +1,6 @@
 import { AFFINITY_ADVANTAGES, CLASS, STATUS_EFFECT, FORMATION_ROW } from '../data/constants.js';
 import StatusEffectManager from './StatusEffectManager.js';
+import BondManager from './BondManager.js';
 import ABILITY_DEFINITIONS from '../data/abilityDefinitions.js';
 
 export default class BattleEngine {
@@ -11,15 +12,24 @@ export default class BattleEngine {
     this.playerFormation = { FRONT: [], BACK: [] };
     this.enemyFormation  = { FRONT: [], BACK: [] };
 
+    const activeHeroDefIds = playerSquad.map(entry => entry.hero.heroDefId).filter(Boolean);
+
     for (const entry of playerSquad) {
+      const stats = entry.hero.computeStats();
+      const bondBonus = BondManager.getHeroBondBonus(entry.hero.heroDefId, activeHeroDefIds);
+      const boostedStats = {
+        hp: Math.floor(stats.hp * (1 + bondBonus)),
+        defense: Math.floor(stats.defense * (1 + bondBonus)),
+        damage: Math.floor(stats.damage * (1 + bondBonus))
+      };
       const combatant = {
         id: entry.hero.id, name: entry.hero.name, heroClass: entry.hero.heroClass,
         affinity: entry.hero.affinity, range: entry.hero.range || 'melee',
-        hp: entry.hero.computeStats().hp, maxHp: entry.hero.computeStats().hp,
-        stats: entry.hero.computeStats(), ultimateCharge: 0,
+        hp: boostedStats.hp, maxHp: boostedStats.hp,
+        stats: boostedStats, ultimateCharge: 0,
         abilityIds: entry.hero.normalAbilityIds || [],
         ultimateAbilityId: entry.hero.ultimateAbilityId,
-        isPlayer: true, row: entry.row
+        isPlayer: true, row: entry.row, bondBonus
       };
       this.playerFormation[entry.row].push(combatant);
     }
