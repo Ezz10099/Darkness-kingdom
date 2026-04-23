@@ -30,6 +30,8 @@ export default class GuildShopScene extends Phaser.Scene {
     const refreshes = GuildManager.getGuildShopRefreshesPerDay();
     c.add(this.add.text(W / 2, 94,
       `Refresh: ${refreshes}x/day  \u2022  ${items.length} total items`,
+    c.add(this.add.text(W / 2, 94,
+      `Rotates daily  \u2022  ${items.length} total items`,
       { font: '11px monospace', fill: '#555577' }).setOrigin(0.5));
 
     items.forEach((item, i) => {

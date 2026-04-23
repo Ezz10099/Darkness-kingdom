@@ -3,6 +3,7 @@ import HeroManager, { HeroInstance } from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import AchievementManager from '../systems/AchievementManager.js';
+import BondManager from '../systems/BondManager.js';
 import STAGE_DEFINITIONS, { getCampaignRegions } from '../data/stageDefinitions.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
@@ -178,8 +179,17 @@ export default class CampaignScene extends Phaser.Scene {
       `Selected ${selected.length}/5  FRONT ${counts.FRONT}/3  BACK ${counts.BACK}/3`,
       { font: '11px monospace', fill: '#bbbbdd' }).setOrigin(0.5));
 
+    const activeHeroDefIds = selected
+      .map(entry => HeroManager.getHero(entry.heroId)?.heroDefId)
+      .filter(Boolean);
+    const activeBonds = BondManager.getActiveBonds(activeHeroDefIds);
+    const bondLine = activeBonds.length
+      ? `BONDS: ${activeBonds.map(b => `${b.name} (+${Math.round(b.bonus * 100)}%)`).join('  |  ')}`
+      : 'BONDS: none active';
+    c.add(this.add.text(W / 2, 82, bondLine, { font: '10px monospace', fill: '#99ddff' }).setOrigin(0.5));
+
     heroes.forEach((hero, i) => {
-      const y = 104 + i * 38;
+      const y = 122 + i * 38;
       const picked = isSelected(hero.id);
       const pickedEntry = selected.find(e => e.heroId === hero.id);
       const row = pickedEntry?.row || '-';
@@ -197,14 +207,14 @@ export default class CampaignScene extends Phaser.Scene {
       if (picked) rowBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => toggleRow(hero));
     });
 
-    const saveBtn = this.add.rectangle(W / 2, 760, 220, 44, 0x213321).setStrokeStyle(1, 0x44bb44)
+    const saveBtn = this.add.rectangle(W / 2, 778, 220, 44, 0x213321).setStrokeStyle(1, 0x44bb44)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => {
         GameState.setActiveSquad(selected);
         if (stage) this._startBattle(stage);
         else this._showStageSelect();
       });
     c.add(saveBtn);
-    c.add(this.add.text(W / 2, 760, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: '#99ff99' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: '#99ff99' }).setOrigin(0.5));
   }
 
   _startBattle(stage) {
