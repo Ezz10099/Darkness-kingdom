@@ -139,7 +139,10 @@ export default class CampaignScene extends Phaser.Scene {
     this._reset();
     const c = this._root, W = 480;
     const heroes = HeroManager.getAllHeroes().slice().sort((a, b) => a.id.localeCompare(b.id));
-    const selected = (draftSelected || GameState.getBattleSquadEntries()).slice();
+    const savedSelected = GameState.getBattleSquadEntries();
+    const selected = (draftSelected || savedSelected).slice();
+    const squadKey = arr => arr.map(e => `${e.heroId}:${e.row}`).sort().join('|');
+    const hasUnsavedChanges = squadKey(selected) !== squadKey(savedSelected);
 
     const countByRow = () => ({
       FRONT: selected.filter(e => e.row === 'FRONT').length,
@@ -171,7 +174,10 @@ export default class CampaignScene extends Phaser.Scene {
     };
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
-    c.add(this.add.text(W / 2, 34, 'FORMATION', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
+    c.add(this.add.rectangle(W / 2, 56, 120, 18, hasUnsavedChanges ? 0x3a2a00 : 0x153315).setStrokeStyle(1, hasUnsavedChanges ? 0xffbb44 : 0x55cc88));
+    c.add(this.add.text(W / 2, 56, hasUnsavedChanges ? 'UNSAVED CHANGES' : 'SAVED',
+      { font: '9px monospace', fill: hasUnsavedChanges ? '#ffdd88' : '#99ffbb' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 30, 'FORMATION', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(22, 34, '< MAP', { font: '14px monospace', fill: '#aaaaaa' }).setOrigin(0, 0.5)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showStageSelect()));
     const counts = countByRow();
@@ -187,6 +193,10 @@ export default class CampaignScene extends Phaser.Scene {
       ? `BONDS: ${activeBonds.map(b => `${b.name} (+${Math.round(b.bonus * 100)}%)`).join('  |  ')}`
       : 'BONDS: none active';
     c.add(this.add.text(W / 2, 82, bondLine, { font: '10px monospace', fill: '#99ddff' }).setOrigin(0.5));
+    const frontNames = selected.filter(e => e.row === 'FRONT').map(e => HeroManager.getHero(e.heroId)?.name).filter(Boolean);
+    const backNames = selected.filter(e => e.row === 'BACK').map(e => HeroManager.getHero(e.heroId)?.name).filter(Boolean);
+    c.add(this.add.text(24, 96, `FRONT: ${frontNames.join(', ') || '-'}`, { font: '10px monospace', fill: '#ffbb99' }));
+    c.add(this.add.text(24, 110, `BACK : ${backNames.join(', ') || '-'}`, { font: '10px monospace', fill: '#99ccff' }));
 
     heroes.forEach((hero, i) => {
       const y = 122 + i * 38;
@@ -194,8 +204,8 @@ export default class CampaignScene extends Phaser.Scene {
       const pickedEntry = selected.find(e => e.heroId === hero.id);
       const row = pickedEntry?.row || '-';
       const rowColor = row === 'FRONT' ? '#ffb088' : row === 'BACK' ? '#88bbff' : '#666688';
-      const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1c2c1c : 0x121226)
-        .setStrokeStyle(1, picked ? 0x44bb44 : 0x333366)
+      const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1e3526 : 0x121226)
+        .setStrokeStyle(1, picked ? 0x66dd88 : 0x333366)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => toggleHero(hero));
       c.add(card);
@@ -210,14 +220,20 @@ export default class CampaignScene extends Phaser.Scene {
       });
     });
 
-    const saveBtn = this.add.rectangle(W / 2, 778, 220, 44, 0x213321).setStrokeStyle(1, 0x44bb44)
+    const saveFill = hasUnsavedChanges ? 0x264a2f : 0x1c2b1f;
+    const saveStroke = hasUnsavedChanges ? 0x66dd88 : 0x3f6d4b;
+    const saveBtn = this.add.rectangle(W / 2, 778, 220, 44, saveFill).setStrokeStyle(1, saveStroke)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => {
         GameState.setActiveSquad(selected);
         if (stage) this._startBattle(stage);
         else this._showStageSelect();
       });
     c.add(saveBtn);
-    c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: '#99ff99' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: hasUnsavedChanges ? '#baffca' : '#88aa95' }).setOrigin(0.5));
+    const clearBtn = this.add.rectangle(W / 2, 822, 220, 26, 0x2b1a1a).setStrokeStyle(1, 0x774444)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor(stage, []));
+    c.add(clearBtn);
+    c.add(this.add.text(W / 2, 822, 'CLEAR SQUAD', { font: '11px monospace', fill: '#ffaaaa' }).setOrigin(0.5));
   }
 
   _startBattle(stage) {
