@@ -1,6 +1,7 @@
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS } from '../data/constants.js';
 import AchievementManager from './AchievementManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 
 export const RANK_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'];
 
@@ -35,7 +36,7 @@ const ArenaManager = {
   _checkDailyReset() {
     const today = this._todayStr();
     if (this.lastResetDate !== today) {
-      this.attemptsRemaining = MAX_ATTEMPTS;
+      this.attemptsRemaining = MAX_ATTEMPTS + ElderTreeManager.getArenaAttemptBonus();
       this.lastResetDate = today;
       this._cachedOpponents = null;
     }
@@ -52,6 +53,10 @@ const ArenaManager = {
   getAttemptsRemaining() {
     this._checkDailyReset();
     return this.attemptsRemaining;
+  },
+
+  getMaxAttempts() {
+    return MAX_ATTEMPTS + ElderTreeManager.getArenaAttemptBonus();
   },
 
   canAttempt() {

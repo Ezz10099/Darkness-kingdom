@@ -1,10 +1,12 @@
 import CurrencyManager from './CurrencyManager.js';
 import { CURRENCY } from '../data/constants.js';
 import AchievementManager from './AchievementManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 
 export const GUILD_CREATION_COST = 5000;
 export const MAX_MEMBERS = 30;
 export const ATTACKS_PER_DAY = 3;
+export const BASE_ATTACK_COOLDOWN_SECS = 30 * 60;
 
 export const BOSS_TIERS = [
   { tier: 1, label: 'Tier I',   bossHp: 10000,  battleHp: 2000,  defense: 8,  damage: 15,  coinsPerKill: 50  },
@@ -69,6 +71,7 @@ const GuildManager = {
     currentHp:     BOSS_TIERS[0].bossHp,
     tierIndex:     0,
     attacksUsed:   0,
+    lastAttackAt:  0,
     lastResetDate: null,
     lastResult:    null,
   },
@@ -79,6 +82,7 @@ const GuildManager = {
     const today = this._todayStr();
     if (this.bossState.lastResetDate !== today) {
       this.bossState.attacksUsed = 0;
+      this.bossState.lastAttackAt = 0;
       this.bossState.lastResetDate = today;
     }
   },
@@ -147,6 +151,21 @@ const GuildManager = {
     return Math.max(0, ATTACKS_PER_DAY - this.bossState.attacksUsed);
   },
 
+  getAttackCooldownSecs() {
+    return Math.floor(BASE_ATTACK_COOLDOWN_SECS * ElderTreeManager.getGuildCooldownMult());
+  },
+
+  getCooldownRemainingSecs(nowMs = Date.now()) {
+    this._checkDailyReset();
+    if (!this.bossState.lastAttackAt || this.getAttacksRemaining() <= 0) return 0;
+    const elapsed = (nowMs - this.bossState.lastAttackAt) / 1000;
+    return Math.max(0, Math.ceil(this.getAttackCooldownSecs() - elapsed));
+  },
+
+  canAttackNow(nowMs = Date.now()) {
+    return this.getAttacksRemaining() > 0 && this.getCooldownRemainingSecs(nowMs) <= 0;
+  },
+
   generateBossSquad() {
     const cfg = this.getCurrentTierConfig();
     return [{
@@ -166,6 +185,7 @@ const GuildManager = {
   recordAttack(rawDamage) {
     this._checkDailyReset();
     this.bossState.attacksUsed = Math.min(ATTACKS_PER_DAY, this.bossState.attacksUsed + 1);
+    this.bossState.lastAttackAt = Date.now();
 
     const cfg    = this.getCurrentTierConfig();
     const damage = Math.min(rawDamage, cfg.battleHp);
@@ -176,7 +196,7 @@ const GuildManager = {
     let tierAdvanced   = false;
 
     const xpGained    = Math.max(1, Math.floor((damage / cfg.bossHp) * 1000 * cfg.tier));
-    const coinMult    = 1 + this.getCoinBonus();
+    const coinMult    = (1 + this.getCoinBonus()) * ElderTreeManager.getGuildCoinMult();
     const coinsEarned = Math.max(1, Math.floor((damage / cfg.battleHp) * cfg.coinsPerKill * coinMult));
 
     if (bossDefeated) {
@@ -203,6 +223,7 @@ const GuildManager = {
         currentHp:     this.bossState.currentHp,
         tierIndex:     this.bossState.tierIndex,
         attacksUsed:   this.bossState.attacksUsed,
+        lastAttackAt:  this.bossState.lastAttackAt,
         lastResetDate: this.bossState.lastResetDate,
         lastResult:    this.bossState.lastResult,
       },
@@ -217,6 +238,7 @@ const GuildManager = {
         currentHp:     data.bossState.currentHp     ?? BOSS_TIERS[0].bossHp,
         tierIndex:     data.bossState.tierIndex      ?? 0,
         attacksUsed:   data.bossState.attacksUsed    ?? 0,
+        lastAttackAt:  data.bossState.lastAttackAt   ?? 0,
         lastResetDate: data.bossState.lastResetDate  ?? null,
         lastResult:    data.bossState.lastResult     ?? null,
       };

@@ -1,4 +1,5 @@
 import HeroManager from './HeroManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 
 // Bench heroes passively train at 15% of active squad XP rate.
 // Level cap: bench hero can only catch up to the lowest active squad member's level.
@@ -6,12 +7,9 @@ const AcademyGroundsManager = {
   BASE_XP_RATE: 2,          // XP/sec per benched hero at 0 regions cleared
   MAX_OFFLINE_SECS: 57600,  // 16-hour cap (matches IdleManager)
 
-  // Elder Tree Academy Branch stub — multiply by this to boost bench training rate
-  academyBoostMultiplier: 1.0,
-
   getXpRate(campaignProgress) {
     const regions = campaignProgress?.regionCleared || 0;
-    return this.BASE_XP_RATE * (1 + regions * 0.3) * this.academyBoostMultiplier;
+    return this.BASE_XP_RATE * (1 + regions * 0.3) * ElderTreeManager.getAcademyXpMult();
   },
 
   _extractHeroIds(activeSquad) {
@@ -58,13 +56,11 @@ const AcademyGroundsManager = {
   },
 
   toJSON() {
-    return { academyBoostMultiplier: this.academyBoostMultiplier };
+    return {};
   },
 
   fromJSON(data) {
-    if (data?.academyBoostMultiplier != null) {
-      this.academyBoostMultiplier = data.academyBoostMultiplier;
-    }
+    void data;
   }
 };
 

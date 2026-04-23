@@ -54,6 +54,7 @@ export default class WorldBossScene extends Phaser.Scene {
     const cfg      = TIER_CONFIG[this._tier];
     const state    = WorldBossManager.tierState[this._tier];
     const attempts = WorldBossManager.getAttemptsRemaining();
+    const maxAtt   = WorldBossManager.getMaxAttempts();
     const hasHeroes = HeroManager.getAllHeroes().length > 0;
     const canFight  = attempts > 0 && hasHeroes;
 
@@ -109,7 +110,7 @@ export default class WorldBossScene extends Phaser.Scene {
 
     // Attempts + record
     c.add(this.add.text(W / 2, 320,
-      'Attempts today: ' + (3 - WorldBossManager.getAttemptsRemaining()) + ' / 3 used',
+      'Attempts today: ' + (maxAtt - attempts) + ' / ' + maxAtt + ' used',
       { font: '15px monospace', fill: attempts > 0 ? '#aaddff' : '#ff6666' }).setOrigin(0.5));
     if (state.highestDamage > 0) {
       c.add(this.add.text(W / 2, 348,

@@ -24,7 +24,10 @@ const BANNER_RATES = {
 const SummonManager = {
   pityCounters: { BASIC: 0, ADVANCED: 0 },
   wishlist: new Set(),
-  wishlistMaxSize: 3,
+
+  getWishlistMaxSize() {
+    return 3 + ElderTreeManager.getWishlistMaxSizeBonus();
+  },
 
   _pickRarity(bannerType, ownedDefIds) {
     const rates = BANNER_RATES[bannerType];
@@ -128,6 +131,10 @@ const SummonManager = {
   fromJSON(data) {
     if (data.pityCounters) this.pityCounters = data.pityCounters;
     if (data.wishlist) this.wishlist = new Set(data.wishlist);
+    const maxSize = this.getWishlistMaxSize();
+    if (this.wishlist.size > maxSize) {
+      this.wishlist = new Set([...this.wishlist].slice(0, maxSize));
+    }
   }
 };
 

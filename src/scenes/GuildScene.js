@@ -3,7 +3,7 @@ import HeroManager     from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine    from '../systems/BattleEngine.js';
 import GuildManager, {
-  BOSS_TIERS, LEVEL_PERKS, GUILD_CREATION_COST, ATTACKS_PER_DAY
+  BOSS_TIERS, LEVEL_PERKS, GUILD_CREATION_COST, ATTACKS_PER_DAY, BASE_ATTACK_COOLDOWN_SECS
 } from '../systems/GuildManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
@@ -126,9 +126,10 @@ export default class GuildScene extends Phaser.Scene {
     const bs      = GuildManager.bossState;
     const cfg     = GuildManager.getCurrentTierConfig();
     const attacks = GuildManager.getAttacksRemaining();
+    const cdLeft  = GuildManager.getCooldownRemainingSecs();
     const coins   = CurrencyManager.get(CURRENCY.GUILD_COINS);
     const hasHeroes = HeroManager.getAllHeroes().length > 0;
-    const canFight  = attacks > 0 && hasHeroes;
+    const canFight  = attacks > 0 && cdLeft <= 0 && hasHeroes;
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
     c.add(this.add.text(W / 2, 34, 'GUILD', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
@@ -178,11 +179,20 @@ export default class GuildScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 316,
       'Attacks today: ' + (ATTACKS_PER_DAY - attacks) + ' / ' + ATTACKS_PER_DAY + ' used',
       { font: '13px monospace', fill: attacks > 0 ? '#aaddff' : '#ff6666' }).setOrigin(0.5));
+    const cdBase = GuildManager.getAttackCooldownSecs();
+    const cdLabel = cdLeft > 0
+      ? 'Cooldown: ' + this._fmtSecs(cdLeft)
+      : 'Cooldown: Ready';
+    const cdNote = cdBase < BASE_ATTACK_COOLDOWN_SECS
+      ? ' (reduced)'
+      : '';
+    c.add(this.add.text(W / 2, 334, cdLabel + cdNote,
+      { font: '11px monospace', fill: cdLeft > 0 ? '#ffcc88' : '#66cc66' }).setOrigin(0.5));
 
     // Last result
     if (bs.lastResult) {
       const lr = bs.lastResult;
-      c.add(this.add.text(W / 2, 340,
+      c.add(this.add.text(W / 2, 352,
         'Last: ' + lr.damage.toLocaleString() + ' dmg  \u2605' + lr.coinsEarned + ' Coins  +' + lr.xpGained + ' XP',
         { font: '11px monospace', fill: '#555577' }).setOrigin(0.5));
     }
@@ -191,7 +201,9 @@ export default class GuildScene extends Phaser.Scene {
     const atkY   = 400;
     const atkC   = canFight ? 0x3a0000 : 0x1a1a2a;
     const atkBrd = canFight ? 0xff4444 : 0x333333;
-    const atkTxt = canFight ? '\u2694 ATTACK BOSS' : (attacks === 0 ? 'NO ATTACKS LEFT' : 'NO HEROES');
+    const atkTxt = canFight
+      ? '\u2694 ATTACK BOSS'
+      : (attacks === 0 ? 'NO ATTACKS LEFT' : (cdLeft > 0 ? 'ON COOLDOWN' : 'NO HEROES'));
     const atkClr = canFight ? '#ff6644' : '#555555';
     const atkBg  = this.add.rectangle(W / 2, atkY, 290, 66, atkC).setStrokeStyle(2, atkBrd);
     c.add(atkBg);
@@ -236,6 +248,7 @@ export default class GuildScene extends Phaser.Scene {
   // ─── BATTLE ─────────────────────────────────────────────────────────────────
 
   _startAttack() {
+    if (!GuildManager.canAttackNow()) return;
     const enemySquad  = GuildManager.generateBossSquad();
     const playerSquad = HeroManager.getAllHeroes().map(h => ({
       hero: h, row: CLASS_DEFAULTS[h.heroClass]?.defaultRow || 'FRONT'
@@ -400,9 +413,13 @@ export default class GuildScene extends Phaser.Scene {
       { font: '12px monospace', fill: '#888888' }).setOrigin(0.5));
 
     const attLeft = GuildManager.getAttacksRemaining();
+    const cdLeft  = GuildManager.getCooldownRemainingSecs();
     c.add(this.add.text(W / 2, nextY + 28,
       attLeft + ' attack' + (attLeft !== 1 ? 's' : '') + ' remaining today',
       { font: '12px monospace', fill: '#888888' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, nextY + 50,
+      (cdLeft > 0 ? 'Next attack in ' + this._fmtSecs(cdLeft) : 'Next attack ready'),
+      { font: '12px monospace', fill: cdLeft > 0 ? '#ffcc88' : '#66cc66' }).setOrigin(0.5));
 
     const colY  = 510;
     const colBg = this.add.rectangle(W / 2, colY, 260, 64, 0x200040)
@@ -413,5 +430,11 @@ export default class GuildScene extends Phaser.Scene {
 
     GameState.save();
     AchievementManager.showPopups(this);
+  }
+
+  _fmtSecs(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return m + ':' + String(s).padStart(2, '0');
   }
 }
