@@ -145,7 +145,6 @@ const GameState = {
 
   fromJSON(data) {
     this.activeSquad      = data.activeSquad      || [];
-    this.activeSquad      = this.getActiveSquadEntries();
     this.campaignProgress = data.campaignProgress || { regionCleared: 0, stageCleared: null };
     this.unlockedSystems  = new Set(data.unlockedSystems || []);
     this.lastSaveTime     = data.lastSaveTime     || Date.now();
@@ -172,6 +171,8 @@ const GameState = {
     if (CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS) === 0) {
       CurrencyManager.add(CURRENCY.PREMIUM_CRYSTALS, 300);
     }
+    // Normalize squad after heroes are loaded so selected hero IDs resolve correctly.
+    this.activeSquad = this.getActiveSquadEntries();
   }
 };
 

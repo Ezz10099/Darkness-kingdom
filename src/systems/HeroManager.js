@@ -45,9 +45,10 @@ class HeroInstance {
   levelUp(goldCost) {
     if (!this.canLevelUp()) return false;
     if (!CurrencyManager.spend(CURRENCY.GOLD, goldCost)) return false;
+    const spentXp = this.xpThreshold();
     this._goldInvested += goldCost;
+    this.xp = Math.max(0, this.xp - spentXp);
     this.level++;
-    this.xp = 0;
     return true;
   }
 
