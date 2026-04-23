@@ -71,8 +71,9 @@ const GameState = {
     const hero = HeroManager.getHero(heroId);
     if (!hero) return null;
     const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || FORMATION_ROW.FRONT;
-    const row = (typeof entry === 'object' && entry.row === FORMATION_ROW.BACK)
-      ? FORMATION_ROW.BACK
+    const rawRow = typeof entry === 'object' ? entry.row : null;
+    const row = (rawRow === FORMATION_ROW.FRONT || rawRow === FORMATION_ROW.BACK)
+      ? rawRow
       : defaultRow;
     return { heroId, row };
   },

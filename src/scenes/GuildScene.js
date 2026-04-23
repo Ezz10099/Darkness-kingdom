@@ -6,7 +6,7 @@ import GuildManager, {
   BOSS_TIERS, LEVEL_PERKS, GUILD_CREATION_COST, BASE_ATTACK_COOLDOWN_SECS
 } from '../systems/GuildManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
-import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
+import { CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
@@ -251,9 +251,12 @@ export default class GuildScene extends Phaser.Scene {
   _startAttack() {
     if (!GuildManager.canAttackNow()) return;
     const enemySquad  = GuildManager.generateBossSquad();
-    const playerSquad = HeroManager.getAllHeroes().map(h => ({
-      hero: h, row: CLASS_DEFAULTS[h.heroClass]?.defaultRow || 'FRONT'
-    }));
+    const playerSquad = GameState.getBattleSquadEntries()
+      .map(entry => {
+        const hero = HeroManager.getHero(entry.heroId);
+        return hero ? { hero, row: entry.row } : null;
+      })
+      .filter(Boolean);
 
     this._engine = new BattleEngine({ playerSquad, enemySquad, onEvent: ev => this._onBattleEvent(ev) });
     this._engine.start();
