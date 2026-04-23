@@ -232,6 +232,7 @@ export default class SummonScene extends Phaser.Scene {
   _buildWishlistButton() {
     const c       = this._mainCont, W = this._W;
     const wlCount = SummonManager.wishlist.size;
+    const wlMax   = SummonManager.getWishlistMaxSize();
     c.add(this.add.rectangle(W / 2, 786, W, 1, 0x222244));
     const bg = this.add.rectangle(W / 2, 815, 340, 50, 0x101030)
       .setStrokeStyle(1, 0x4444aa)
@@ -241,7 +242,7 @@ export default class SummonScene extends Phaser.Scene {
       .on('pointerup',   () => this._showWishlistOverlay());
     c.add(bg);
     c.add(this.add.text(W / 2, 815,
-      `WISHLIST  (${wlCount}/3 active)`,
+      `WISHLIST  (${wlCount}/${wlMax} active)`,
       { font: '14px monospace', fill: '#8888cc' }).setOrigin(0.5));
   }
 
@@ -314,8 +315,9 @@ export default class SummonScene extends Phaser.Scene {
         .on('pointerdown', () => rowBg.setFillStyle(0x07071a))
         .on('pointerout',  () => rowBg.setFillStyle(0x111128))
         .on('pointerup',   () => {
-          if (!inWL && SummonManager.wishlist.size >= SummonManager.wishlistMaxSize) {
-            this._flashMsg('Wishlist full (3/3)');
+          const wlMax = SummonManager.getWishlistMaxSize();
+          if (!inWL && SummonManager.wishlist.size >= wlMax) {
+            this._flashMsg(`Wishlist full (${wlMax}/${wlMax})`);
             return;
           }
           inWL

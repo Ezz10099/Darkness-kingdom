@@ -1,4 +1,5 @@
 import AchievementManager from './AchievementManager.js';
+import ElderTreeManager from './ElderTreeManager.js';
 
 const TIER_CONFIG = {
   EASY: {
@@ -48,7 +49,11 @@ const WorldBossManager = {
 
   getAttemptsRemaining() {
     this._checkDailyReset();
-    return Math.max(0, MAX_ATTEMPTS - this.attemptsUsed);
+    return Math.max(0, this.getMaxAttempts() - this.attemptsUsed);
+  },
+
+  getMaxAttempts() {
+    return MAX_ATTEMPTS + ElderTreeManager.getWorldBossAttemptBonus();
   },
 
   canAttempt() {
@@ -86,7 +91,7 @@ const WorldBossManager = {
 
   recordAttempt(tierKey, rawDamage) {
     this._checkDailyReset();
-    this.attemptsUsed = Math.min(MAX_ATTEMPTS, this.attemptsUsed + 1);
+    this.attemptsUsed = Math.min(this.getMaxAttempts(), this.attemptsUsed + 1);
 
     const cfg   = TIER_CONFIG[tierKey];
     const state = this.tierState[tierKey];

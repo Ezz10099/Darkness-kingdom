@@ -2,7 +2,7 @@ import GameState from '../systems/GameState.js';
 import HeroManager from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
-import ArenaManager, { RANK_CONFIG, MAX_ATTEMPTS } from '../systems/ArenaManager.js';
+import ArenaManager, { RANK_CONFIG } from '../systems/ArenaManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
@@ -48,6 +48,7 @@ export default class ArenaScene extends Phaser.Scene {
     const c = this._root, W = 480;
     const rankCfg   = ArenaManager.getRankConfig();
     const attempts  = ArenaManager.getAttemptsRemaining();
+    const maxAtt    = ArenaManager.getMaxAttempts();
     const tokens    = CurrencyManager.get(CURRENCY.ARENA_TOKENS);
     const history   = ArenaManager.battleHistory;
     const opponents = ArenaManager.getOpponents();
@@ -71,7 +72,7 @@ export default class ArenaScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 120, tokens + ' Arena Tokens', {
       font: '14px monospace', fill: '#ffaa44',
     }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 144, 'Attempts: ' + attempts + ' / ' + MAX_ATTEMPTS, {
+    c.add(this.add.text(W / 2, 144, 'Attempts: ' + attempts + ' / ' + maxAtt, {
       font: '14px monospace', fill: attempts > 0 ? '#aaffaa' : '#ff6666',
     }).setOrigin(0.5));
 

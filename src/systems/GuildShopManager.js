@@ -1,5 +1,6 @@
 import CurrencyManager from './CurrencyManager.js';
 import { CURRENCY } from '../data/constants.js';
+import GuildManager from './GuildManager.js';
 
 const GEAR_POOL = [
   { id: 'gs_iron_sword',     name: 'Iron Sword',       type: 'gear', slot: 'WEAPON',    rarity: 'COMMON',    desc: '+15 DMG',           cost: 80,   rarityColor: '#aaaaaa' },
@@ -40,6 +41,12 @@ function getDaySeed() {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 }
 
+function getHalfDaySeed() {
+  const d = new Date();
+  const half = d.getUTCHours() < 12 ? 0 : 1;
+  return (d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate()) * 10 + half;
+}
+
 function shuffle(arr, rand) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -51,34 +58,47 @@ function shuffle(arr, rand) {
 
 function generateDailyRotation(daySeed) {
   const rand = seededRandom(daySeed);
-  return [
-    ...shuffle(GEAR_POOL,     rand).slice(0, 3),
-    ...shuffle(COSMETIC_POOL, rand).slice(0, 3),
-  ];
+  const gear = shuffle(GEAR_POOL, rand);
+  const cosmetic = shuffle(COSMETIC_POOL, rand);
+  const out = gear.slice(0, 3).concat(cosmetic.slice(0, 3));
+  const extraSlots = GuildManager.getGuildShopExtraSlots();
+  if (extraSlots > 0) {
+    const extraPool = gear.slice(3).concat(cosmetic.slice(3));
+    const extra = shuffle(extraPool, rand).slice(0, extraSlots);
+    for (const item of extra) out.push(item);
+  }
+  return out;
 }
 
 const GuildShopManager = {
   purchasedToday: [],
-  lastShopDate:   null,
+  lastShopDate:   null, // tracks current rotation key (day or half-day)
 
-  _todayStr() { return new Date().toISOString().slice(0, 10); },
+  _rotationKey() {
+    const d = new Date().toISOString().slice(0, 10);
+    if (GuildManager.getGuildShopRefreshesPerDay() < 2) return d;
+    return d + (new Date().getUTCHours() < 12 ? '-A' : '-B');
+  },
 
   _checkDailyReset() {
-    const today = this._todayStr();
-    if (this.lastShopDate !== today) {
+    const key = this._rotationKey();
+    if (this.lastShopDate !== key) {
       this.purchasedToday = [];
-      this.lastShopDate   = today;
+      this.lastShopDate   = key;
     }
   },
 
-  getRotation() { return generateDailyRotation(getDaySeed()); },
+  getRotation() {
+    return generateDailyRotation(
+      GuildManager.getGuildShopRefreshesPerDay() < 2 ? getDaySeed() : getHalfDaySeed()
+    );
+  },
 
   getItems() {
     this._checkDailyReset();
-    return this.getRotation().map(item => ({
-      ...item,
-      purchased: this.purchasedToday.includes(item.id),
-    }));
+    return this.getRotation().map(item =>
+      Object.assign({}, item, { purchased: this.purchasedToday.includes(item.id) })
+    );
   },
 
   buyItem(itemId) {

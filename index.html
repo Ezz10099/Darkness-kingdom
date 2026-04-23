@@ -11,6 +11,20 @@
 <body>
   <div id="game-container"></div>
   <script src="phaser.min.js"></script>
-  <script type="module" src="main.js"></script>
+  <script>
+    (function () {
+      var supportsModules = true;
+      try { new Function("import('data:text/javascript,')"); } catch (e) { supportsModules = false; }
+      if (supportsModules) {
+        var script = document.createElement('script');
+        script.type = 'module';
+        script.src = 'main.js';
+        document.body.appendChild(script);
+      } else {
+        document.getElementById('game-container').innerText =
+          'This preview browser cannot run ES modules. Use a modern browser or desktop preview.';
+      }
+    }());
+  </script>
 </body>
 </html>

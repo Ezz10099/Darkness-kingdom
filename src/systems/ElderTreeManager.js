@@ -66,6 +66,42 @@ export const TREE_NODES = [
     desc: 'Offline cap: 35h \u2192 45h',
     cost: 90000, requires: 'eco_idle_3',
   },
+  // Academy branch (mid-game progression quality-of-life)
+  {
+    id: 'academy_arena_attempt', label: 'War Council', section: 'ACADEMY',
+    desc: '+1 Arena attempt per day',
+    cost: 85000, requires: null,
+  },
+  {
+    id: 'academy_training_1', label: 'Lecture Cycle I', section: 'ACADEMY',
+    desc: '+10% Academy Grounds passive XP rate',
+    cost: 60000, requires: null,
+  },
+  {
+    id: 'academy_training_2', label: 'Lecture Cycle II', section: 'ACADEMY',
+    desc: '+10% Academy Grounds passive XP rate (total +20%)',
+    cost: 110000, requires: 'academy_training_1',
+  },
+  {
+    id: 'academy_guild_coin', label: 'Guild Diplomacy', section: 'ACADEMY',
+    desc: '+10% Guild Coin earnings',
+    cost: 95000, requires: null,
+  },
+  {
+    id: 'academy_guild_cooldown', label: 'Raid Logistics', section: 'ACADEMY',
+    desc: 'Guild Boss attack cooldown reduced',
+    cost: 125000, requires: null,
+  },
+  {
+    id: 'academy_wishlist_slot', label: 'Curator Privilege', section: 'ACADEMY',
+    desc: '+1 Wishlist slot',
+    cost: 120000, requires: null,
+  },
+  {
+    id: 'academy_world_boss_attempt', label: 'Rift Study', section: 'ACADEMY',
+    desc: '+1 World Boss attempt per day',
+    cost: 180000, requires: 'academy_training_2',
+  },
 ];
 
 const ElderTreeManager = {
@@ -125,6 +161,33 @@ const ElderTreeManager = {
     if (this._purchased.has('eco_idle_2')) return 28 * 3600;
     if (this._purchased.has('eco_idle_1')) return 22 * 3600;
     return 16 * 3600;
+  },
+
+  getArenaAttemptBonus() {
+    return this._purchased.has('academy_arena_attempt') ? 1 : 0;
+  },
+
+  getAcademyXpMult() {
+    let bonus = 0;
+    if (this._purchased.has('academy_training_1')) bonus += 0.10;
+    if (this._purchased.has('academy_training_2')) bonus += 0.10;
+    return 1 + bonus;
+  },
+
+  getGuildCoinMult() {
+    return this._purchased.has('academy_guild_coin') ? 1.10 : 1;
+  },
+
+  getGuildCooldownMult() {
+    return this._purchased.has('academy_guild_cooldown') ? 0.67 : 1;
+  },
+
+  getWishlistMaxSizeBonus() {
+    return this._purchased.has('academy_wishlist_slot') ? 1 : 0;
+  },
+
+  getWorldBossAttemptBonus() {
+    return this._purchased.has('academy_world_boss_attempt') ? 1 : 0;
   },
 
   toJSON()  { return { purchased: [...this._purchased] }; },
