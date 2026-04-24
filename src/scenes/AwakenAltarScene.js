@@ -140,7 +140,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 400, '— HERO RESET —', { font: '13px monospace', fill: '#ff6644' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 424, `Reset to Level 1  |  Fee: ${fee.toLocaleString()} ${CURRENCY_LABEL.GOLD}`, { font: '12px monospace', fill: '#aaaaaa' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 446, `Refund: ${hero._goldInvested.toLocaleString()} ${CURRENCY_LABEL.GOLD} (leveling costs)`, { font: '12px monospace', fill: '#55ee55' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 468, 'Stars & Rarity are NOT refunded', { font: '10px monospace', fill: '#664444' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 468, 'Stars, Rarity & Awakening Shards are NOT refunded', { font: '10px monospace', fill: '#664444' }).setOrigin(0.5));
 
     const canReset = hero.level > 1 && CurrencyManager.get(CURRENCY.GOLD) >= fee;
     const resetLabel = hero.level === 1 ? 'ALREADY LEVEL 1' : !canReset ? `NEED ${fee.toLocaleString()}` : `RESET HERO  −${fee}`;
@@ -201,7 +201,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 360, hero.name, { font: '20px monospace', fill: '#ffffff' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 398, 'returned to Level 1', { font: '14px monospace', fill: '#888888' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 434, `Leveling ${CURRENCY_LABEL.GOLD} refunded`, { font: '13px monospace', fill: '#55ee55' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 458, 'Stars & Rarity unchanged', { font: '12px monospace', fill: '#665544' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 458, 'Stars, Rarity & Awakening Shards unchanged', { font: '12px monospace', fill: '#665544' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 560, 'Tap to continue', { font: '13px monospace', fill: '#444466' }).setOrigin(0.5));
 
     this.add.rectangle(W / 2, H / 2, W, H, 0x000000).setAlpha(0.001)
