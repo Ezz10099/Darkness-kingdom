@@ -24,7 +24,7 @@ const BANNER_RATES = {
 const SummonManager = {
   pityCounters: {
     BASIC: { epic: 0 },
-    ADVANCED: { legendary: 0, tenPullRare: 0 }
+    ADVANCED: { legendary: 0 }
   },
   wishlist: new Set(),
 
@@ -123,11 +123,7 @@ const SummonManager = {
       if (rarity === 'EPIC') this.pityCounters.BASIC.epic = 0;
     } else if (bannerType === 'ADVANCED') {
       this.pityCounters.ADVANCED.legendary++;
-      this.pityCounters.ADVANCED.tenPullRare++;
       if (rarity === 'LEGENDARY') this.pityCounters.ADVANCED.legendary = 0;
-      if ((RARITY_ORDER[rarity] ?? 0) >= RARITY_ORDER.RARE) {
-        this.pityCounters.ADVANCED.tenPullRare = 0;
-      }
     }
 
     return { heroDefId: pickedDef.id, rarity, affinity: pickedDef.affinity, isNew, def: pickedDef };
@@ -135,9 +131,10 @@ const SummonManager = {
 
   pullMulti(bannerType, heroPool, count) {
     const results = [];
+    let hasRareOrBetterInBatch = false;
     for (let i = 0; i < count; i++) {
       const forceRare = bannerType === 'ADVANCED' && count >= 10 && i === count - 1
-        && this.pityCounters.ADVANCED.tenPullRare >= 9;
+        && !hasRareOrBetterInBatch;
       if (forceRare) {
         const ownedDefIds = HeroManager.getAllHeroes().map(h => h.heroDefId);
         const rarity = this._pickRarity(bannerType, ownedDefIds, 'RARE');
@@ -145,12 +142,14 @@ const SummonManager = {
         if (!pickedDef) continue;
         const isNew = !ownedDefIds.includes(pickedDef.id);
         this.pityCounters.ADVANCED.legendary++;
-        this.pityCounters.ADVANCED.tenPullRare = 0;
         if (rarity === 'LEGENDARY') this.pityCounters.ADVANCED.legendary = 0;
+        hasRareOrBetterInBatch = true;
         results.push({ heroDefId: pickedDef.id, rarity, affinity: pickedDef.affinity, isNew, def: pickedDef });
         continue;
       }
-      results.push(this.pull(bannerType, heroPool));
+      const result = this.pull(bannerType, heroPool);
+      if ((RARITY_ORDER[result?.rarity] ?? 0) >= RARITY_ORDER.RARE) hasRareOrBetterInBatch = true;
+      results.push(result);
     }
     return results.filter(Boolean);
   },
@@ -187,16 +186,14 @@ const SummonManager = {
         this.pityCounters = {
           BASIC: { epic: Number(data.pityCounters.BASIC) || 0 },
           ADVANCED: {
-            legendary: Number(data.pityCounters.ADVANCED) || 0,
-            tenPullRare: 0
+            legendary: Number(data.pityCounters.ADVANCED) || 0
           }
         };
       } else {
         this.pityCounters = {
           BASIC: { epic: Number(data.pityCounters?.BASIC?.epic) || 0 },
           ADVANCED: {
-            legendary: Number(data.pityCounters?.ADVANCED?.legendary) || 0,
-            tenPullRare: Number(data.pityCounters?.ADVANCED?.tenPullRare) || 0
+            legendary: Number(data.pityCounters?.ADVANCED?.legendary) || 0
           }
         };
       }

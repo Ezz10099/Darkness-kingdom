@@ -59,6 +59,7 @@ export default class ElderTreeScene extends Phaser.Scene {
 
     for (const section of SECTIONS) {
       const nodes = TREE_NODES.filter(n => n.section === section);
+      const academyLocked = section === 'ACADEMY' && !ElderTreeManager.isAcademyUnlocked();
 
       // Section header
       const bar = this.add.rectangle(W / 2, y + 14, W - 16, 28, 0x0c200f)
@@ -67,6 +68,13 @@ export default class ElderTreeScene extends Phaser.Scene {
         { font: '13px monospace', fill: '#66cc88' }).setOrigin(0.5);
       this._cont.add([bar, hdr]);
       y += 36;
+
+      if (academyLocked) {
+        const lockMsg = this.add.text(W / 2, y + 8, 'Unlocks after Region 3 completion',
+          { font: '10px monospace', fill: '#776644' }).setOrigin(0.5);
+        this._cont.add(lockMsg);
+        y += 20;
+      }
 
       for (const node of nodes) {
         this._drawCard(node, y, W);
@@ -82,7 +90,8 @@ export default class ElderTreeScene extends Phaser.Scene {
     const owned   = ElderTreeManager.isPurchased(node.id);
     const canBuy  = ElderTreeManager.canPurchase(node.id);
     const prereqMet = !node.requires || ElderTreeManager.isPurchased(node.requires);
-    const locked  = !owned && !prereqMet;
+    const academyLocked = node.section === 'ACADEMY' && !ElderTreeManager.isAcademyUnlocked();
+    const locked  = !owned && (!prereqMet || academyLocked);
 
     const bgColor = owned ? 0x0a2e10 : locked ? 0x0d0d0d : 0x0f1e12;
     const border  = owned ? 0x33aa55 : locked ? 0x222222 : canBuy ? 0x44cc66 : 0x2a3a2a;

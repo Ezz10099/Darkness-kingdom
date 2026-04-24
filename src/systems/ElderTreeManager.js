@@ -1,5 +1,6 @@
 import CurrencyManager from './CurrencyManager.js';
 import { CURRENCY } from '../data/constants.js';
+import AchievementManager from './AchievementManager.js';
 
 export const TREE_NODES = [
   // Economy Branch (Layer 1)
@@ -55,39 +56,34 @@ export const TREE_NODES = [
   },
   // Academy branch (mid-game progression quality-of-life)
   {
-    id: 'academy_arena_attempt', label: 'War Council', section: 'ACADEMY',
+    id: 'academy_arena_attempt', label: 'A1 • War Council', section: 'ACADEMY',
     desc: '+1 Arena attempt per day',
-    cost: 85000, requires: null,
+    cost: 30000, requires: null,
   },
   {
-    id: 'academy_training_1', label: 'Lecture Cycle I', section: 'ACADEMY',
-    desc: '+10% Academy Grounds passive XP rate',
-    cost: 60000, requires: null,
+    id: 'academy_training', label: 'A2 • Lecture Cycle', section: 'ACADEMY',
+    desc: '+25% Academy Grounds passive XP rate',
+    cost: 45000, requires: 'academy_arena_attempt',
   },
   {
-    id: 'academy_training_2', label: 'Lecture Cycle II', section: 'ACADEMY',
-    desc: '+10% Academy Grounds passive XP rate (total +20%)',
-    cost: 110000, requires: 'academy_training_1',
+    id: 'academy_guild_cooldown', label: 'A3 • Raid Logistics', section: 'ACADEMY',
+    desc: 'Guild Boss attack cooldown -30 min',
+    cost: 60000, requires: 'academy_training',
   },
   {
-    id: 'academy_guild_coin', label: 'Guild Diplomacy', section: 'ACADEMY',
-    desc: '+10% Guild Coin earnings',
-    cost: 95000, requires: null,
+    id: 'academy_guild_coin', label: 'A4 • Guild Diplomacy', section: 'ACADEMY',
+    desc: '+20% Guild Coin earnings',
+    cost: 80000, requires: 'academy_guild_cooldown',
   },
   {
-    id: 'academy_guild_cooldown', label: 'Raid Logistics', section: 'ACADEMY',
-    desc: 'Guild Boss attack cooldown reduced',
-    cost: 125000, requires: null,
-  },
-  {
-    id: 'academy_wishlist_slot', label: 'Curator Privilege', section: 'ACADEMY',
+    id: 'academy_wishlist_slot', label: 'A5 • Curator Privilege', section: 'ACADEMY',
     desc: '+1 Wishlist slot',
-    cost: 120000, requires: null,
+    cost: 100000, requires: 'academy_guild_coin',
   },
   {
-    id: 'academy_world_boss_attempt', label: 'Rift Study', section: 'ACADEMY',
+    id: 'academy_world_boss_attempt', label: 'A6 • Rift Study', section: 'ACADEMY',
     desc: '+1 World Boss attempt per day',
-    cost: 180000, requires: 'academy_training_2',
+    cost: 150000, requires: 'academy_wishlist_slot',
   },
 ];
 
@@ -100,6 +96,7 @@ const ElderTreeManager = {
   canPurchase(id) {
     const node = TREE_NODES.find(n => n.id === id);
     if (!node || this._purchased.has(id)) return false;
+    if (node.section === 'ACADEMY' && !this.isAcademyUnlocked()) return false;
     if (node.requires && !this._purchased.has(node.requires)) return false;
     return CurrencyManager.get(CURRENCY.GOLD) >= node.cost;
   },
@@ -107,10 +104,15 @@ const ElderTreeManager = {
   purchase(id) {
     const node = TREE_NODES.find(n => n.id === id);
     if (!node || this._purchased.has(id)) return false;
+    if (node.section === 'ACADEMY' && !this.isAcademyUnlocked()) return false;
     if (node.requires && !this._purchased.has(node.requires)) return false;
     if (!CurrencyManager.spend(CURRENCY.GOLD, node.cost)) return false;
     this._purchased.add(id);
     return true;
+  },
+
+  isAcademyUnlocked() {
+    return AchievementManager.isCompleted('prog_region_3');
   },
 
   // ── Bonus getters ─────────────────────────────────────────────────────────
@@ -150,18 +152,15 @@ const ElderTreeManager = {
   },
 
   getAcademyXpMult() {
-    let bonus = 0;
-    if (this._purchased.has('academy_training_1')) bonus += 0.10;
-    if (this._purchased.has('academy_training_2')) bonus += 0.10;
-    return 1 + bonus;
+    return this._purchased.has('academy_training') ? 1.25 : 1;
   },
 
   getGuildCoinMult() {
-    return this._purchased.has('academy_guild_coin') ? 1.10 : 1;
+    return this._purchased.has('academy_guild_coin') ? 1.20 : 1;
   },
 
   getGuildCooldownMult() {
-    return this._purchased.has('academy_guild_cooldown') ? 0.67 : 1;
+    return this._purchased.has('academy_guild_cooldown') ? 0 : 1;
   },
 
   getWishlistMaxSizeBonus() {
@@ -188,7 +187,9 @@ const ElderTreeManager = {
       ['eco_idle_1', 'eco_7'],
       ['eco_idle_2', 'eco_8'],
       ['eco_idle_3', 'eco_9'],
-      ['eco_idle_4', 'eco_10']
+      ['eco_idle_4', 'eco_10'],
+      ['academy_training_1', 'academy_training'],
+      ['academy_training_2', 'academy_training']
     ];
     legacyToNew.forEach(([oldId, newId]) => {
       if (migrated.has(oldId)) migrated.add(newId);

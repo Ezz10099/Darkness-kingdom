@@ -5,6 +5,7 @@ import ElderTreeManager from './ElderTreeManager.js';
 
 export const GUILD_CREATION_COST = 5000;
 export const MAX_MEMBERS = 30;
+export const MAX_GUILD_LEVEL = 30;
 export const ATTACKS_PER_DAY = 3;
 export const BASE_ATTACK_COOLDOWN_SECS = 30 * 60;
 
@@ -104,7 +105,8 @@ const GuildManager = {
 
   joinGuild(guildName, level, memberCount) {
     if (this.guild) return { ok: false, reason: 'Already in a guild' };
-    this.guild = { name: guildName, level: level || 1, xp: 0, memberCount: (memberCount || 5) + 1, isOwner: false };
+    const clampedLevel = Math.max(1, Math.min(MAX_GUILD_LEVEL, Number(level) || 1));
+    this.guild = { name: guildName, level: clampedLevel, xp: 0, memberCount: (memberCount || 5) + 1, isOwner: false };
     AchievementManager.checkGuildJoined();
     return { ok: true };
   },
@@ -115,14 +117,14 @@ const GuildManager = {
   getXP()     { return this.guild ? this.guild.xp    : 0; },
 
   getXPToNextLevel() {
-    if (!this.guild || this.guild.level >= 30) return Infinity;
+    if (!this.guild || this.guild.level >= MAX_GUILD_LEVEL) return Infinity;
     return GUILD_XP_TABLE[this.guild.level] || Infinity;
   },
 
   _addXP(amount) {
-    if (!this.guild || this.guild.level >= 30) return;
+    if (!this.guild || this.guild.level >= MAX_GUILD_LEVEL) return;
     this.guild.xp += amount;
-    while (this.guild.level < 30) {
+    while (this.guild.level < MAX_GUILD_LEVEL) {
       const needed = GUILD_XP_TABLE[this.guild.level];
       if (!needed || this.guild.xp < needed) break;
       this.guild.xp -= needed;
@@ -137,7 +139,7 @@ const GuildManager = {
   getMaxUnlockedTierIndex() {
     if (!this.guild) return 0;
     const lv = this.guild.level;
-    if (lv >= 30) return 4;
+    if (lv >= MAX_GUILD_LEVEL) return 4;
     if (lv >= 20) return 3;
     if (lv >= 10) return 2;
     if (lv >= 5)  return 1;
@@ -244,7 +246,13 @@ const GuildManager = {
 
   fromJSON(data) {
     if (!data) return;
-    this.guild = data.guild || null;
+    this.guild = data.guild
+      ? {
+        ...data.guild,
+        level: Math.max(1, Math.min(MAX_GUILD_LEVEL, Number(data.guild.level) || 1)),
+        xp: Math.max(0, Number(data.guild.xp) || 0)
+      }
+      : null;
     if (data.bossState) {
       this.bossState = {
         currentHp:     data.bossState.currentHp     ?? BOSS_TIERS[0].bossHp,
