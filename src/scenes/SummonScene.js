@@ -4,7 +4,7 @@ import CurrencyManager from '../systems/CurrencyManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
-import { CURRENCY } from '../data/constants.js';
+import { CURRENCY, CURRENCY_LABEL } from '../data/constants.js';
 
 const RARITY_HEX = {
   COMMON: 0x888888, UNCOMMON: 0x44aa44, RARE: 0x4488ff,
@@ -23,12 +23,12 @@ const BANNER_POOLS = {
 const BANNERS = {
   BASIC: {
     key: 'BASIC', label: 'BASIC', unlockKey: 'BASIC_SUMMON',
-    currency: CURRENCY.CRYSTALS, currencyLabel: 'Crystals',
+    currency: CURRENCY.CRYSTALS, currencyLabel: CURRENCY_LABEL.CRYSTALS,
     cost1: 100, cost10: 900, pityMax: 30, pityLabel: 'Epic pity'
   },
   ADVANCED: {
     key: 'ADVANCED', label: 'ADVANCED', unlockKey: 'ADVANCED_SUMMON',
-    currency: CURRENCY.PREMIUM_CRYSTALS, currencyLabel: 'PCrystals',
+    currency: CURRENCY.PREMIUM_CRYSTALS, currencyLabel: CURRENCY_LABEL.PREMIUM_CRYSTALS,
     cost1: 100, cost10: 900, pityMax: 80, pityLabel: 'Legendary pity'
   }
 };
@@ -250,9 +250,11 @@ export default class SummonScene extends Phaser.Scene {
 
   _refreshCurrency() {
     this._crystalTxt.setText(
-      'Crystals: ' + CurrencyManager.get(CURRENCY.CRYSTALS).toLocaleString());
+      `${CURRENCY_LABEL.CRYSTALS}: ${CurrencyManager.get(CURRENCY.CRYSTALS).toLocaleString()}`
+    );
     this._pcrystalTxt.setText(
-      'PCrystals: ' + CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS).toLocaleString());
+      `${CURRENCY_LABEL.PREMIUM_CRYSTALS}: ${CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS).toLocaleString()}`
+    );
   }
 
   // ─── PULL ─────────────────────────────────────────────────────────────────────
