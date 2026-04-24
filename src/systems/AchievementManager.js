@@ -3,29 +3,31 @@ import { CURRENCY } from '../data/constants.js';
 
 export const ACHIEVEMENTS = [
   // Progression
-  { id: 'prog_first_hero',      label: 'First Steps',        desc: 'Summon your first hero',                          category: 'Progression', reward: 50  },
-  { id: 'prog_first_legendary', label: 'Legendary Find',     desc: 'Pull a Legendary rarity hero',                    category: 'Progression', reward: 100 },
-  { id: 'prog_first_ascended',  label: 'Ascension',          desc: 'Ascend a hero for the first time',                category: 'Progression', reward: 150 },
-  { id: 'prog_region_3',        label: 'Explorer',           desc: 'Reach Region 3 in Campaign',                      category: 'Progression', reward: 75  },
-  { id: 'prog_region_5',        label: 'Conqueror',          desc: 'Reach Region 5 in Campaign',                      category: 'Progression', reward: 150 },
+  { id: 'prog_first_hero',      label: 'First Steps',        desc: 'Summon your first hero',                          category: 'Progression', reward: 10  },
+  { id: 'prog_first_legendary', label: 'Legendary Find',     desc: 'Pull a Legendary rarity hero',                    category: 'Progression', reward: 30  },
+  { id: 'prog_first_ascended',  label: 'Ascension',          desc: 'Ascend a hero for the first time',                category: 'Progression', reward: 100 },
+  { id: 'prog_region_3',        label: 'Explorer',           desc: 'Reach Region 3 in Campaign',                      category: 'Progression', reward: 50  },
+  { id: 'prog_region_5',        label: 'Conqueror',          desc: 'Reach Region 5 in Campaign',                      category: 'Progression', reward: 100 },
+  { id: 'prog_endless_100',     label: 'Tower Marathon',     desc: 'Clear 100 Endless Tower floors',                  category: 'Progression', reward: 80  },
+  { id: 'prog_affinity_50',     label: 'Affinity Pioneer',   desc: 'Clear Floor 50 in any Affinity Tower',            category: 'Progression', reward: 60  },
   // Collection
-  { id: 'col_10_heroes',        label: 'Collector I',        desc: 'Own 10 heroes',                                   category: 'Collection',  reward: 50  },
-  { id: 'col_25_heroes',        label: 'Collector II',       desc: 'Own 25 heroes',                                   category: 'Collection',  reward: 100 },
-  { id: 'col_50_heroes',        label: 'Collector III',      desc: 'Own 50 heroes',                                   category: 'Collection',  reward: 200 },
-  { id: 'col_full_affinity',    label: 'Affinity Master',    desc: 'Own one hero of each affinity',                   category: 'Collection',  reward: 100 },
-  { id: 'col_full_class',       label: 'Class Master',       desc: 'Own one hero of every class',                     category: 'Collection',  reward: 100 },
+  { id: 'col_10_heroes',        label: 'Collector I',        desc: 'Own 10 heroes',                                   category: 'Collection',  reward: 20  },
+  { id: 'col_25_heroes',        label: 'Collector II',       desc: 'Own 25 heroes',                                   category: 'Collection',  reward: 40  },
+  { id: 'col_50_heroes',        label: 'Collector III',      desc: 'Own 50 heroes',                                   category: 'Collection',  reward: 80  },
+  { id: 'col_full_affinity',    label: 'Affinity Roster',    desc: 'Complete a full affinity roster',                 category: 'Collection',  reward: 60  },
+  { id: 'col_full_class',       label: 'Class Master',       desc: 'Own one hero of every class',                     category: 'Collection',  reward: 60  },
   // Combat
-  { id: 'com_arena_10',         label: 'Arena Veteran',      desc: 'Win 10 Arena matches',                            category: 'Combat',      reward: 100 },
-  { id: 'com_world_boss_hard',  label: 'Boss Slayer',        desc: 'Defeat the World Boss on Hard',                   category: 'Combat',      reward: 150 },
-  { id: 'com_guild_1m',         label: 'Megaton Strike',     desc: 'Deal 1,000,000+ damage in one Guild Boss attack', category: 'Combat',      reward: 200 },
+  { id: 'com_arena_10',         label: 'Arena Veteran',      desc: 'Win 10 Arena matches',                            category: 'Combat',      reward: 30  },
+  { id: 'com_world_boss_hard',  label: 'Boss Slayer',        desc: 'Defeat the World Boss on Hard',                   category: 'Combat',      reward: 50  },
+  { id: 'com_guild_1m',         label: 'Megaton Strike',     desc: 'Deal 1,000,000+ damage in one Guild Boss attack', category: 'Combat',      reward: 50  },
   // Gear
-  { id: 'gear_full_set',        label: 'Fully Equipped',     desc: 'Equip all 5 gear slots on one hero',              category: 'Gear',        reward: 75  },
-  { id: 'gear_legendary',       label: 'Legendary Armament', desc: 'Obtain a Legendary gear piece',                   category: 'Gear',        reward: 100 },
-  { id: 'gear_mythic',          label: 'Mythic Armament',    desc: 'Obtain a Mythic gear piece',                      category: 'Gear',        reward: 200 },
+  { id: 'gear_full_set',        label: 'Fully Equipped',     desc: 'Equip all 5 gear slots on one hero',              category: 'Gear',        reward: 20  },
+  { id: 'gear_legendary',       label: 'Legendary Armament', desc: 'Obtain a Legendary gear piece',                   category: 'Gear',        reward: 40  },
+  { id: 'gear_mythic',          label: 'Mythic Armament',    desc: 'Obtain a Mythic gear piece',                      category: 'Gear',        reward: 80  },
   // Social
-  { id: 'soc_join_guild',       label: 'Guild Member',       desc: 'Join or create a guild',                          category: 'Social',      reward: 50  },
-  { id: 'soc_guild_boss_10',    label: 'Guild Veteran',      desc: 'Participate in 10 Guild Boss attacks',            category: 'Social',      reward: 100 },
-  { id: 'soc_guild_level_10',   label: 'Guild Champion',     desc: 'Reach Guild Level 10',                            category: 'Social',      reward: 150 },
+  { id: 'soc_join_guild',       label: 'Guild Member',       desc: 'Join or create a guild',                          category: 'Social',      reward: 10  },
+  { id: 'soc_guild_boss_10',    label: 'Guild Veteran',      desc: 'Participate in 10 Guild Boss attacks',            category: 'Social',      reward: 20  },
+  { id: 'soc_guild_level_10',   label: 'Guild Champion',     desc: 'Reach Guild Level 10',                            category: 'Social',      reward: 50  },
 ];
 
 const AchievementManager = {
@@ -72,6 +74,14 @@ const AchievementManager = {
   checkRegionReached(region) {
     if (region >= 3) this._complete('prog_region_3');
     if (region >= 5) this._complete('prog_region_5');
+  },
+
+  checkEndlessFloor(floor) {
+    if (floor >= 100) this._complete('prog_endless_100');
+  },
+
+  checkAffinityFloor(floor) {
+    if (floor >= 50) this._complete('prog_affinity_50');
   },
 
   checkArenaWin() {

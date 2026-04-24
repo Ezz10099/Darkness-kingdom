@@ -145,7 +145,7 @@ Amounts in Lumens.
 | Participate in 10 Guild Boss attacks | 20 |
 | Reach Guild Level 10 | 50 |
 
-**Total max earnable from achievements (one-time): ~963 Lumens**
+**Total max earnable from achievements (one-time): 1,040 Lumens**
 This is intentionally meaningful — a dedicated F2P player can save toward a focused multi-pull over time.
 
 ---

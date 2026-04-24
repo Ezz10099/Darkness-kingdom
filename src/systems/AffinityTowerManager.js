@@ -1,5 +1,6 @@
 import HeroManager, { HeroInstance } from './HeroManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
+import AchievementManager from './AchievementManager.js';
 const AFFINITIES = ['FIRE', 'ICE', 'EARTH', 'SHADOW', 'LIGHT'];
 
 const ENEMY_NAMES = ['Warden', 'Sentinel', 'Mystic', 'Guardian', 'Specter', 'Titan', 'Zealot', 'Phantom'];
@@ -118,6 +119,7 @@ const AffinityTowerManager = {
     const reward = this.getFloorReward(affinity, floor);
     tower.lastReward   = { floor, ...reward };
     if (floor > tower.highestFloor) tower.highestFloor = floor;
+    AchievementManager.checkAffinityFloor(floor);
     tower.currentFloor = floor + 1;
     if (reward.isMilestone && !tower.milestonesClaimed.includes(floor)) {
       tower.milestonesClaimed.push(floor);

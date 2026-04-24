@@ -1,3 +1,5 @@
+import AchievementManager from './AchievementManager.js';
+
 const AFFINITIES = ['FIRE', 'ICE', 'EARTH', 'SHADOW', 'LIGHT'];
 const ENEMY_NAMES = ['Guard', 'Scout', 'Mystic', 'Warden', 'Sentinel', 'Specter', 'Titan', 'Phantom'];
 
@@ -57,6 +59,7 @@ const EndlessTowerManager = {
     const reward      = this.getFloorReward(floor);
     this.lastReward   = { floor, ...reward };
     if (floor > this.highestFloor) this.highestFloor = floor;
+    AchievementManager.checkEndlessFloor(floor);
     this.currentFloor = floor + 1;
   },
 
