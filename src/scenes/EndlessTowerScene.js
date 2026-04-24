@@ -4,7 +4,7 @@ import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import EndlessTowerManager from '../systems/EndlessTowerManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
-import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
+import { CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
@@ -51,6 +51,8 @@ export default class EndlessTowerScene extends Phaser.Scene {
     const isMilestone = floor % 10 === 0;
     const enemies    = EndlessTowerManager.generateEnemySquad(floor);
     const hasHeroes  = HeroManager.getAllHeroes().length > 0;
+    const squadEntries = GameState.getBattleSquadEntries();
+    const squadNames = squadEntries.map(e => HeroManager.getHero(e.heroId)?.name).filter(Boolean);
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
 
@@ -71,9 +73,13 @@ export default class EndlessTowerScene extends Phaser.Scene {
         font: '14px monospace', fill: '#888888'
       }).setOrigin(0.5));
     }
+    c.add(this.add.rectangle(W / 2, 206, 430, 20, 0x1a1230).setStrokeStyle(1, 0x4b2b66));
+    c.add(this.add.text(W / 2, 206, `SQUAD ${squadEntries.length}/5: ${(squadNames.join(', ') || 'none').slice(0, 48)}`, {
+      font: '10px monospace', fill: '#caa3ff'
+    }).setOrigin(0.5));
 
     // Reward preview
-    const rY = 260;
+    const rY = 272;
     c.add(this.add.rectangle(W / 2, rY, 380, isMilestone ? 100 : 72, 0x0d0d22)
       .setStrokeStyle(1, 0x3a1a5a));
     c.add(this.add.text(W / 2, rY - 26, 'FLOOR REWARD', {
@@ -94,7 +100,7 @@ export default class EndlessTowerScene extends Phaser.Scene {
     }
 
     // Enemy names preview
-    const previewY = isMilestone ? 358 : 332;
+    const previewY = isMilestone ? 370 : 344;
     c.add(this.add.text(W / 2, previewY,
       'Enemies: ' + enemies.map(e => e.name).join(', '), {
         font: '12px monospace', fill: '#ff9988'
@@ -139,9 +145,12 @@ export default class EndlessTowerScene extends Phaser.Scene {
   _startClimb(floor) {
     this._curFloor    = floor;
     const enemySquad  = EndlessTowerManager.generateEnemySquad(floor);
-    const playerSquad = HeroManager.getAllHeroes().map(h => ({
-      hero: h, row: CLASS_DEFAULTS[h.heroClass]?.defaultRow || 'FRONT'
-    }));
+    const playerSquad = GameState.getBattleSquadEntries()
+      .map(entry => {
+        const hero = HeroManager.getHero(entry.heroId);
+        return hero ? { hero, row: entry.row } : null;
+      })
+      .filter(Boolean);
 
     this._engine = new BattleEngine({
       playerSquad,
@@ -207,14 +216,23 @@ export default class EndlessTowerScene extends Phaser.Scene {
     const startX = (W - btnW * heroes.length) / 2 + btnW / 2;
     heroes.forEach((hero, i) => {
       const x  = startX + i * btnW;
-      const bg = this.add.rectangle(x, 640, btnW - 6, 50, 0x1a0530)
+      const hasDual = Boolean(hero.ultimateAbilityId2);
+      const bg = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530)
         .setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id); });
-      const chgTxt = this.add.text(x, 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
+        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'primary'); });
+      const chgTxt = this.add.text(x, hasDual ? 632 : 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
       c.add(bg);
-      c.add(this.add.text(x, 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+      c.add(this.add.text(x, hasDual ? 618 : 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
       c.add(chgTxt);
-      this._ultBtns.push({ heroId: hero.id, bg, chgTxt });
+      this._ultBtns.push({ heroId: hero.id, slot: 'primary', bg, chgTxt });
+      if (hasDual) {
+        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530)
+          .setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'secondary'); });
+        const chgTxt2 = this.add.text(x, 656, '0%', { font: '11px monospace', fill: '#aa99dd' }).setOrigin(0.5);
+        c.add(bg2); c.add(chgTxt2);
+        this._ultBtns.push({ heroId: hero.id, slot: 'secondary', bg: bg2, chgTxt: chgTxt2 });
+      }
     });
   }
 
@@ -239,13 +257,15 @@ export default class EndlessTowerScene extends Phaser.Scene {
         break;
       }
       case 'ultimateReady': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.id);
+        const btn = this._ultBtns.find(b => b.heroId === ev.id && b.slot === (ev.slot || 'primary'));
         if (btn) { btn.bg.setFillStyle(0x5500bb); btn.chgTxt.setText('\u25b6ULT').setStyle({ fill: '#ffaaff' }); }
         break;
       }
       case 'ultimateTriggered': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.heroId);
-        if (btn) { btn.bg.setFillStyle(0x1a0530); btn.chgTxt.setText('0%').setStyle({ fill: '#887799' }); }
+        for (const btn of this._ultBtns.filter(b => b.heroId === ev.heroId)) {
+          btn.bg.setFillStyle(0x1a0530);
+          btn.chgTxt.setText('0%').setStyle({ fill: btn.slot === 'secondary' ? '#aa99dd' : '#887799' });
+        }
         this._log('ULTIMATE!');
         break;
       }

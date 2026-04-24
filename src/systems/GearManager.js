@@ -3,6 +3,7 @@ import CurrencyManager from './CurrencyManager.js';
 import HeroManager from './HeroManager.js';
 import AchievementManager from './AchievementManager.js';
 import ElderTreeManager from './ElderTreeManager.js';
+import DailyCodexManager from './DailyCodexManager.js';
 
 const RARITY_MULT = {
   COMMON: 1, UNCOMMON: 1.5, RARE: 2.5, EPIC: 4, LEGENDARY: 6, MYTHIC: 10, ASCENDED: 15
@@ -51,6 +52,7 @@ class GearInstance {
       defense: Math.floor(base * focus.defense * factor),
       hp:      Math.floor(base * focus.hp      * factor)
     };
+    DailyCodexManager.increment('UPGRADE_GEAR');
     return true;
   }
 

@@ -1,3 +1,5 @@
+import HeroManager, { HeroInstance } from './HeroManager.js';
+import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 const AFFINITIES = ['FIRE', 'ICE', 'EARTH', 'SHADOW', 'LIGHT'];
 
 const ENEMY_NAMES = ['Warden', 'Sentinel', 'Mystic', 'Guardian', 'Specter', 'Titan', 'Zealot', 'Phantom'];
@@ -10,6 +12,10 @@ const ARCHETYPES = [
 ];
 
 const MILESTONE_FLOORS = [50, 100, 200, 500];
+const MILESTONE_HERO_GIFTS = Object.freeze({
+  200: 'hero_aethon', // exclusive gift placeholder
+  500: 'hero_dusk'    // exclusive rare gift placeholder
+});
 
 const _defaultTower = () => ({
   highestFloor: 0, currentFloor: 1, lastReward: null, milestonesClaimed: []
@@ -115,7 +121,25 @@ const AffinityTowerManager = {
     tower.currentFloor = floor + 1;
     if (reward.isMilestone && !tower.milestonesClaimed.includes(floor)) {
       tower.milestonesClaimed.push(floor);
+      this._grantMilestoneHero(floor);
     }
+  },
+
+  _grantMilestoneHero(floor) {
+    const heroDefId = MILESTONE_HERO_GIFTS[floor];
+    if (!heroDefId) return;
+    if (HeroManager.getAllHeroes().some(h => h.heroDefId === heroDefId)) return;
+    const def = HERO_DEFINITIONS.find(h => h.id === heroDefId);
+    if (!def) return;
+    HeroManager.addHero(new HeroInstance({
+      heroDefId: def.id, name: def.name, title: def.title,
+      heroClass: def.heroClass, affinity: def.affinity,
+      rarity: def.rarity, originRarity: def.rarity,
+      baseStats: def.baseStats,
+      normalAbilityIds: def.normalAbilityIds,
+      ultimateAbilityId: def.ultimateAbilityId,
+      ultimateAbilityId2: def.ultimateAbilityId2 || null
+    }));
   },
 
   toJSON() {

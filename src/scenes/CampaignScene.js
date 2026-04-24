@@ -135,11 +135,14 @@ export default class CampaignScene extends Phaser.Scene {
 
   // ─── BATTLE ─────────────────────────────────────────────────────────────────
 
-  _showFormationEditor(stage = null) {
+  _showFormationEditor(stage = null, draftSelected = null) {
     this._reset();
     const c = this._root, W = 480;
     const heroes = HeroManager.getAllHeroes().slice().sort((a, b) => a.id.localeCompare(b.id));
-    const selected = GameState.getBattleSquadEntries().slice();
+    const savedSelected = GameState.getBattleSquadEntries();
+    const selected = (draftSelected || savedSelected).slice();
+    const squadKey = arr => arr.map(e => `${e.heroId}:${e.row}`).sort().join('|');
+    const hasUnsavedChanges = squadKey(selected) !== squadKey(savedSelected);
 
     const countByRow = () => ({
       FRONT: selected.filter(e => e.row === 'FRONT').length,
@@ -149,14 +152,14 @@ export default class CampaignScene extends Phaser.Scene {
 
     const toggleHero = (hero) => {
       const idx = selected.findIndex(e => e.heroId === hero.id);
-      if (idx >= 0) { selected.splice(idx, 1); this._showFormationEditor(stage); return; }
+      if (idx >= 0) { selected.splice(idx, 1); this._showFormationEditor(stage, selected); return; }
       if (selected.length >= 5) return;
       const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || 'FRONT';
       const counts = countByRow();
       const row = counts[defaultRow] < 3 ? defaultRow : (defaultRow === 'FRONT' ? 'BACK' : 'FRONT');
       if (counts[row] >= 3) return;
       selected.push({ heroId: hero.id, row });
-      this._showFormationEditor(stage);
+      this._showFormationEditor(stage, selected);
     };
 
     const toggleRow = (hero) => {
@@ -167,11 +170,14 @@ export default class CampaignScene extends Phaser.Scene {
       const counts = countByRow();
       if (counts[nextRow] >= 3) return;
       current.row = nextRow;
-      this._showFormationEditor(stage);
+      this._showFormationEditor(stage, selected);
     };
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
-    c.add(this.add.text(W / 2, 34, 'FORMATION', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
+    c.add(this.add.rectangle(W / 2, 56, 120, 18, hasUnsavedChanges ? 0x3a2a00 : 0x153315).setStrokeStyle(1, hasUnsavedChanges ? 0xffbb44 : 0x55cc88));
+    c.add(this.add.text(W / 2, 56, hasUnsavedChanges ? 'UNSAVED CHANGES' : 'SAVED',
+      { font: '9px monospace', fill: hasUnsavedChanges ? '#ffdd88' : '#99ffbb' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 30, 'FORMATION', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(22, 34, '< MAP', { font: '14px monospace', fill: '#aaaaaa' }).setOrigin(0, 0.5)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showStageSelect()));
     const counts = countByRow();
@@ -187,6 +193,10 @@ export default class CampaignScene extends Phaser.Scene {
       ? `BONDS: ${activeBonds.map(b => `${b.name} (+${Math.round(b.bonus * 100)}%)`).join('  |  ')}`
       : 'BONDS: none active';
     c.add(this.add.text(W / 2, 82, bondLine, { font: '10px monospace', fill: '#99ddff' }).setOrigin(0.5));
+    const frontNames = selected.filter(e => e.row === 'FRONT').map(e => HeroManager.getHero(e.heroId)?.name).filter(Boolean);
+    const backNames = selected.filter(e => e.row === 'BACK').map(e => HeroManager.getHero(e.heroId)?.name).filter(Boolean);
+    c.add(this.add.text(24, 96, `FRONT: ${frontNames.join(', ') || '-'}`, { font: '10px monospace', fill: '#ffbb99' }));
+    c.add(this.add.text(24, 110, `BACK : ${backNames.join(', ') || '-'}`, { font: '10px monospace', fill: '#99ccff' }));
 
     heroes.forEach((hero, i) => {
       const y = 122 + i * 38;
@@ -194,8 +204,8 @@ export default class CampaignScene extends Phaser.Scene {
       const pickedEntry = selected.find(e => e.heroId === hero.id);
       const row = pickedEntry?.row || '-';
       const rowColor = row === 'FRONT' ? '#ffb088' : row === 'BACK' ? '#88bbff' : '#666688';
-      const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1c2c1c : 0x121226)
-        .setStrokeStyle(1, picked ? 0x44bb44 : 0x333366)
+      const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1e3526 : 0x121226)
+        .setStrokeStyle(1, picked ? 0x66dd88 : 0x333366)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => toggleHero(hero));
       c.add(card);
@@ -204,17 +214,26 @@ export default class CampaignScene extends Phaser.Scene {
       const rowBtn = this.add.rectangle(408, y, 62, 22, picked ? 0x22334d : 0x222222).setStrokeStyle(1, 0x555577);
       c.add(rowBtn);
       c.add(this.add.text(408, y, row, { font: '10px monospace', fill: rowColor }).setOrigin(0.5));
-      if (picked) rowBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => toggleRow(hero));
+      if (picked) rowBtn.setInteractive({ useHandCursor: true }).on('pointerup', (pointer, lx, ly, ev) => {
+        if (ev?.stopPropagation) ev.stopPropagation();
+        toggleRow(hero);
+      });
     });
 
-    const saveBtn = this.add.rectangle(W / 2, 778, 220, 44, 0x213321).setStrokeStyle(1, 0x44bb44)
+    const saveFill = hasUnsavedChanges ? 0x264a2f : 0x1c2b1f;
+    const saveStroke = hasUnsavedChanges ? 0x66dd88 : 0x3f6d4b;
+    const saveBtn = this.add.rectangle(W / 2, 778, 220, 44, saveFill).setStrokeStyle(1, saveStroke)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => {
         GameState.setActiveSquad(selected);
         if (stage) this._startBattle(stage);
         else this._showStageSelect();
       });
     c.add(saveBtn);
-    c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: '#99ff99' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: hasUnsavedChanges ? '#baffca' : '#88aa95' }).setOrigin(0.5));
+    const clearBtn = this.add.rectangle(W / 2, 822, 220, 26, 0x2b1a1a).setStrokeStyle(1, 0x774444)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor(stage, []));
+    c.add(clearBtn);
+    c.add(this.add.text(W / 2, 822, 'CLEAR SQUAD', { font: '11px monospace', fill: '#ffaaaa' }).setOrigin(0.5));
   }
 
   _startBattle(stage) {
@@ -288,14 +307,23 @@ export default class CampaignScene extends Phaser.Scene {
     const startX = (W - btnW * heroes.length) / 2 + btnW / 2;
     heroes.forEach((hero, i) => {
       const x  = startX + i * btnW;
-      const bg = this.add.rectangle(x, 640, btnW - 6, 50, 0x1a0530)
+      const hasDual = Boolean(hero.ultimateAbilityId2);
+      const bg = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530)
         .setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id); });
-      const chgTxt = this.add.text(x, 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
+        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'primary'); });
+      const chgTxt = this.add.text(x, hasDual ? 632 : 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
       c.add(bg);
-      c.add(this.add.text(x, 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+      c.add(this.add.text(x, hasDual ? 618 : 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
       c.add(chgTxt);
-      this._ultBtns.push({ heroId: hero.id, bg, chgTxt });
+      this._ultBtns.push({ heroId: hero.id, slot: 'primary', bg, chgTxt });
+      if (hasDual) {
+        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530)
+          .setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'secondary'); });
+        const chgTxt2 = this.add.text(x, 656, '0%', { font: '11px monospace', fill: '#aa99dd' }).setOrigin(0.5);
+        c.add(bg2); c.add(chgTxt2);
+        this._ultBtns.push({ heroId: hero.id, slot: 'secondary', bg: bg2, chgTxt: chgTxt2 });
+      }
     });
   }
 
@@ -320,13 +348,15 @@ export default class CampaignScene extends Phaser.Scene {
         break;
       }
       case 'ultimateReady': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.id);
+        const btn = this._ultBtns.find(b => b.heroId === ev.id && b.slot === (ev.slot || 'primary'));
         if (btn) { btn.bg.setFillStyle(0x5500bb); btn.chgTxt.setText('▶ULT').setStyle({ fill: '#ffaaff' }); }
         break;
       }
       case 'ultimateTriggered': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.heroId);
-        if (btn) { btn.bg.setFillStyle(0x1a0530); btn.chgTxt.setText('0%').setStyle({ fill: '#887799' }); }
+        for (const btn of this._ultBtns.filter(b => b.heroId === ev.heroId)) {
+          btn.bg.setFillStyle(0x1a0530);
+          btn.chgTxt.setText('0%').setStyle({ fill: btn.slot === 'secondary' ? '#aa99dd' : '#887799' });
+        }
         this._log('ULTIMATE!');
         break;
       }
