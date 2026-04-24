@@ -141,7 +141,7 @@ export default class SummonScene extends Phaser.Scene {
   _buildPityLine() {
     const c   = this._mainCont, W = this._W;
     const bn  = BANNERS[this._activeBanner];
-    const n   = SummonManager.pityCounters[this._activeBanner];
+    const n   = SummonManager.getDisplayedPityCounter(this._activeBanner);
     c.add(this.add.text(W / 2, 120,
       `${bn.pityLabel}: ${n} / ${bn.pityMax}`,
       { font: '11px monospace', fill: '#776699' }).setOrigin(0.5));
