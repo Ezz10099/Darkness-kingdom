@@ -22,14 +22,29 @@ const BANNER_RATES = {
 };
 
 const SummonManager = {
-  pityCounters: { BASIC: 0, ADVANCED: 0 },
+  pityCounters: {
+    BASIC: { epic: 0 },
+    ADVANCED: { legendary: 0, tenPullRare: 0 }
+  },
   wishlist: new Set(),
 
   getWishlistMaxSize() {
     return 3 + ElderTreeManager.getWishlistMaxSizeBonus();
   },
 
-  _pickRarity(bannerType, ownedDefIds) {
+  _getCounterRef(bannerType) {
+    if (bannerType === 'BASIC') return this.pityCounters.BASIC;
+    if (bannerType === 'ADVANCED') return this.pityCounters.ADVANCED;
+    return null;
+  },
+
+  getDisplayedPityCounter(bannerType) {
+    const ctr = this._getCounterRef(bannerType);
+    if (!ctr) return 0;
+    return bannerType === 'BASIC' ? ctr.epic : ctr.legendary;
+  },
+
+  _pickRarity(bannerType, ownedDefIds, forceMinRarity = null) {
     const rates = BANNER_RATES[bannerType];
     const pool = {};
     for (const [rarity, rate] of Object.entries(rates)) {
@@ -40,14 +55,28 @@ const SummonManager = {
       pool[rarity] = owned ? rate.obtained : rate.unobtained;
     }
 
-    const counter = this.pityCounters[bannerType];
+    if (forceMinRarity) {
+      for (const rarity of Object.keys(pool)) {
+        if ((RARITY_ORDER[rarity] ?? -1) < (RARITY_ORDER[forceMinRarity] ?? -1)) delete pool[rarity];
+      }
+    }
+
+    const counterRef = this._getCounterRef(bannerType);
+    const nextPull = bannerType === 'BASIC'
+      ? (counterRef.epic + 1)
+      : (counterRef.legendary + 1);
+
     if (bannerType === 'BASIC') {
-      if (counter >= 30) return 'EPIC';
-      if (counter >= 25 && pool.EPIC) pool.EPIC *= (1 + 10 * (counter - 25));
+      if (nextPull >= 30) return 'EPIC';
+      if (nextPull >= 25 && pool.EPIC) {
+        pool.EPIC *= (1 + 10 * (nextPull - 24));
+      }
     }
     if (bannerType === 'ADVANCED') {
-      if (counter >= 80) return 'LEGENDARY';
-      if (counter >= 60 && pool.LEGENDARY) pool.LEGENDARY *= (1 + 10 * (counter - 60));
+      if (nextPull >= 80) return 'LEGENDARY';
+      if (nextPull >= 60 && pool.LEGENDARY) {
+        pool.LEGENDARY *= (1 + 10 * (nextPull - 59));
+      }
     }
 
     const total = Object.values(pool).reduce((a, b) => a + b, 0);
@@ -89,9 +118,16 @@ const SummonManager = {
     if (!pickedDef) return null;
 
     const isNew = !ownedDefIds.includes(pickedDef.id);
-    this.pityCounters[bannerType]++;
-    if ((bannerType === 'BASIC' && rarity === 'EPIC') || (bannerType === 'ADVANCED' && rarity === 'LEGENDARY')) {
-      this.pityCounters[bannerType] = 0;
+    if (bannerType === 'BASIC') {
+      this.pityCounters.BASIC.epic++;
+      if (rarity === 'EPIC') this.pityCounters.BASIC.epic = 0;
+    } else if (bannerType === 'ADVANCED') {
+      this.pityCounters.ADVANCED.legendary++;
+      this.pityCounters.ADVANCED.tenPullRare++;
+      if (rarity === 'LEGENDARY') this.pityCounters.ADVANCED.legendary = 0;
+      if ((RARITY_ORDER[rarity] ?? 0) >= RARITY_ORDER.RARE) {
+        this.pityCounters.ADVANCED.tenPullRare = 0;
+      }
     }
 
     return { heroDefId: pickedDef.id, rarity, affinity: pickedDef.affinity, isNew, def: pickedDef };
@@ -99,7 +135,23 @@ const SummonManager = {
 
   pullMulti(bannerType, heroPool, count) {
     const results = [];
-    for (let i = 0; i < count; i++) results.push(this.pull(bannerType, heroPool));
+    for (let i = 0; i < count; i++) {
+      const forceRare = bannerType === 'ADVANCED' && count >= 10 && i === count - 1
+        && this.pityCounters.ADVANCED.tenPullRare >= 9;
+      if (forceRare) {
+        const ownedDefIds = HeroManager.getAllHeroes().map(h => h.heroDefId);
+        const rarity = this._pickRarity(bannerType, ownedDefIds, 'RARE');
+        const pickedDef = this._pickHeroFromPool(rarity, heroPool);
+        if (!pickedDef) continue;
+        const isNew = !ownedDefIds.includes(pickedDef.id);
+        this.pityCounters.ADVANCED.legendary++;
+        this.pityCounters.ADVANCED.tenPullRare = 0;
+        if (rarity === 'LEGENDARY') this.pityCounters.ADVANCED.legendary = 0;
+        results.push({ heroDefId: pickedDef.id, rarity, affinity: pickedDef.affinity, isNew, def: pickedDef });
+        continue;
+      }
+      results.push(this.pull(bannerType, heroPool));
+    }
     return results.filter(Boolean);
   },
 
@@ -129,7 +181,26 @@ const SummonManager = {
   toJSON() { return { pityCounters: this.pityCounters, wishlist: [...this.wishlist] }; },
 
   fromJSON(data) {
-    if (data.pityCounters) this.pityCounters = data.pityCounters;
+    if (data.pityCounters) {
+      // Backward compatibility with old numeric counters.
+      if (typeof data.pityCounters.BASIC === 'number' || typeof data.pityCounters.ADVANCED === 'number') {
+        this.pityCounters = {
+          BASIC: { epic: Number(data.pityCounters.BASIC) || 0 },
+          ADVANCED: {
+            legendary: Number(data.pityCounters.ADVANCED) || 0,
+            tenPullRare: 0
+          }
+        };
+      } else {
+        this.pityCounters = {
+          BASIC: { epic: Number(data.pityCounters?.BASIC?.epic) || 0 },
+          ADVANCED: {
+            legendary: Number(data.pityCounters?.ADVANCED?.legendary) || 0,
+            tenPullRare: Number(data.pityCounters?.ADVANCED?.tenPullRare) || 0
+          }
+        };
+      }
+    }
     if (data.wishlist) this.wishlist = new Set(data.wishlist);
     const maxSize = this.getWishlistMaxSize();
     if (this.wishlist.size > maxSize) {

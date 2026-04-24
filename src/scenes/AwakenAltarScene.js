@@ -1,7 +1,7 @@
 import HeroManager from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import GameState from '../systems/GameState.js';
-import { RARITY_ORDER, RARITY_CONFIG, CURRENCY, ASCENSION_CEILING } from '../data/constants.js';
+import { RARITY_ORDER, RARITY_CONFIG, CURRENCY, ASCENSION_CEILING, CURRENCY_LABEL } from '../data/constants.js';
 
 const RARITY_HEX = {
   COMMON: 0xaaaaaa, UNCOMMON: 0x66cc44, RARE: 0x4488ff,
@@ -13,7 +13,18 @@ const RARITY_STR = {
 };
 const AFF_ICON = { FIRE: '🔥', ICE: '❄', EARTH: '🌿', SHADOW: '🌑', LIGHT: '✦' };
 
-function resetFee(hero) { return Math.max(100, hero.level * 10); }
+const RESET_FEE_RULES = Object.freeze([
+  { min: 1,  max: 20,  baseFee: 500,  levelMultiplier: 5 },
+  { min: 21, max: 50,  baseFee: 1000, levelMultiplier: 8 },
+  { min: 51, max: 80,  baseFee: 2500, levelMultiplier: 12 },
+  { min: 81, max: 100, baseFee: 5000, levelMultiplier: 18 }
+]);
+
+function resetFee(hero) {
+  const lvl = Math.max(1, Number(hero.level) || 1);
+  const rule = RESET_FEE_RULES.find(r => lvl >= r.min && lvl <= r.max) || RESET_FEE_RULES[RESET_FEE_RULES.length - 1];
+  return rule.baseFee + ((lvl ** 2) * rule.levelMultiplier);
+}
 
 function nextRarity(hero) {
   const keys = Object.keys(RARITY_ORDER).sort((a, b) => RARITY_ORDER[a] - RARITY_ORDER[b]);
@@ -45,7 +56,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
       .on('pointerup', () => this.scene.start('MainHub')));
 
     const shards = CurrencyManager.get(CURRENCY.AWAKENING_SHARDS);
-    c.add(this.add.text(W / 2, 74, `✦ ${shards} Awakening Shards`, { font: '13px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 74, `✦ ${shards} ${CURRENCY_LABEL.AWAKENING_SHARDS}`, { font: '13px monospace', fill: '#cc88ff' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 94, 'Tap a hero to Ascend or Reset', { font: '11px monospace', fill: '#444466' }).setOrigin(0.5));
 
     if (!heroes.length) {
@@ -76,7 +87,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
       c.add(this.add.text(W - 30, y, 'ASCEND\nREADY ✦', { font: '11px monospace', fill: '#ffaa00', align: 'right' }).setOrigin(1, 0.5));
     } else {
       c.add(this.add.text(W - 30, y - 10, `${hero.awakeningShards}✦ shards`, { font: '11px monospace', fill: '#7755aa' }).setOrigin(1, 0.5));
-      c.add(this.add.text(W - 30, y + 10, `reset: ${resetFee(hero)}g`, { font: '10px monospace', fill: '#555577' }).setOrigin(1, 0.5));
+      c.add(this.add.text(W - 30, y + 10, `reset: ${resetFee(hero)}`, { font: '10px monospace', fill: '#555577' }).setOrigin(1, 0.5));
     }
   }
 
@@ -103,7 +114,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 88,  hero.name, { font: '22px monospace', fill: '#ffffff' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 114, `${hero.heroClass}  ${AFF_ICON[hero.affinity] || hero.affinity}  LV ${hero.level}`, { font: '12px monospace', fill: '#aaaaaa' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 138, hero.rarity, { font: '16px monospace', fill: RARITY_STR[hero.rarity] }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 162, `${hero.awakeningShards} Awakening Shards`, { font: '12px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 162, `${hero.awakeningShards} ${CURRENCY_LABEL.AWAKENING_SHARDS}`, { font: '12px monospace', fill: '#cc88ff' }).setOrigin(0.5));
 
     // ── ASCEND PANEL ──
     c.add(this.add.rectangle(W / 2, 282, 446, 130, 0x0d0d25).setStrokeStyle(1, 0x2a2a55));
@@ -113,7 +124,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
       c.add(this.add.text(W / 2, 282, 'MAX RARITY REACHED\nfor this hero lineage', { font: '13px monospace', fill: '#555577', align: 'center' }).setOrigin(0.5));
     } else if (hero.canAscend()) {
       c.add(this.add.text(W / 2, 252, `${hero.rarity}  →  ${next}`, { font: '16px monospace', fill: '#ffffff' }).setOrigin(0.5));
-      c.add(this.add.text(W / 2, 274, 'Cost: 50 Awakening Shards', { font: '12px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+      c.add(this.add.text(W / 2, 274, `Cost: 50 ${CURRENCY_LABEL.AWAKENING_SHARDS}`, { font: '12px monospace', fill: '#cc88ff' }).setOrigin(0.5));
       this._btn(c, W / 2, 308, 320, 44, '✦  ASCEND NOW', '#ffaa00', 0x1a0d00, 0xffaa00, () => {
         if (hero.ascend()) { GameState.save(); this._ascendEffect(hero); }
       });
@@ -127,12 +138,12 @@ export default class AwakenAltarScene extends Phaser.Scene {
     // ── RESET PANEL ──
     c.add(this.add.rectangle(W / 2, 460, 446, 134, 0x0d0d25).setStrokeStyle(1, 0x2a2a55));
     c.add(this.add.text(W / 2, 400, '— HERO RESET —', { font: '13px monospace', fill: '#ff6644' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 424, `Reset to Level 1  |  Fee: ${fee.toLocaleString()} Gold`, { font: '12px monospace', fill: '#aaaaaa' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 446, `Refund: ${hero._goldInvested.toLocaleString()} Gold (leveling costs)`, { font: '12px monospace', fill: '#55ee55' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 424, `Reset to Level 1  |  Fee: ${fee.toLocaleString()} ${CURRENCY_LABEL.GOLD}`, { font: '12px monospace', fill: '#aaaaaa' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 446, `Refund: ${hero._goldInvested.toLocaleString()} ${CURRENCY_LABEL.GOLD} (leveling costs)`, { font: '12px monospace', fill: '#55ee55' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 468, 'Stars & Rarity are NOT refunded', { font: '10px monospace', fill: '#664444' }).setOrigin(0.5));
 
     const canReset = hero.level > 1 && CurrencyManager.get(CURRENCY.GOLD) >= fee;
-    const resetLabel = hero.level === 1 ? 'ALREADY LEVEL 1' : !canReset ? `NEED ${fee.toLocaleString()}g` : `RESET HERO  −${fee}g`;
+    const resetLabel = hero.level === 1 ? 'ALREADY LEVEL 1' : !canReset ? `NEED ${fee.toLocaleString()}` : `RESET HERO  −${fee}`;
     this._btn(c, W / 2, 500, 320, 44, resetLabel,
       canReset ? '#ff6644' : '#444455',
       canReset ? 0x1a0500 : 0x111122,
@@ -189,7 +200,7 @@ export default class AwakenAltarScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 310, 'HERO RESET', { font: '28px monospace', fill: '#ff6644' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 360, hero.name, { font: '20px monospace', fill: '#ffffff' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 398, 'returned to Level 1', { font: '14px monospace', fill: '#888888' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 434, 'Leveling Gold refunded', { font: '13px monospace', fill: '#55ee55' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 434, `Leveling ${CURRENCY_LABEL.GOLD} refunded`, { font: '13px monospace', fill: '#55ee55' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 458, 'Stars & Rarity unchanged', { font: '12px monospace', fill: '#665544' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 560, 'Tap to continue', { font: '13px monospace', fill: '#444466' }).setOrigin(0.5));
 

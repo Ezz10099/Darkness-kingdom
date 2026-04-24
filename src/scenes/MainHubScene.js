@@ -3,6 +3,7 @@ import CurrencyManager from '../systems/CurrencyManager.js';
 import IdleManager from '../systems/IdleManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import LoginStreakManager from '../systems/LoginStreakManager.js';
+import { CURRENCY, CURRENCY_LABEL } from '../data/constants.js';
 
 const BTN_COLOR      = 0x1a1a3a;
 const BTN_COLOR_DOWN = 0x0d0d1f;
@@ -20,9 +21,9 @@ export default class MainHubScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Currency display
-    this._goldText    = this.add.text(20, 90,  'Gold: 0',         { font: '16px monospace', fill: '#ffffff' });
-    this._crystalText = this.add.text(20, 112, 'Crystals: 0',     { font: '16px monospace', fill: '#aaddff' });
-    this._premText    = this.add.text(20, 134, 'Prem.Crystals: 0',{ font: '13px monospace', fill: '#cc88ff' });
+    this._goldText    = this.add.text(20, 90,  `${CURRENCY_LABEL.GOLD}: 0`,            { font: '16px monospace', fill: '#ffffff' });
+    this._crystalText = this.add.text(20, 112, `${CURRENCY_LABEL.CRYSTALS}: 0`,        { font: '16px monospace', fill: '#aaddff' });
+    this._premText    = this.add.text(20, 134, `${CURRENCY_LABEL.PREMIUM_CRYSTALS}: 0`, { font: '13px monospace', fill: '#cc88ff' });
     this._rateText    = this.add.text(20, 154, '+0/s',            { font: '13px monospace', fill: '#888888' });
 
     // Nav buttons
@@ -93,9 +94,15 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _refreshUI() {
-    this._goldText.setText('Gold: '          + CurrencyManager.get('GOLD').toLocaleString());
-    this._crystalText.setText('Crystals: '   + CurrencyManager.get('CRYSTALS').toLocaleString());
-    this._premText.setText('Prem.Crystals: ' + CurrencyManager.get('PREMIUM_CRYSTALS').toLocaleString());
+    this._goldText.setText(
+      `${CURRENCY_LABEL.GOLD}: ${CurrencyManager.get(CURRENCY.GOLD).toLocaleString()}`
+    );
+    this._crystalText.setText(
+      `${CURRENCY_LABEL.CRYSTALS}: ${CurrencyManager.get(CURRENCY.CRYSTALS).toLocaleString()}`
+    );
+    this._premText.setText(
+      `${CURRENCY_LABEL.PREMIUM_CRYSTALS}: ${CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS).toLocaleString()}`
+    );
     this._rateText.setText('+' + IdleManager.getRate(GameState.campaignProgress).toFixed(1) + '/s');
   }
 }
