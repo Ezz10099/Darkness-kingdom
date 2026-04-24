@@ -16,6 +16,7 @@ import GuildShopScene               from './src/scenes/GuildShopScene.js';
 import AchievementScene             from './src/scenes/AchievementScene.js';
 import ElderTreeScene               from './src/scenes/ElderTreeScene.js';
 import AwakenAltarScene             from './src/scenes/AwakenAltarScene.js';
+import SettingsScene                from './src/scenes/SettingsScene.js';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -23,7 +24,7 @@ new Phaser.Game({
   height: 854,
   backgroundColor: '#0a0a1a',
   parent: 'game-container',
-  scene: [BootScene, PreloadScene, MainHubScene, CampaignScene, RosterScene, SummonScene, EndlessTowerScene, WorldBossScene, ArenaScene, ArenaShopScene, AffinityTowerSelectionScene, AffinityTowerScene, DailyCodexScene, GuildScene, GuildShopScene, AchievementScene, ElderTreeScene, AwakenAltarScene],
+  scene: [BootScene, PreloadScene, MainHubScene, CampaignScene, RosterScene, SummonScene, EndlessTowerScene, WorldBossScene, ArenaScene, ArenaShopScene, AffinityTowerSelectionScene, AffinityTowerScene, DailyCodexScene, GuildScene, GuildShopScene, AchievementScene, ElderTreeScene, AwakenAltarScene, SettingsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
