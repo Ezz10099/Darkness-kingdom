@@ -24,6 +24,7 @@ const GameState = {
   unlockedSystems: new Set(),
   sessionStartTime: null,
   lastSaveTime: null,
+  firstSession: false,
 
   init() {
     this.sessionStartTime = Date.now();
@@ -41,6 +42,7 @@ const GameState = {
     this.campaignProgress = { regionCleared: 0, stageCleared: null };
     this.unlockedSystems  = new Set();
     this.lastSaveTime     = Date.now();
+    this.firstSession     = true;
     // Starting currencies for early progression spend
     CurrencyManager.add(CURRENCY.CRYSTALS, 500);
     CurrencyManager.add(CURRENCY.PREMIUM_CRYSTALS, 300);
@@ -151,6 +153,7 @@ const GameState = {
     this.campaignProgress = data.campaignProgress || { regionCleared: 0, stageCleared: null };
     this.unlockedSystems  = new Set(data.unlockedSystems || []);
     this.lastSaveTime     = data.lastSaveTime     || Date.now();
+    this.firstSession     = false;
     // Achievements loaded first so hero/gear load checks don't re-trigger completed ones
     if (data.achievements) AchievementManager.fromJSON(data.achievements);
     if (data.currencies)   CurrencyManager.fromJSON(data.currencies);

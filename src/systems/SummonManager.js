@@ -7,7 +7,7 @@ const SHARD_VALUES = {
   COMMON: 1, UNCOMMON: 2, RARE: 5, EPIC: 15, LEGENDARY: 50, MYTHIC: 150, ASCENDED: 300
 };
 
-const BANNER_RATES = {
+export const BANNER_RATES = {
   BASIC: {
     COMMON:   { unobtained: 55,  obtained: 30  },
     UNCOMMON: { unobtained: 28,  obtained: 15  },

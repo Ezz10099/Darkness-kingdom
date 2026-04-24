@@ -1,5 +1,5 @@
 import GameState from '../systems/GameState.js';
-import SummonManager from '../systems/SummonManager.js';
+import SummonManager, { BANNER_RATES } from '../systems/SummonManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
@@ -92,6 +92,14 @@ export default class SummonScene extends Phaser.Scene {
     const c = this._mainCont, W = this._W;
     c.add(this.add.text(W / 2, 28, 'SUMMON',
       { font: '22px monospace', fill: '#ffd700' }).setOrigin(0.5));
+
+    const ratesBtn = this.add.text(460, 28, 'RATES ▶',
+      { font: '11px monospace', fill: '#888888' })
+      .setOrigin(1, 0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this._showRatesOverlay());
+    c.add(ratesBtn);
+
     this._addBack(c);
   }
 
@@ -271,6 +279,58 @@ export default class SummonScene extends Phaser.Scene {
     this._lastResults = results;
     this._build();
     AchievementManager.showPopups(this);
+  }
+
+
+  _showRatesOverlay() {
+    const oc = this._overlayCont;
+    oc.removeAll(true);
+    const W = this._W, H = this._H;
+    const rates = BANNER_RATES[this._activeBanner] || {};
+    const rows = Object.entries(rates);
+    const bn = BANNERS[this._activeBanner];
+
+    oc.add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.88));
+    oc.add(this.add.text(W / 2, 80, 'SUMMON RATES',
+      { font: '22px monospace', fill: '#ffd700' }).setOrigin(0.5));
+    oc.add(this.add.text(W / 2, 114, `${bn.label} Banner`,
+      { font: '13px monospace', fill: '#cccccc' }).setOrigin(0.5));
+
+    oc.add(this.add.text(60, 170, 'Rarity',
+      { font: '12px monospace', fill: '#bbbbbb' }));
+    oc.add(this.add.text(220, 170, '| Base Rate',
+      { font: '12px monospace', fill: '#bbbbbb' }));
+
+    rows.forEach(([rarity, values], i) => {
+      const y = 204 + i * 34;
+      const unob = values.unobtained;
+      const obt = values.obtained;
+      oc.add(this.add.text(60, y, rarity,
+        { font: '12px monospace', fill: RARITY_STR[rarity] || '#aaaaaa' }));
+      oc.add(this.add.text(220, y, `| ${unob}% (new) / ${obt}% (owned)`,
+        { font: '12px monospace', fill: '#dddddd' }));
+    });
+
+    const pityNote = this._activeBanner === 'BASIC'
+      ? 'Epic guaranteed by pull 30. Soft pity begins at pull 25.'
+      : `Legendary guaranteed by pull 80. Soft pity begins at pull 60.\n10-pull guarantees at least 1 Rare.`;
+
+    oc.add(this.add.text(W / 2, 370, pityNote,
+      { font: '12px monospace', fill: '#cccccc', align: 'center' }).setOrigin(0.5));
+    oc.add(this.add.text(W / 2, 450,
+      'Light and Shadow affinity heroes pull at half rate within their rarity tier.',
+      { font: '11px monospace', fill: '#aaaaaa', align: 'center', wordWrap: { width: 420 } }).setOrigin(0.5));
+
+    const closeBtn = this.add.rectangle(W / 2, 770, 220, 44, 0x1a083a)
+      .setStrokeStyle(1, 0x7744cc)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => {
+        this._overlayCont.removeAll(true);
+        this._build();
+      });
+    oc.add(closeBtn);
+    oc.add(this.add.text(W / 2, 770, '[ CLOSE ]',
+      { font: '14px monospace', fill: '#cc88ff' }).setOrigin(0.5));
   }
 
   // ─── WISHLIST OVERLAY ─────────────────────────────────────────────────────────
