@@ -25,7 +25,7 @@ new Phaser.Game({
   height: 854,
   backgroundColor: '#0a0a1a',
   parent: 'game-container',
-  scene: [BootScene, PreloadScene, MainHubScene, CampaignScene, RosterScene, SummonScene, EndlessTowerScene, WorldBossScene, ArenaScene, ArenaShopScene, AffinityTowerSelectionScene, AffinityTowerScene, DailyCodexScene, GuildScene, GuildShopScene, AchievementScene, ElderTreeScene, AwakenAltarScene, GearForgeScene, SettingsScene],
+  scene: [BootScene, PreloadScene, MainHubScene, CampaignScene, RosterScene, SummonScene, EndlessTowerScene, WorldBossScene, ArenaScene, ArenaShopScene, AffinityTowerSelectionScene, AffinityTowerScene, DailyCodexScene, GuildScene, GuildShopScene, AchievementScene, ElderTreeScene, AwakenAltarScene, SettingsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
