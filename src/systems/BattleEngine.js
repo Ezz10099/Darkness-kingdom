@@ -108,23 +108,25 @@ export default class BattleEngine {
     }
   }
 
-  _calculateDamage(attacker, target, baseDamage) {
-    let dmg = baseDamage + (attacker.stats?.damage || 0);
+  _calculateDamage(attacker, target, scalingBase) {
+    const attackerDmg = attacker.stats?.damage || 0;
+    const abilityPowerMultiplier = Math.max(0.5, (scalingBase || 10) / 20);
+
+    let rawDamage = attackerDmg * abilityPowerMultiplier;
+
+    const defenderDef = target.stats?.defense || 0;
+    let reducedDamage = rawDamage * (1 - (defenderDef / (defenderDef + 500)));
 
     const adv = AFFINITY_ADVANTAGES[attacker.affinity];
+    let affinityMultiplier = 1.0;
     if (adv) {
-      if (adv.strongVs === target.affinity) dmg *= 1.5;
-      else if (adv.weakVs === target.affinity) dmg *= 0.75;
+      if (adv.strongVs === target.affinity) affinityMultiplier = 1.3;
+      else if (adv.weakVs === target.affinity) affinityMultiplier = 0.75;
     }
 
-    const shadowLight = new Set(['SHADOW', 'LIGHT']);
-    if (shadowLight.has(attacker.affinity) && shadowLight.has(target.affinity)) dmg *= 1.5;
+    if (StatusEffectManager.hasEffect(attacker.id, STATUS_EFFECT.BLIND)) reducedDamage *= 0.5;
 
-    if (StatusEffectManager.hasEffect(attacker.id, STATUS_EFFECT.BLIND)) dmg *= 0.5;
-
-    const def = target.stats?.defense || 0;
-    dmg = Math.max(1, Math.floor(dmg - def * 0.5));
-    return dmg;
+    return Math.max(1, Math.floor(reducedDamage * affinityMultiplier));
   }
 
   _dealDamage(attacker, target, amount) {

@@ -1,4 +1,7 @@
-import { RARITY_CONFIG, RARITY_ORDER, ASCENSION_CEILING, CURRENCY } from '../data/constants.js';
+import {
+  RARITY_CONFIG, RARITY_ORDER, ASCENSION_CEILING, CURRENCY,
+  CLASS_BASE_STATS, RARITY_STAT_MULTIPLIER
+} from '../data/constants.js';
 import CurrencyManager from './CurrencyManager.js';
 import AchievementManager from './AchievementManager.js';
 
@@ -29,14 +32,25 @@ class HeroInstance {
   currentStarLevelCap(){ return this.stars * 10; }
 
   computeStats() {
-    const rarityMult = 1 + (RARITY_ORDER[this.rarity] * 0.2);
-    const levelMult  = 1 + ((this.level - 1) * 0.05);
-    const starMult   = 1 + ((this.stars - 1) * 0.1);
+    const classBase  = CLASS_BASE_STATS[this.heroClass] || this.baseStats;
+    const rarityMult = RARITY_STAT_MULTIPLIER[this.rarity] || 1;
+    const levelStep  = Math.max(0, this.level - 1);
+
+    const baseHp     = classBase.hp * rarityMult;
+    const baseDef    = classBase.defense * rarityMult;
+    const baseDmg    = classBase.damage * rarityMult;
+
+    const levelHp    = baseHp * (1.02 ** levelStep);
+    const levelDef   = baseDef * (1.018 ** levelStep);
+    const levelDmg   = baseDmg * (1.022 ** levelStep);
+
+    const starMult   = 1 + (Math.max(1, this.stars) - 1) * 0.15;
     const titleBonus = this.title ? 1.05 : 1.0;
+
     return {
-      hp:      Math.floor(this.baseStats.hp      * rarityMult * levelMult * starMult * titleBonus),
-      defense: Math.floor(this.baseStats.defense * rarityMult * levelMult * starMult * titleBonus),
-      damage:  Math.floor(this.baseStats.damage  * rarityMult * levelMult * starMult * titleBonus)
+      hp:      Math.floor(levelHp * starMult * titleBonus),
+      defense: Math.floor(levelDef * starMult * titleBonus),
+      damage:  Math.floor(levelDmg * starMult * titleBonus)
     };
   }
 

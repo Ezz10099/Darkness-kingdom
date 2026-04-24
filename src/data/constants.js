@@ -51,13 +51,32 @@ export const RARITY_CONFIG = Object.freeze({
 });
 
 export const AFFINITY_ADVANTAGES = Object.freeze({
-  FIRE:   { strongVs: 'EARTH',  weakVs: 'ICE',    statusEffect: 'BURNING' },
-  ICE:    { strongVs: 'FIRE',   weakVs: 'EARTH',   statusEffect: 'FREEZE'  },
-  EARTH:  { strongVs: 'ICE',    weakVs: 'FIRE',    statusEffect: 'ROOT'    },
-  SHADOW: { strongVs: 'LIGHT',  weakVs: 'LIGHT',   statusEffect: 'BLIND'   },
-  LIGHT:  { strongVs: 'SHADOW', weakVs: 'SHADOW',  statusEffect: 'BLIND'   }
+  FIRE:   { strongVs: 'ICE',    weakVs: 'LIGHT',  statusEffect: 'BURNING' },
+  ICE:    { strongVs: 'EARTH',  weakVs: 'FIRE',   statusEffect: 'FREEZE'  },
+  EARTH:  { strongVs: 'SHADOW', weakVs: 'ICE',    statusEffect: 'ROOT'    },
+  SHADOW: { strongVs: 'LIGHT',  weakVs: 'EARTH',  statusEffect: 'BLIND'   },
+  LIGHT:  { strongVs: 'FIRE',   weakVs: 'SHADOW', statusEffect: 'BLIND'   }
 });
 
+
+export const CLASS_BASE_STATS = Object.freeze({
+  TANK:     { hp: 1200, defense: 120, damage: 80 },
+  WARRIOR:  { hp: 900,  defense: 90,  damage: 110 },
+  HEALER:   { hp: 800,  defense: 80,  damage: 70 },
+  MAGE:     { hp: 600,  defense: 60,  damage: 160 },
+  ARCHER:   { hp: 700,  defense: 65,  damage: 150 },
+  ASSASSIN: { hp: 550,  defense: 55,  damage: 190 }
+});
+
+export const RARITY_STAT_MULTIPLIER = Object.freeze({
+  COMMON: 1.0,
+  UNCOMMON: 1.15,
+  RARE: 1.35,
+  EPIC: 1.65,
+  LEGENDARY: 2.1,
+  MYTHIC: 2.8,
+  ASCENDED: 3.8
+});
 export const CLASS_DEFAULTS = Object.freeze({
   WARRIOR:  { defaultRow: 'FRONT', statProfile: 'balanced'        },
   TANK:     { defaultRow: 'FRONT', statProfile: 'high_hp_def'     },
@@ -80,5 +99,5 @@ export const ASCENSION_CEILING = Object.freeze({
 export default {
   CLASS, AFFINITY, RARITY, RARITY_ORDER, GEAR_SLOT, CURRENCY,
   CURRENCY_LABEL, STATUS_EFFECT, FORMATION_ROW, RARITY_CONFIG, AFFINITY_ADVANTAGES,
-  CLASS_DEFAULTS, ASCENSION_CEILING
+  CLASS_BASE_STATS, RARITY_STAT_MULTIPLIER, CLASS_DEFAULTS, ASCENSION_CEILING
 };
