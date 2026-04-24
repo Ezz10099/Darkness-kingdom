@@ -4,7 +4,7 @@ import CurrencyManager from '../systems/CurrencyManager.js';
 import BattleEngine from '../systems/BattleEngine.js';
 import AffinityTowerManager from '../systems/AffinityTowerManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
-import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
+import { CURRENCY } from '../data/constants.js';
 
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
@@ -67,10 +67,11 @@ export default class AffinityTowerScene extends Phaser.Scene {
     const best   = tower.highestFloor;
     const reward = AffinityTowerManager.getFloorReward(aff, floor);
     const isBoss = floor % 10 === 0;
-    const enemies   = AffinityTowerManager.generateEnemySquad(aff, floor);
-    const allHeroes = HeroManager.getAllHeroes();
-    const hasHeroes = allHeroes.length > 0;
-    const bonusHeroes = allHeroes.filter(h => h.affinity === aff);
+    const enemies      = AffinityTowerManager.generateEnemySquad(aff, floor);
+    const squadEntries = GameState.getBattleSquadEntries();
+    const squadHeroes  = squadEntries.map(e => HeroManager.getHero(e.heroId)).filter(Boolean);
+    const hasHeroes    = squadHeroes.length > 0;
+    const bonusHeroes  = squadHeroes.filter(h => h.affinity === aff);
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
 
@@ -197,9 +198,12 @@ export default class AffinityTowerScene extends Phaser.Scene {
     this._curFloor       = floor;
     const aff            = this._affinity;
     const enemySquad     = AffinityTowerManager.generateEnemySquad(aff, floor);
-    const rawSquad       = HeroManager.getAllHeroes().map(h => ({
-      hero: h, row: CLASS_DEFAULTS[h.heroClass]?.defaultRow || 'FRONT'
-    }));
+    const rawSquad       = GameState.getBattleSquadEntries()
+      .map(entry => {
+        const hero = HeroManager.getHero(entry.heroId);
+        return hero ? { hero, row: entry.row } : null;
+      })
+      .filter(Boolean);
     const playerSquad    = AffinityTowerManager.applyAffinityBonus(rawSquad, aff);
 
     this._engine = new BattleEngine({
@@ -231,8 +235,9 @@ export default class AffinityTowerScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 470, 'YOUR SQUAD', { font: '11px monospace', fill: '#66ccff' }).setOrigin(0.5));
 
     // Show affinity bonus heroes in battle view
-    const allHeroes = HeroManager.getAllHeroes();
-    const bonusHeroes = allHeroes.filter(h => h.affinity === this._affinity);
+    const bonusHeroes = GameState.getBattleSquadEntries()
+      .map(e => HeroManager.getHero(e.heroId))
+      .filter(h => h?.affinity === this._affinity);
     if (bonusHeroes.length > 0) {
       c.add(this.add.text(W / 2, 50,
         '\u2605 ' + bonusHeroes.map(h => h.name).join(', ') + ' +50%',
@@ -279,14 +284,23 @@ export default class AffinityTowerScene extends Phaser.Scene {
     const startX = (W - btnW * heroes.length) / 2 + btnW / 2;
     heroes.forEach((hero, i) => {
       const x  = startX + i * btnW;
-      const bg = this.add.rectangle(x, 640, btnW - 6, 50, 0x1a0530)
+      const hasDual = Boolean(hero.ultimateAbilityId2);
+      const bg = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530)
         .setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id); });
-      const chgTxt = this.add.text(x, 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
+        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'primary'); });
+      const chgTxt = this.add.text(x, hasDual ? 632 : 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
       c.add(bg);
-      c.add(this.add.text(x, 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+      c.add(this.add.text(x, hasDual ? 618 : 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
       c.add(chgTxt);
-      this._ultBtns.push({ heroId: hero.id, bg, chgTxt });
+      this._ultBtns.push({ heroId: hero.id, slot: 'primary', bg, chgTxt });
+      if (hasDual) {
+        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530)
+          .setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'secondary'); });
+        const chgTxt2 = this.add.text(x, 656, '0%', { font: '11px monospace', fill: '#aa99dd' }).setOrigin(0.5);
+        c.add(bg2); c.add(chgTxt2);
+        this._ultBtns.push({ heroId: hero.id, slot: 'secondary', bg: bg2, chgTxt: chgTxt2 });
+      }
     });
   }
 
@@ -311,13 +325,15 @@ export default class AffinityTowerScene extends Phaser.Scene {
         break;
       }
       case 'ultimateReady': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.id);
+        const btn = this._ultBtns.find(b => b.heroId === ev.id && b.slot === (ev.slot || 'primary'));
         if (btn) { btn.bg.setFillStyle(0x5500bb); btn.chgTxt.setText('\u25b6ULT').setStyle({ fill: '#ffaaff' }); }
         break;
       }
       case 'ultimateTriggered': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.heroId);
-        if (btn) { btn.bg.setFillStyle(0x1a0530); btn.chgTxt.setText('0%').setStyle({ fill: '#887799' }); }
+        for (const btn of this._ultBtns.filter(b => b.heroId === ev.heroId)) {
+          btn.bg.setFillStyle(0x1a0530);
+          btn.chgTxt.setText('0%').setStyle({ fill: btn.slot === 'secondary' ? '#aa99dd' : '#887799' });
+        }
         this._log('ULTIMATE!');
         break;
       }

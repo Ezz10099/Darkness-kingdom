@@ -4,6 +4,7 @@ import AcademyGroundsManager from './AcademyGroundsManager.js';
 import ElderTreeManager from './ElderTreeManager.js';
 import HeroManager from './HeroManager.js';
 import { getStageById } from '../data/stageDefinitions.js';
+import DailyCodexManager from './DailyCodexManager.js';
 
 const IdleManager = {
   BASE_RATE: 5, // fallback gold/sec when no stage is cleared
@@ -46,6 +47,7 @@ const IdleManager = {
     const earnedXp = Math.floor(this.getXpRate(campaignProgress) * elapsed);
     if (earnedGold > 0) CurrencyManager.add(CURRENCY.GOLD, earnedGold);
     if (earnedXp > 0) this._grantXp(earnedXp);
+    if (earnedGold > 0 || earnedXp > 0) DailyCodexManager.increment('COLLECT_IDLE');
     AcademyGroundsManager.processOffline(lastSaveTime, campaignProgress, activeSquad);
     return earnedGold;
   }

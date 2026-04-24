@@ -14,6 +14,7 @@ import GuildShopManager from './GuildShopManager.js';
 import AcademyGroundsManager from './AcademyGroundsManager.js';
 import AchievementManager from './AchievementManager.js';
 import ElderTreeManager from './ElderTreeManager.js';
+import LoginStreakManager from './LoginStreakManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS, CURRENCY, FORMATION_ROW } from '../data/constants.js';
 
@@ -140,6 +141,7 @@ const GameState = {
       academyGrounds:   AcademyGroundsManager.toJSON(),
       achievements:     AchievementManager.toJSON(),
       elderTree:        ElderTreeManager.toJSON(),
+      loginStreak:      LoginStreakManager.toJSON(),
       lastSaveTime:     Date.now()
     };
   },
@@ -165,6 +167,7 @@ const GameState = {
     if (data.academyGrounds) AcademyGroundsManager.fromJSON(data.academyGrounds);
     if (!data.achievements)  AchievementManager.fromJSON(null);
     if (data.elderTree)      ElderTreeManager.fromJSON(data.elderTree);
+    if (data.loginStreak)    LoginStreakManager.fromJSON(data.loginStreak);
     // Migration: grant starter crystals to existing saves that lack them
     if (CurrencyManager.get(CURRENCY.CRYSTALS) === 0) {
       CurrencyManager.add(CURRENCY.CRYSTALS, 500);

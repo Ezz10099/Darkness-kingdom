@@ -2,6 +2,7 @@ import GameState from '../systems/GameState.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
 import IdleManager from '../systems/IdleManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
+import LoginStreakManager from '../systems/LoginStreakManager.js';
 
 const BTN_COLOR      = 0x1a1a3a;
 const BTN_COLOR_DOWN = 0x0d0d1f;
@@ -50,6 +51,10 @@ export default class MainHubScene extends Phaser.Scene {
     this.time.addEvent({ delay: 1000,  loop: true, callback: this._idleTick,   callbackScope: this });
     this.time.addEvent({ delay: 30000, loop: true, callback: () => GameState.save() });
     this._refreshUI();
+
+    if (LoginStreakManager.canClaimToday()) {
+      this.time.delayedCall(120, () => this.scene.start('LoginStreak', { returnScene: 'MainHub' }));
+    }
 
     // Show any achievement popups queued from other scenes
     AchievementManager.showPopups(this);

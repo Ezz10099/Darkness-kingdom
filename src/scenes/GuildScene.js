@@ -142,11 +142,13 @@ export default class GuildScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 76, guild.name, { font: '22px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 102, 'Level ' + guild.level + '  \u2022  ' + guild.memberCount + '/' + 30 + ' members',
       { font: '13px monospace', fill: '#aaaaaa' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 116, 'Leaderboard: post-launch online feature',
+      { font: '10px monospace', fill: '#666688' }).setOrigin(0.5));
 
     // XP bar
     const xpNeeded = GuildManager.getXPToNextLevel();
     const xpPct    = xpNeeded === Infinity ? 1 : Math.min(1, guild.xp / xpNeeded);
-    const xpBarW = 340, xpBarH = 14, xpBarY = 126;
+    const xpBarW = 340, xpBarH = 14, xpBarY = 138;
     c.add(this.add.rectangle(W / 2, xpBarY, xpBarW, xpBarH, 0x1a1a00).setStrokeStyle(1, 0x444400));
     c.add(this.add.rectangle(W / 2 - xpBarW / 2, xpBarY, xpBarW * xpPct, xpBarH, 0xffaa00).setOrigin(0, 0.5));
     const xpLbl = xpNeeded === Infinity ? 'MAX LEVEL'
@@ -154,11 +156,11 @@ export default class GuildScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, xpBarY, xpLbl, { font: '10px monospace', fill: '#ffffff' }).setOrigin(0.5));
 
     // Guild Coins
-    c.add(this.add.text(W / 2, 152, '\u2605 Guild Coins: ' + coins.toLocaleString(),
+    c.add(this.add.text(W / 2, 164, '\u2605 Guild Coins: ' + coins.toLocaleString(),
       { font: '14px monospace', fill: '#ffd700' }).setOrigin(0.5));
 
     // Boss HP bar
-    const bBarW = 380, bBarH = 28, bBarY = 212;
+    const bBarW = 380, bBarH = 28, bBarY = 224;
     const hpPct = bs.currentHp / cfg.bossHp;
     c.add(this.add.text(W / 2, bBarY - 22, 'GUILD BOSS \u2014 ' + cfg.label,
       { font: '14px monospace', fill: '#ff6644' }).setOrigin(0.5));
@@ -169,7 +171,7 @@ export default class GuildScene extends Phaser.Scene {
       { font: '11px monospace', fill: '#ffffff' }).setOrigin(0.5));
 
     // Boss stats row
-    const panelY = 274;
+    const panelY = 286;
     c.add(this.add.rectangle(W / 2, panelY, 380, 52, 0x0d0d22).setStrokeStyle(1, 0x3a1a4a));
     c.add(this.add.text(W / 2 - 115, panelY, 'Battle HP: ' + cfg.battleHp.toLocaleString(),
       { font: '11px monospace', fill: '#ff9988' }).setOrigin(0.5));
@@ -179,7 +181,7 @@ export default class GuildScene extends Phaser.Scene {
       { font: '11px monospace', fill: '#ffd700' }).setOrigin(0.5));
 
     // Attacks remaining
-    c.add(this.add.text(W / 2, 316,
+    c.add(this.add.text(W / 2, 328,
       'Attacks today: ' + (maxAtt - attacks) + ' / ' + maxAtt + ' used',
       { font: '13px monospace', fill: attacks > 0 ? '#aaddff' : '#ff6666' }).setOrigin(0.5));
     const cdBase = GuildManager.getAttackCooldownSecs();
@@ -189,19 +191,19 @@ export default class GuildScene extends Phaser.Scene {
     const cdNote = cdBase < BASE_ATTACK_COOLDOWN_SECS
       ? ' (reduced)'
       : '';
-    c.add(this.add.text(W / 2, 334, cdLabel + cdNote,
+    c.add(this.add.text(W / 2, 346, cdLabel + cdNote,
       { font: '11px monospace', fill: cdLeft > 0 ? '#ffcc88' : '#66cc66' }).setOrigin(0.5));
 
     // Last result
     if (bs.lastResult) {
       const lr = bs.lastResult;
-      c.add(this.add.text(W / 2, 352,
+      c.add(this.add.text(W / 2, 364,
         'Last: ' + lr.damage.toLocaleString() + ' dmg  \u2605' + lr.coinsEarned + ' Coins  +' + lr.xpGained + ' XP',
         { font: '11px monospace', fill: '#555577' }).setOrigin(0.5));
     }
 
     // Attack button
-    const atkY   = 400;
+    const atkY   = 412;
     const atkC   = canFight ? 0x3a0000 : 0x1a1a2a;
     const atkBrd = canFight ? 0xff4444 : 0x333333;
     const atkTxt = canFight
@@ -217,30 +219,30 @@ export default class GuildScene extends Phaser.Scene {
         .on('pointerout',  () => atkBg.setFillStyle(0x3a0000))
         .on('pointerup',   () => this._startAttack());
     }
-    c.add(this.add.rectangle(W / 2, 438, 380, 20, 0x131326).setStrokeStyle(1, 0x4a4a66));
-    c.add(this.add.text(W / 2, 438, `SQUAD ${squadEntries.length}/5: ${(squadNames.join(', ') || 'none').slice(0, 46)}`,
+    c.add(this.add.rectangle(W / 2, 450, 380, 20, 0x131326).setStrokeStyle(1, 0x4a4a66));
+    c.add(this.add.text(W / 2, 450, `SQUAD ${squadEntries.length}/5: ${(squadNames.join(', ') || 'none').slice(0, 46)}`,
       { font: '10px monospace', fill: '#99ccff' }).setOrigin(0.5));
 
     // Level perks
-    c.add(this.add.text(W / 2, 470, 'GUILD PERKS', { font: '12px monospace', fill: '#886699' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 482, 'GUILD PERKS', { font: '12px monospace', fill: '#886699' }).setOrigin(0.5));
     [5, 10, 20, 30].forEach((lv, i) => {
       const unlocked = guild.level >= lv;
-      c.add(this.add.text(W / 2, 490 + i * 20,
+      c.add(this.add.text(W / 2, 502 + i * 20,
         (unlocked ? '\u2713 ' : '\u25cb ') + 'Lv.' + lv + ': ' + LEVEL_PERKS[lv],
         { font: '11px monospace', fill: unlocked ? '#44cc44' : '#555555' }).setOrigin(0.5));
     });
 
     // Shop button
-    const shopBg = this.add.rectangle(W / 2, 628, 270, 58, 0x0d1a00)
+    const shopBg = this.add.rectangle(W / 2, 648, 270, 58, 0x0d1a00)
       .setStrokeStyle(2, 0x44cc44).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => shopBg.setFillStyle(0x071000))
       .on('pointerout',  () => shopBg.setFillStyle(0x0d1a00))
       .on('pointerup',   () => this.scene.start('GuildShop'));
     c.add(shopBg);
-    c.add(this.add.text(W / 2, 628, '\u2605 GUILD SHOP', { font: '20px monospace', fill: '#44cc44' }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 648, '\u2605 GUILD SHOP', { font: '20px monospace', fill: '#44cc44' }).setOrigin(0.5));
 
     // Leave guild
-    c.add(this.add.text(W / 2, 704, 'Leave Guild', { font: '12px monospace', fill: '#444466' })
+    c.add(this.add.text(W / 2, 724, 'Leave Guild', { font: '12px monospace', fill: '#444466' })
       .setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerup', () => {
         if (window.confirm('Leave ' + guild.name + '?')) {
@@ -322,14 +324,23 @@ export default class GuildScene extends Phaser.Scene {
     const startX = (W - btnW * heroes.length) / 2 + btnW / 2;
     heroes.forEach((hero, i) => {
       const x   = startX + i * btnW;
-      const bg  = this.add.rectangle(x, 640, btnW - 6, 50, 0x1a0530)
+      const hasDual = Boolean(hero.ultimateAbilityId2);
+      const bg  = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530)
         .setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id); });
-      const chg = this.add.text(x, 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
+        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'primary'); });
+      const chg = this.add.text(x, hasDual ? 632 : 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
       c.add(bg);
-      c.add(this.add.text(x, 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+      c.add(this.add.text(x, hasDual ? 618 : 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
       c.add(chg);
-      this._ultBtns.push({ heroId: hero.id, bg, chgTxt: chg });
+      this._ultBtns.push({ heroId: hero.id, slot: 'primary', bg, chgTxt: chg });
+      if (hasDual) {
+        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530)
+          .setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'secondary'); });
+        const chg2 = this.add.text(x, 656, '0%', { font: '11px monospace', fill: '#aa99dd' }).setOrigin(0.5);
+        c.add(bg2); c.add(chg2);
+        this._ultBtns.push({ heroId: hero.id, slot: 'secondary', bg: bg2, chgTxt: chg2 });
+      }
     });
   }
 
@@ -360,13 +371,15 @@ export default class GuildScene extends Phaser.Scene {
         break;
       }
       case 'ultimateReady': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.id);
+        const btn = this._ultBtns.find(b => b.heroId === ev.id && b.slot === (ev.slot || 'primary'));
         if (btn) { btn.bg.setFillStyle(0x5500bb); btn.chgTxt.setText('\u25b6ULT').setStyle({ fill: '#ffaaff' }); }
         break;
       }
       case 'ultimateTriggered': {
-        const btn = this._ultBtns.find(b => b.heroId === ev.heroId);
-        if (btn) { btn.bg.setFillStyle(0x1a0530); btn.chgTxt.setText('0%').setStyle({ fill: '#887799' }); }
+        for (const btn of this._ultBtns.filter(b => b.heroId === ev.heroId)) {
+          btn.bg.setFillStyle(0x1a0530);
+          btn.chgTxt.setText('0%').setStyle({ fill: btn.slot === 'secondary' ? '#aa99dd' : '#887799' });
+        }
         this._log('ULTIMATE!');
         break;
       }

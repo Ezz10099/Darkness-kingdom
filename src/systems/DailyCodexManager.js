@@ -9,6 +9,8 @@ const TASK_POOL = [
   { id: 'ARENA_FIGHTS',   label: 'Complete 3 Arena fights',          target: 3, scene: 'Arena'                 },
   { id: 'BOSS_TWICE',     label: 'Attack World Boss 2 times',        target: 2, scene: 'WorldBoss'             },
   { id: 'VISIT_CODEX',    label: 'Open the Daily Codex',             target: 1, scene: 'DailyCodex'            },
+  { id: 'UPGRADE_GEAR',   label: 'Upgrade 1 Gear piece',             target: 1, scene: 'Roster'                },
+  { id: 'COLLECT_IDLE',   label: 'Collect idle rewards once',        target: 1, scene: 'MainHub'               },
 ];
 
 const WEEKLY_TASK_DEF = {

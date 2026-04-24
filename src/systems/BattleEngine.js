@@ -29,6 +29,7 @@ export default class BattleEngine {
         stats: boostedStats, ultimateCharge: 0,
         abilityIds: entry.hero.normalAbilityIds || [],
         ultimateAbilityId: entry.hero.ultimateAbilityId,
+        ultimateAbilityId2: entry.hero.ultimateAbilityId2 || null,
         isPlayer: true, row: entry.row, bondBonus
       };
       this.playerFormation[entry.row].push(combatant);
@@ -83,25 +84,27 @@ export default class BattleEngine {
     this.onEvent({ type: 'tick', tick: this.tick, state: this.getState() });
   }
 
-  triggerUltimate(heroId) {
+  triggerUltimate(heroId, slot = 'primary') {
     const c = this._findCombatant(heroId);
     if (!c || c.ultimateCharge < 100) return false;
-    c.ultimateCharge = 0;
-    const ability = ABILITY_DEFINITIONS.find(a => a.id === c.ultimateAbilityId);
+    const abilityId = slot === 'secondary' && c.ultimateAbilityId2 ? c.ultimateAbilityId2 : c.ultimateAbilityId;
+    const ability = ABILITY_DEFINITIONS.find(a => a.id === abilityId);
     if (!ability) return false;
+    c.ultimateCharge = 0;
     const targets = this._selectTargets(c, ability);
     for (const target of targets) {
       const dmg = this._calculateDamage(c, target, ability.scalingBase * 2);
       this._dealDamage(c, target, dmg);
     }
-    this.onEvent({ type: 'ultimateTriggered', heroId, abilityId: c.ultimateAbilityId });
+    this.onEvent({ type: 'ultimateTriggered', heroId, abilityId, slot });
     return true;
   }
 
   _chargeUltimate(combatant, amount) {
     combatant.ultimateCharge = Math.min(100, combatant.ultimateCharge + amount);
     if (combatant.ultimateCharge >= 100) {
-      this.onEvent({ type: 'ultimateReady', id: combatant.id });
+      this.onEvent({ type: 'ultimateReady', id: combatant.id, slot: 'primary' });
+      if (combatant.ultimateAbilityId2) this.onEvent({ type: 'ultimateReady', id: combatant.id, slot: 'secondary' });
     }
   }
 
