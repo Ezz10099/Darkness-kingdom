@@ -14,7 +14,7 @@ const ARCHETYPES = [
 
 const MILESTONE_FLOORS = [50, 100, 200, 500];
 const MILESTONE_HERO_GIFTS = Object.freeze({
-  200: 'hero_aethon', // exclusive gift placeholder
+  200: 'hero_archmage_eloris', // exclusive gift placeholder
   500: 'hero_dusk'    // exclusive rare gift placeholder
 });
 

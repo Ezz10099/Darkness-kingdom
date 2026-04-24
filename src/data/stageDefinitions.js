@@ -35,7 +35,7 @@ const PRESET_STAGE_OVERRIDES = {
   '1-3': { name: 'The East Wing', enemies: [
     { ...ENEMY_ARCHETYPES[0], id: 'e_1_3_a', stats: { hp: 145, defense: 14, damage: 18 }, abilityIds: ['wa_slash', 'aff_burning_touch'], ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[2], id: 'e_1_3_b', stats: { hp: 90, defense: 8, damage: 20 }, abilityIds: ['ar_piercing_arrow'], ultimateCharge: 0 }
-  ], milestoneRewards: [{ type: 'giftHero', heroDefId: 'hero_brynn', hint: 'Brynn joins your team!' }] },
+  ], milestoneRewards: [{ type: 'giftHero', heroDefId: 'hero_stone_sentinel_gorr', hint: 'Stone Sentinel Gorr joins your team!' }] },
   '1-4': { name: 'The Grand Hall', enemies: [
     { ...ENEMY_ARCHETYPES[1], id: 'e_1_4_a', stats: { hp: 230, defense: 28, damage: 14 }, ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[3], id: 'e_1_4_b', stats: { hp: 82, defense: 8, damage: 26 }, abilityIds: ['mg_arcane_bolt', 'aff_glacial_spike'], affinity: 'ICE', ultimateCharge: 0 }
@@ -45,7 +45,7 @@ const PRESET_STAGE_OVERRIDES = {
     { ...ENEMY_ARCHETYPES[0], id: 'e_1_5_b', stats: { hp: 175, defense: 18, damage: 22 }, abilityIds: ['wa_slash', 'aff_burning_touch'], ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[3], id: 'e_1_5_c', stats: { hp: 95, defense: 10, damage: 30 }, abilityIds: ['mg_arcane_bolt', 'aff_burning_touch'], affinity: 'FIRE', ultimateCharge: 0 }
   ], milestoneRewards: [
-    { type: 'giftHero', heroDefId: 'hero_sylva', hint: 'Sylva joins your team!' },
+    { type: 'giftHero', heroDefId: 'hero_frost_warden_kael', hint: 'Frost Warden Kael joins your team!' },
     { type: 'unlockSystem', system: 'BASIC_SUMMON', hint: 'Basic Summon unlocked!' }
   ] }
 };

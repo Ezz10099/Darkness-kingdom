@@ -5,18 +5,34 @@ function _countActiveMembers(bond, activeHeroDefIds) {
   return bond.memberHeroDefIds.reduce((n, id) => n + (activeSet.has(id) ? 1 : 0), 0);
 }
 
+function _getBondHeroBonus(bond, activeCount, heroDefId) {
+  const perHeroByCount = bond.perHeroBonusByActiveMembers?.[activeCount];
+  if (perHeroByCount && typeof perHeroByCount[heroDefId] === 'number') {
+    return perHeroByCount[heroDefId];
+  }
+  return bond.bonusByActiveMembers?.[activeCount] || 0;
+}
+
 const BondManager = {
   getActiveBonds(activeHeroDefIds) {
     return BOND_DEFINITIONS
       .map(bond => {
         const activeCount = _countActiveMembers(bond, activeHeroDefIds);
         const bonus = bond.bonusByActiveMembers[activeCount] || 0;
-        return bonus > 0 ? { bondId: bond.id, name: bond.name, activeCount, bonus } : null;
+        if (bonus <= 0) return null;
+        return {
+          bondId: bond.id,
+          name: bond.name,
+          activeCount,
+          bonus,
+          bonusDescription: bond.bonusDescription || null
+        };
       })
       .filter(Boolean);
   },
 
-  // Aggregate % stat bonus applied to all members participating in active bonds.
+  // Aggregate % stat bonus applied to members participating in active bonds.
+  // Supports asymmetric per-hero bonuses when perHeroBonusByActiveMembers is present.
   getHeroBondBonus(heroDefId, activeHeroDefIds) {
     const activeSet = new Set(activeHeroDefIds);
     if (!activeSet.has(heroDefId)) return 0;
@@ -25,7 +41,7 @@ const BondManager = {
     for (const bond of BOND_DEFINITIONS) {
       if (!bond.memberHeroDefIds.includes(heroDefId)) continue;
       const activeCount = _countActiveMembers(bond, activeHeroDefIds);
-      bonus += bond.bonusByActiveMembers[activeCount] || 0;
+      bonus += _getBondHeroBonus(bond, activeCount, heroDefId);
     }
     return bonus;
   }

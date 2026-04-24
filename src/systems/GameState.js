@@ -45,7 +45,7 @@ const GameState = {
     CurrencyManager.add(CURRENCY.CRYSTALS, 500);
     CurrencyManager.add(CURRENCY.PREMIUM_CRYSTALS, 300);
     // Grant starter hero
-    const starterDef = HERO_DEFINITIONS.find(d => d.id === 'hero_kael');
+    const starterDef = HERO_DEFINITIONS.find(d => d.id === 'hero_cinder_vale');
     if (starterDef) {
       HeroManager.addHero(new HeroInstance({
         heroDefId: starterDef.id, name: starterDef.name, title: starterDef.title,
