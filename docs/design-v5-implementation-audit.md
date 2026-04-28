@@ -2,37 +2,38 @@
 
 Date: 2026-04-28
 
-## Implemented at high level
-- Core managers and scenes exist for Campaign, Endless Tower, Affinity Towers, Arena, World Boss, Guild/Guild Boss, Awakening Altar, Gear, Elder Tree, Daily Codex, Academy Grounds, and Achievements.
+## Targeted verification of the 10 flagged items
 
-## Still unimplemented or partial vs v5
-1. **Affinity matchup table differs from v5 spec**
-   - v5: Fire>Earth, Ice>Fire, Earth>Ice, Shadow<->Light only.
-   - current constants use a different matrix.
+1. **Affinity matchup table differs from v5 spec** — **Implemented (now aligned)**
+   - `AFFINITY_ADVANTAGES` matches v5 relationships: Fire>Earth, Ice>Fire, Earth>Ice, and Shadow<->Light.
 
-2. **Per-affinity title passives are not implemented**
-   - current hero stats apply a flat title bonus multiplier (1.05) rather than affinity-specific passives.
+2. **Per-affinity title passives are not implemented** — **Implemented**
+   - `TITLE_AFFINITY_BONUS` is affinity-specific and `HeroInstance.computeStats()` applies those per-affinity multipliers when a title exists.
 
-3. **Arena “frozen squad” behavior is not implemented**
-   - current arena creates random opponents, but there is no player-side frozen snapshot lock at entry time.
+3. **Arena “frozen squad” behavior is not implemented** — **Implemented**
+   - Arena freezes player squad snapshots at battle start via `freezeSquadFromEntries(...)` and fights with frozen stat snapshots.
 
-4. **Affinity tower leaderboard is stubbed**
-   - UI explicitly marks leaderboard as stub.
+4. **Affinity tower leaderboard is stubbed** — **Implemented (local/simulated leaderboard)**
+   - `AffinityTowerManager` maintains per-affinity leaderboards and updates them on floor clear; tower UI surfaces top rank line.
 
-5. **Arena shop exclusives are still placeholder/stub content**
-   - shop includes a stub cosmetic title entry.
+5. **Arena shop exclusives are still placeholder/stub content** — **Implemented**
+   - Arena shop sells two exclusive hero entries (`hero_arena_valtora`, `hero_arena_nox`) plus materials; no stub title placeholder remains.
 
-6. **Guild join modes (open vs approval-required closed guilds) are not implemented**
-   - current guild flow supports create/join from predefined open guilds; no closed-guild approval flow.
+6. **Guild join modes (open vs approval-required closed guilds) are not implemented** — **Partially implemented**
+   - Open guild joins exist.
+   - Closed guild request flow exists (`requestJoinClosedGuild` + UI button), but there is no leader-side approve/reject workflow yet.
 
-7. **Guild end-of-day reward distribution by member contribution is not implemented**
-   - current rewards are immediate per attack; no day-end contribution payout model.
+7. **Guild end-of-day reward distribution by member contribution is not implemented** — **Partially implemented**
+   - A daily contribution payout is computed and claimable.
+   - Immediate per-attack coin rewards are still granted, so behavior is hybrid rather than pure day-end distribution.
 
-8. **Mythic/Ascended duplicate-merge flow is not implemented as specified**
-   - current ascension uses shard thresholds and linear rarity upgrades; no explicit "two identical Legendary -> Mythic" and "two identical Mythic -> Ascended" merge flow.
+8. **Mythic/Ascended duplicate-merge flow is not implemented as specified** — **Partially implemented / differs from v5 exact rule**
+   - Duplicate Legendary -> Mythic is implemented.
+   - Ascended upgrade currently triggers on **existing Mythic + new Legendary duplicate**, not explicit **two Mythics merge**.
+   - Shard-based ascension path still exists separately.
 
-9. **Advanced Summon unlock timing differs from v5**
-   - v5 says unlock at Campaign Region 3; current content unlocks at Region 2 completion.
+9. **Advanced Summon unlock timing differs from v5** — **Implemented (now aligned)**
+   - Campaign region schedule unlocks `ADVANCED_SUMMON` at Region 3 completion.
 
-10. **Some v5 scope items are still pending by design**
-   - Bond full pairing list and tuning items are marked TBD in v5 and remain incomplete by nature.
+10. **Some v5 scope items are still pending by design** — **Still pending by design**
+   - Bond and balancing scope remains intentionally incomplete in places (design-level TBD remains true).
