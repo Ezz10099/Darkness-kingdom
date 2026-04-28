@@ -12,12 +12,35 @@ const W = 480;
 const H = 854;
 const OUTER_PADDING = 16;
 
+const ICONS = {
+  settings: '✦',
+  gold: '◍',
+  gems: '◆',
+  tickets: '◈',
+  energy: 'ϟ',
+  adventure: '⚔',
+  heroes: '⛨',
+  academy: '⌂',
+  summon: '✹',
+  guild: '⛊',
+  friends: '☉',
+  arena: '⚔',
+  rankings: '♛',
+  chat: '✉',
+  quests: '☰',
+  mail: '✉',
+  events: '✦',
+  pass: '⬢',
+  offers: '◉'
+};
+
 export default class MainHubScene extends Phaser.Scene {
   constructor() {
     super('MainHub');
     this._heroSprites = [];
     this._pendingIdleGold = 0;
     this._dotTargets = {};
+    this._resourceTexts = [];
   }
 
   create() {
@@ -42,43 +65,52 @@ export default class MainHubScene extends Phaser.Scene {
   _drawTopBar() {
     const topBarHeight = 72;
     const y = topBarHeight / 2 + 6;
-    createPanel(this, { x: W / 2, y, width: W - (OUTER_PADDING * 2), height: topBarHeight, fill: 0x120c22, border: 0x89613f, withInner: false });
+    createPanel(this, {
+      x: W / 2,
+      y,
+      width: W - (OUTER_PADDING * 2),
+      height: topBarHeight,
+      fill: 0x120c22,
+      border: 0x89613f,
+      withInner: false
+    });
 
     this._avatarRing = this.add.circle(OUTER_PADDING + 28, y, 24, 0x2a1d45, 0.95).setStrokeStyle(2, 0xc69d63, 1);
+    this._avatarCore = this.add.circle(OUTER_PADDING + 28, y, 16, 0x4e2f72, 0.8).setStrokeStyle(1, 0xe3bf80, 0.8);
     this._avatarOnline = this.add.circle(OUTER_PADDING + 44, y + 17, 4, 0x58ffb2, 0.95)
       .setStrokeStyle(1, 0xdffff0, 0.8);
     this.tweens.add({ targets: this._avatarOnline, alpha: 0.35, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.inOut' });
+
     this._levelBadge = this.add.circle(OUTER_PADDING + 14, y + 18, 9, 0x4a316b, 1).setStrokeStyle(1, 0xe5be7e, 0.9);
     this._levelText = this.add.text(OUTER_PADDING + 14, y + 18, '1', { font: '10px monospace', fill: ARCANE_THEME.colors.textPrimary }).setOrigin(0.5);
 
-    this._usernameText = this.add.text(OUTER_PADDING + 58, y - 14, 'PlayerName', { font: '14px monospace', fill: ARCANE_THEME.colors.textPrimary });
-    this._powerText = this.add.text(OUTER_PADDING + 58, y + 6, 'Combat 0', { font: '12px monospace', fill: ARCANE_THEME.colors.textSecondary });
+    this._usernameText = this.add.text(OUTER_PADDING + 58, y - 14, 'Arcanist', { font: '14px monospace', fill: ARCANE_THEME.colors.textPrimary });
+    this._powerText = this.add.text(OUTER_PADDING + 58, y + 6, 'Power 0', { font: '12px monospace', fill: ARCANE_THEME.colors.textSecondary });
 
-    const currencyY = y;
     const currencyDefs = [
-      { key: CURRENCY.GOLD, icon: '🪙', tint: '#ffd27b', short: 'gold' },
-      { key: CURRENCY.PREMIUM_CRYSTALS, icon: '💎', tint: '#d3a2ff', short: 'gems' },
-      { key: CURRENCY.CRYSTALS, icon: '🎟️', tint: '#bba8ff', short: 'tickets' },
-      { key: CURRENCY.AWAKENING_SHARDS, icon: '⚡', tint: '#7ecfff', short: 'energy' }
+      { key: CURRENCY.GOLD, icon: ICONS.gold, tint: '#ffd27b', short: 'gold' },
+      { key: CURRENCY.PREMIUM_CRYSTALS, icon: ICONS.gems, tint: '#d3a2ff', short: 'gems' },
+      { key: CURRENCY.CRYSTALS, icon: ICONS.tickets, tint: '#bba8ff', short: 'tickets' },
+      { key: CURRENCY.AWAKENING_SHARDS, icon: ICONS.energy, tint: '#7ecfff', short: 'energy' }
     ];
 
     this._currencyTexts = {};
     let cx = 250;
     currencyDefs.forEach(def => {
-      const holder = this.add.container(cx, currencyY);
-      const chip = this.add.rectangle(0, 0, 50, 24, 0x1c1230, 0.95).setStrokeStyle(1, 0x8f6947, 0.9);
-      const icon = this.add.text(-17, 0, def.icon, { font: '12px sans-serif', fill: def.tint }).setOrigin(0.5);
-      const value = this.add.text(0, 0, '0', { font: '11px monospace', fill: ARCANE_THEME.colors.textPrimary }).setOrigin(0.5);
-      const plus = this.add.rectangle(24, 0, 14, 14, 0x3a264f, 1).setStrokeStyle(1, 0xc79e67, 0.8)
-        .setInteractive({ useHandCursor: true });
+      const holder = this.add.container(cx, y);
+      const chip = this.add.rectangle(0, 0, 52, 24, 0x1c1230, 0.95).setStrokeStyle(1, 0x8f6947, 0.9);
+      const chipGlow = this.add.rectangle(0, 0, 52, 24, 0x7837b3, 0.08);
+      const icon = this.add.text(-17, 0, def.icon, { font: '12px serif', fill: def.tint }).setOrigin(0.5);
+      const value = this.add.text(1, 0, '0', { font: '11px monospace', fill: ARCANE_THEME.colors.textPrimary }).setOrigin(0.5);
+      const plus = this.add.rectangle(24, 0, 14, 14, 0x3a264f, 1).setStrokeStyle(1, 0xc79e67, 0.8).setInteractive({ useHandCursor: true });
       const plusText = this.add.text(24, 0, '+', { font: '10px monospace', fill: '#ffe4b8' }).setOrigin(0.5);
       plus.on('pointerup', () => this._showToast(`${def.short} sources`));
-      holder.add([chip, icon, value, plus, plusText]);
+      holder.add([chip, chipGlow, icon, value, plus, plusText]);
       this._currencyTexts[def.key] = value;
       cx += 52;
     });
 
-    this._makeIconButton({ x: W - OUTER_PADDING - 20, y, label: '⚙', scene: 'Settings' });
+    this._makeIconButton({ x: W - OUTER_PADDING - 20, y, label: ICONS.settings, scene: 'Settings' });
   }
 
   _drawCenterScene() {
@@ -90,24 +122,28 @@ export default class MainHubScene extends Phaser.Scene {
     const clouds = this.add.ellipse(W / 2, 250, 420, 110, 0x8d63cf, 0.11);
     this.tweens.add({ targets: clouds, x: W / 2 + 8, yoyo: true, duration: 5000, repeat: -1, ease: 'Sine.inOut' });
 
-    this._drawBuilding({ x: 88, y: 438, label: 'Campaign Gate', scene: 'Campaign', color: 0x64315c });
-    this._drawBuilding({ x: 188, y: 356, label: 'Summon Portal', scene: 'Summon', color: 0x6a3e9d, pulse: true, dotKey: 'summon' });
-    this._drawBuilding({ x: 298, y: 350, label: 'Academy Tower', scene: 'AffinityTowerSelection', color: 0x3f326b });
-    this._drawBuilding({ x: 392, y: 435, label: 'Guild Hall', scene: 'Guild', color: 0x523245 });
+    this._drawBuilding({ x: 88, y: 438, label: 'Campaign Gate', scene: 'Campaign', color: 0x64315c, icon: ICONS.adventure });
+    this._drawBuilding({ x: 188, y: 356, label: 'Summon Portal', scene: 'Summon', color: 0x6a3e9d, pulse: true, dotKey: 'summon', icon: ICONS.summon });
+    this._drawBuilding({ x: 298, y: 350, label: 'Academy Tower', scene: 'AffinityTowerSelection', color: 0x3f326b, icon: ICONS.academy });
+    this._drawBuilding({ x: 392, y: 435, label: 'Guild Hall', scene: 'Guild', color: 0x523245, icon: ICONS.guild });
 
     this._heroLayer = this.add.container(0, 0);
     this._buildIdleHeroAnimations();
+    this._drawResourceStrip();
   }
 
-  _drawBuilding({ x, y, label, scene, color, pulse = false, dotKey = null }) {
+  _drawBuilding({ x, y, label, scene, color, pulse = false, dotKey = null, icon = '◆' }) {
     const pad = this.add.container(x, y);
     const glow = this.add.circle(0, 0, 36, color, 0.3);
     const body = this.add.circle(0, 0, 24, color, 0.9).setStrokeStyle(2, 0xc79d62, 0.9);
+    const inner = this.add.circle(0, 0, 14, 0x140c22, 0.55).setStrokeStyle(1, 0xd2b070, 0.7);
+    const iconText = this.add.text(0, -1, icon, { font: '13px serif', fill: '#f7e0bd' }).setOrigin(0.5);
     const title = this.add.text(0, 35, label, { font: '11px monospace', fill: ARCANE_THEME.colors.textPrimary, align: 'center' }).setOrigin(0.5);
-    pad.add([glow, body, title]);
+    pad.add([glow, body, inner, iconText, title]);
 
     if (pulse) {
       this.tweens.add({ targets: glow, scaleX: 1.22, scaleY: 1.22, alpha: 0.12, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      this.tweens.add({ targets: iconText, alpha: 0.5, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     }
 
     body.setInteractive({ useHandCursor: true });
@@ -117,43 +153,84 @@ export default class MainHubScene extends Phaser.Scene {
     if (dotKey) this._dotTargets[dotKey] = dot;
   }
 
-  _drawSideButtons() {
-    const leftButtons = [
-      { label: '👥', toast: 'Friends' },
-      { label: '⚔️', scene: 'Arena' },
-      { label: '🏆', scene: 'EndlessTower' },
-      { label: '💬', toast: 'Chat' }
-    ];
-
-    const rightButtons = [
-      { label: '📜', scene: 'DailyCodex', dotKey: 'codex' },
-      { label: '✉️', toast: 'Mail' },
-      { label: '🎉', scene: 'Achievement', large: true, dotKey: 'events' },
-      { label: '🎫', toast: 'Battle Pass' },
-      { label: '🛍️', scene: 'GuildShop', dotKey: 'offers' }
-    ];
-
-    leftButtons.forEach((item, idx) => {
-      this._makeSideButton({ x: OUTER_PADDING + 22, y: 322 + (idx * 56), ...item });
+  _drawResourceStrip() {
+    const panel = createPanel(this, {
+      x: W / 2,
+      y: 540,
+      width: 312,
+      height: 34,
+      fill: 0x0f0a1c,
+      border: 0x8d6940,
+      withInner: false
     });
 
-    rightButtons.forEach((item, idx) => {
-      this._makeSideButton({ x: W - OUTER_PADDING - 22, y: 296 + (idx * 56), ...item });
+    const defs = [
+      { key: CURRENCY.GOLD, icon: ICONS.gold, tint: '#ffd27b' },
+      { key: CURRENCY.PREMIUM_CRYSTALS, icon: ICONS.gems, tint: '#d3a2ff' },
+      { key: CURRENCY.CRYSTALS, icon: ICONS.tickets, tint: '#bba8ff' }
+    ];
+
+    this._resourceTexts = defs.map((def, index) => {
+      const x = -98 + (index * 98);
+      panel.add(this.add.text(x, 0, def.icon, { font: '13px serif', fill: def.tint }).setOrigin(0.5));
+      const valueText = this.add.text(x + 24, 0, '0', {
+        font: '14px monospace',
+        fill: ARCANE_THEME.colors.textPrimary
+      }).setOrigin(0.5);
+      panel.add(valueText);
+      return valueText;
     });
   }
 
-  _makeSideButton({ x, y, label, scene, toast, large = false, dotKey = null }) {
-    const size = large ? 52 : 42;
-    const circle = this.add.circle(x, y, size / 2, 0x201335, 0.92).setStrokeStyle(2, 0xba915a, 0.95);
-    const icon = this.add.text(x, y, label, { font: `${large ? 20 : 16}px sans-serif` }).setOrigin(0.5);
-    const hit = this.add.zone(x, y, size, size).setInteractive({ useHandCursor: true });
+  _drawSideButtons() {
+    const leftButtons = [
+      { icon: ICONS.friends, label: 'Friends', toast: 'Friends' },
+      { icon: ICONS.arena, label: 'Arena', scene: 'Arena' },
+      { icon: ICONS.rankings, label: 'Ranks', scene: 'EndlessTower' },
+      { icon: ICONS.chat, label: 'Chat', toast: 'Chat' }
+    ];
 
-    this.tweens.add({ targets: [circle, icon], duration: 220, paused: true });
-    hit.on('pointerdown', () => this.tweens.add({ targets: [circle, icon], scale: 1.03, duration: 110, yoyo: true }));
+    const rightButtons = [
+      { icon: ICONS.quests, label: 'Quests', scene: 'DailyCodex', dotKey: 'codex' },
+      { icon: ICONS.mail, label: 'Mail', toast: 'Mail' },
+      { icon: ICONS.events, label: 'Events', scene: 'Achievement', large: true, dotKey: 'events', timer: '02:19' },
+      { icon: ICONS.pass, label: 'Pass', toast: 'Battle Pass' },
+      { icon: ICONS.offers, label: 'Offers', scene: 'GuildShop', dotKey: 'offers' }
+    ];
+
+    leftButtons.forEach((item, idx) => {
+      this._makeSideButton({ x: OUTER_PADDING + 26, y: 322 + (idx * 56), ...item });
+    });
+
+    rightButtons.forEach((item, idx) => {
+      this._makeSideButton({ x: W - OUTER_PADDING - 26, y: 296 + (idx * 56), ...item });
+    });
+  }
+
+  _makeSideButton({ x, y, icon, label, scene, toast, large = false, dotKey = null, timer = null }) {
+    const size = large ? 56 : 46;
+    const circle = this.add.circle(x, y, size / 2, 0x201335, 0.92).setStrokeStyle(2, 0xba915a, 0.95);
+    const ring = this.add.circle(x, y, (size / 2) - 6, 0x0f0a1b, 0.6).setStrokeStyle(1, 0x9a7548, 0.8);
+    const iconText = this.add.text(x, y - 1, icon, { font: `${large ? 22 : 16}px serif`, fill: '#f5dfbc' }).setOrigin(0.5);
+    const title = this.add.text(x, y + (large ? 38 : 32), label, {
+      font: '10px monospace',
+      fill: ARCANE_THEME.colors.textSecondary
+    }).setOrigin(0.5);
+
+    const hit = this.add.zone(x, y, size + 16, size + 16).setInteractive({ useHandCursor: true });
+    hit.on('pointerdown', () => this.tweens.add({ targets: [circle, ring, iconText], scale: 1.03, duration: 110, yoyo: true }));
     hit.on('pointerup', () => {
       if (scene) this.scene.start(scene);
       else this._showToast(toast || 'Soon');
     });
+
+    if (timer) {
+      const timerPlate = this.add.rectangle(x, y + (large ? 22 : 18), 30, 11, 0x2f1b44, 0.95).setStrokeStyle(1, 0xc89f65, 0.8);
+      const timerText = this.add.text(x, y + (large ? 22 : 18), timer, { font: '8px monospace', fill: '#ffdbad' }).setOrigin(0.5);
+      this.tweens.add({ targets: timerText, alpha: 0.5, duration: 600, yoyo: true, repeat: -1 });
+      timerPlate.setDepth(circle.depth + 1);
+      timerText.setDepth(circle.depth + 2);
+    }
 
     if (dotKey) {
       const dot = this.add.circle(x + (size / 2) - 7, y - (size / 2) + 7, 5, ARCANE_THEME.colors.danger).setVisible(false);
@@ -175,11 +252,11 @@ export default class MainHubScene extends Phaser.Scene {
     });
 
     const items = [
-      { label: 'Adventure', icon: '🗺️', scene: 'Campaign', x: 62 },
-      { label: 'Heroes', icon: '🛡️', scene: 'Roster', x: 142 },
-      { label: 'Academy', icon: '🏰', scene: 'AffinityTowerSelection', x: 222 },
-      { label: 'Summon', icon: '🔮', scene: 'Summon', x: 302, center: true, dotKey: 'summon' },
-      { label: 'Guild', icon: '🛡️', scene: 'Guild', x: 382 }
+      { label: 'Adventure', icon: ICONS.adventure, scene: 'Campaign', x: 62 },
+      { label: 'Heroes', icon: ICONS.heroes, scene: 'Roster', x: 142 },
+      { label: 'Academy', icon: ICONS.academy, scene: 'AffinityTowerSelection', x: 222 },
+      { label: 'Summon', icon: ICONS.summon, scene: 'Summon', x: 302, center: true, dotKey: 'summon' },
+      { label: 'Guild', icon: ICONS.guild, scene: 'Guild', x: 382 }
     ];
 
     items.forEach(item => {
@@ -187,14 +264,16 @@ export default class MainHubScene extends Phaser.Scene {
       const radius = item.center ? 34 : 25;
       const ring = this.add.circle(item.x, buttonY, radius, item.center ? 0x3c2168 : 0x241639, 0.98)
         .setStrokeStyle(2, item.center ? 0xd2ab6d : 0xa37d4a, 1);
-      const icon = this.add.text(item.x, buttonY - 7, item.icon, { font: `${item.center ? 20 : 16}px sans-serif` }).setOrigin(0.5);
+      const core = this.add.circle(item.x, buttonY, radius - (item.center ? 9 : 7), 0x110a20, 0.7)
+        .setStrokeStyle(1, 0x8f6841, 0.8);
+      const icon = this.add.text(item.x, buttonY - 7, item.icon, { font: `${item.center ? 22 : 17}px serif`, fill: '#f5dfbc' }).setOrigin(0.5);
       const text = this.add.text(item.x, buttonY + (item.center ? 18 : 16), item.label, {
         font: `${item.center ? 11 : 10}px monospace`,
         fill: ARCANE_THEME.colors.textPrimary
       }).setOrigin(0.5);
 
-      const hit = this.add.zone(item.x, buttonY, radius * 2, radius * 2).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => this.tweens.add({ targets: [ring, icon], scale: 1.03, duration: 110, yoyo: true }));
+      const hit = this.add.zone(item.x, buttonY, radius * 2 + 10, radius * 2 + 10).setInteractive({ useHandCursor: true });
+      hit.on('pointerdown', () => this.tweens.add({ targets: [ring, core, icon], scale: 1.03, duration: 110, yoyo: true }));
       hit.on('pointerup', () => this.scene.start(item.scene));
 
       if (item.center) {
@@ -214,17 +293,24 @@ export default class MainHubScene extends Phaser.Scene {
 
     const heroBaseX = W / 2;
     const heroBaseY = 470;
-    const body = this.add.circle(heroBaseX, heroBaseY, 30, 0x301f4f, 1).setStrokeStyle(2, 0xe0b774, 0.9);
     const aura = this.add.circle(heroBaseX, heroBaseY, 44, 0x7d42d6, 0.2);
-    this._heroLayer.add([aura, body]);
+    const body = this.add.circle(heroBaseX, heroBaseY, 30, 0x301f4f, 1).setStrokeStyle(2, 0xe0b774, 0.9);
+    const helm = this.add.text(heroBaseX, heroBaseY - 2, '⛨', { font: '20px serif', fill: '#f8dcb1' }).setOrigin(0.5);
+    this._heroLayer.add([aura, body, helm]);
 
-    for (let i = 0; i < 4; i++) {
-      const orb = this.add.circle(heroBaseX + Phaser.Math.Between(-60, 60), heroBaseY - Phaser.Math.Between(40, 90), 4, 0xc28bff, 0.7);
+    for (let i = 0; i < 6; i++) {
+      const orb = this.add.circle(
+        heroBaseX + Phaser.Math.Between(-78, 78),
+        heroBaseY - Phaser.Math.Between(30, 110),
+        Phaser.Math.Between(2, 4),
+        0xc28bff,
+        0.7
+      );
       this._heroLayer.add(orb);
       this._heroSprites.push(orb);
       this.tweens.add({
         targets: orb,
-        y: orb.y - Phaser.Math.Between(18, 42),
+        y: orb.y - Phaser.Math.Between(18, 52),
         alpha: 0.15,
         duration: Phaser.Math.Between(1800, 2600),
         yoyo: true,
@@ -234,6 +320,7 @@ export default class MainHubScene extends Phaser.Scene {
     }
 
     this.tweens.add({ targets: body, scaleY: 1.03, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: helm, y: heroBaseY - 5, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     this.tweens.add({ targets: aura, scale: 1.08, alpha: 0.14, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   }
 
@@ -244,7 +331,7 @@ export default class MainHubScene extends Phaser.Scene {
       width: 36,
       height: 36,
       label,
-      font: '16px sans-serif',
+      font: '16px serif',
       onClick: () => this.scene.start(scene)
     });
     return root;
@@ -286,34 +373,41 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _refreshUI() {
-  this._currencyTexts[CURRENCY.GOLD]?.setText(this._compact(CurrencyManager.get(CURRENCY.GOLD)));
-  this._currencyTexts[CURRENCY.PREMIUM_CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS)));
-  this._currencyTexts[CURRENCY.CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.CRYSTALS)));
-  this._currencyTexts[CURRENCY.AWAKENING_SHARDS]?.setText(this._compact(CurrencyManager.get(CURRENCY.AWAKENING_SHARDS)));
+    this._currencyTexts[CURRENCY.GOLD]?.setText(this._compact(CurrencyManager.get(CURRENCY.GOLD)));
+    this._currencyTexts[CURRENCY.PREMIUM_CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS)));
+    this._currencyTexts[CURRENCY.CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.CRYSTALS)));
+    this._currencyTexts[CURRENCY.AWAKENING_SHARDS]?.setText(this._compact(CurrencyManager.get(CURRENCY.AWAKENING_SHARDS)));
 
-  this._levelText.setText(String(GameState.playerLevel || 1));
-  this._usernameText.setText(GameState.playerName || 'Arcanist');
-  this._powerText.setText(`Combat ${this._compact(this._getTeamPower())}`);
-  this._updateNotificationDots();
-}
+    if (this._resourceTexts.length >= 3) {
+      this._resourceTexts[0].setText(this._compact(CurrencyManager.get(CURRENCY.GOLD)));
+      this._resourceTexts[1].setText(this._compact(CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS)));
+      this._resourceTexts[2].setText(this._compact(CurrencyManager.get(CURRENCY.CRYSTALS)));
+    }
 
-_getTeamPower() {
-  if (typeof GameState.getTeamPower === 'function') {
-    const statePower = GameState.getTeamPower();
-    return Number.isFinite(statePower) ? statePower : 0;
+    this._levelText.setText(String(GameState.playerLevel || 1));
+    this._usernameText.setText(GameState.playerName || 'Arcanist');
+    this._powerText.setText(`Power ${this._compact(this._getTeamPower())}`);
+    this._updateNotificationDots();
   }
 
-  const entries = GameState.getActiveSquadEntries?.() || [];
-  if (!entries.length) return 0;
+  _getTeamPower() {
+    if (typeof GameState.getTeamPower === 'function') {
+      const statePower = GameState.getTeamPower();
+      return Number.isFinite(statePower) ? statePower : 0;
+    }
 
-  return entries.reduce((total, entry) => {
-    const hero = HeroManager.getHero(entry.heroId);
-    if (!hero?.computeStats) return total;
-    const stats = hero.computeStats();
-    const heroPower = (stats.damage || 0) + (stats.defense || 0) + Math.floor((stats.hp || 0) / 10);
-    return total + heroPower;
-  }, 0);
-}
+    const entries = GameState.getActiveSquadEntries?.() || [];
+    if (!entries.length) return 0;
+
+    return entries.reduce((total, entry) => {
+      const hero = HeroManager.getHero(entry.heroId);
+      if (!hero?.computeStats) return total;
+      const stats = hero.computeStats();
+      const heroPower = (stats.damage || 0) + (stats.defense || 0) + Math.floor((stats.hp || 0) / 10);
+      return total + heroPower;
+    }, 0);
+  }
+
   _compact(value) {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
