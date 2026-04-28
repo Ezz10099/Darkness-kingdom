@@ -9,26 +9,22 @@ import { ARCANE_THEME, addArcaneBackdrop, createPanel, createArcaneButton } from
 
 const W = 480;
 const H = 854;
+const OUTER_PADDING = 16;
 
 export default class MainHubScene extends Phaser.Scene {
   constructor() {
     super('MainHub');
     this._heroSprites = [];
     this._pendingIdleGold = 0;
-    this._lastCollectAt = 0;
-    this._collectCooldownMs = 15000;
-    this._moreExpanded = false;
     this._dotTargets = {};
   }
 
   create() {
     addArcaneBackdrop(this, W, H);
-    this._drawHeader();
-    this._drawIdleScene();
-    this._drawCurrencyBar();
-    this._drawPrimaryActions();
-    this._drawGridNav();
-    this._drawMoreMenu();
+    this._drawCenterScene();
+    this._drawTopBar();
+    this._drawSideButtons();
+    this._drawBottomNav();
 
     this.time.addEvent({ delay: 500, loop: true, callback: this._refreshUI, callbackScope: this });
     this.time.addEvent({ delay: 1000, loop: true, callback: this._idleTick, callbackScope: this });
@@ -42,145 +38,202 @@ export default class MainHubScene extends Phaser.Scene {
     AchievementManager.showPopups(this);
   }
 
-  _drawHeader() {
-    createPanel(this, { x: W / 2, y: 34, width: W - 14, height: 52, fill: 0x120d24, withInner: false });
-    this._makeIconButton({ x: 34, y: 34, label: '⚙', scene: 'Settings' });
-    this._makeIconButton({ x: W - 34, y: 34, label: '👤', scene: 'Roster' });
-    this.add.text(W / 2, 34, 'ARCANE ACADEMY', {
-      font: '20px monospace', fill: ARCANE_THEME.colors.textPrimary
-    }).setOrigin(0.5);
+  _drawTopBar() {
+    const topBarHeight = 72;
+    const y = topBarHeight / 2 + 6;
+    createPanel(this, { x: W / 2, y, width: W - (OUTER_PADDING * 2), height: topBarHeight, fill: 0x120c22, border: 0x89613f, withInner: false });
+
+    this._avatarRing = this.add.circle(OUTER_PADDING + 28, y, 24, 0x2a1d45, 0.95).setStrokeStyle(2, 0xc69d63, 1);
+    this._avatarOnline = this.add.circle(OUTER_PADDING + 44, y + 17, 4, 0x58ffb2, 0.95)
+      .setStrokeStyle(1, 0xdffff0, 0.8);
+    this.tweens.add({ targets: this._avatarOnline, alpha: 0.35, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.inOut' });
+    this._levelBadge = this.add.circle(OUTER_PADDING + 14, y + 18, 9, 0x4a316b, 1).setStrokeStyle(1, 0xe5be7e, 0.9);
+    this._levelText = this.add.text(OUTER_PADDING + 14, y + 18, '1', { font: '10px monospace', fill: ARCANE_THEME.colors.textPrimary }).setOrigin(0.5);
+
+    this._usernameText = this.add.text(OUTER_PADDING + 58, y - 14, 'PlayerName', { font: '14px monospace', fill: ARCANE_THEME.colors.textPrimary });
+    this._powerText = this.add.text(OUTER_PADDING + 58, y + 6, 'Combat 0', { font: '12px monospace', fill: ARCANE_THEME.colors.textSecondary });
+
+    const currencyY = y;
+    const currencyDefs = [
+      { key: CURRENCY.GOLD, icon: '🪙', tint: '#ffd27b', short: 'gold' },
+      { key: CURRENCY.PREMIUM_CRYSTALS, icon: '💎', tint: '#d3a2ff', short: 'gems' },
+      { key: CURRENCY.CRYSTALS, icon: '🎟️', tint: '#bba8ff', short: 'tickets' },
+      { key: CURRENCY.AWAKENING_SHARDS, icon: '⚡', tint: '#7ecfff', short: 'energy' }
+    ];
+
+    this._currencyTexts = {};
+    let cx = 250;
+    currencyDefs.forEach(def => {
+      const holder = this.add.container(cx, currencyY);
+      const chip = this.add.rectangle(0, 0, 50, 24, 0x1c1230, 0.95).setStrokeStyle(1, 0x8f6947, 0.9);
+      const icon = this.add.text(-17, 0, def.icon, { font: '12px sans-serif', fill: def.tint }).setOrigin(0.5);
+      const value = this.add.text(0, 0, '0', { font: '11px monospace', fill: ARCANE_THEME.colors.textPrimary }).setOrigin(0.5);
+      const plus = this.add.rectangle(24, 0, 14, 14, 0x3a264f, 1).setStrokeStyle(1, 0xc79e67, 0.8)
+        .setInteractive({ useHandCursor: true });
+      const plusText = this.add.text(24, 0, '+', { font: '10px monospace', fill: '#ffe4b8' }).setOrigin(0.5);
+      plus.on('pointerup', () => this._showToast(`${def.short} sources`));
+      holder.add([chip, icon, value, plus, plusText]);
+      this._currencyTexts[def.key] = value;
+      cx += 52;
+    });
+
+    this._makeIconButton({ x: W - OUTER_PADDING - 20, y, label: '⚙', scene: 'Settings' });
   }
 
-  _drawIdleScene() {
-    this._artRect = createPanel(this, { x: W / 2, y: 216, width: W - 24, height: 290, fill: 0x100b1f, border: 0x73553b, withInner: true });
-    this.add.text(W / 2, 95, 'ACADEMY COURTYARD', {
-      font: '14px monospace', fill: ARCANE_THEME.colors.textSecondary
-    }).setOrigin(0.5);
-    this.add.ellipse(W / 2, 216, 360, 180, 0x26425d, 0.55).setStrokeStyle(1, 0x4f83b8, 0.6);
+  _drawCenterScene() {
+    const centerY = 420;
+    this.add.ellipse(W / 2, centerY, W + 120, H - 260, 0x0f0b1d, 0.85);
+    this.add.ellipse(W / 2, centerY - 120, W + 140, 320, 0x25143c, 0.24);
+    this.add.ellipse(W / 2, centerY + 20, W + 70, 250, 0x4d2b66, 0.2);
+
+    const clouds = this.add.ellipse(W / 2, 250, 420, 110, 0x8d63cf, 0.11);
+    this.tweens.add({ targets: clouds, x: W / 2 + 8, yoyo: true, duration: 5000, repeat: -1, ease: 'Sine.inOut' });
+
+    this._drawBuilding({ x: 88, y: 438, label: 'Campaign Gate', scene: 'Campaign', color: 0x64315c });
+    this._drawBuilding({ x: 188, y: 356, label: 'Summon Portal', scene: 'Summon', color: 0x6a3e9d, pulse: true, dotKey: 'summon' });
+    this._drawBuilding({ x: 298, y: 350, label: 'Academy Tower', scene: 'AffinityTowerSelection', color: 0x3f326b });
+    this._drawBuilding({ x: 392, y: 435, label: 'Guild Hall', scene: 'Guild', color: 0x523245 });
+
     this._heroLayer = this.add.container(0, 0);
     this._buildIdleHeroAnimations();
   }
 
-  _drawCurrencyBar() {
-    const y = 378;
-    createPanel(this, { x: W / 2, y, width: W - 24, height: 88, fill: 0x130d22, border: 0x65492f, withInner: false });
-    this._marksText = this.add.text(24, y - 27, '💛 Marks: 0', { font: '16px monospace', fill: '#ffe08a' });
-    this._lumensText = this.add.text(250, y - 27, '✨ Lumens: 0', { font: '16px monospace', fill: '#dcb6ff' });
-    this._etherText = this.add.text(24, y + 4, '🔵 Ether: 0', { font: '16px monospace', fill: '#8ed8ff' });
-    this._resonanceText = this.add.text(250, y + 4, '🌀 Resonance: 0', { font: '16px monospace', fill: '#d1c9ff' });
+  _drawBuilding({ x, y, label, scene, color, pulse = false, dotKey = null }) {
+    const pad = this.add.container(x, y);
+    const glow = this.add.circle(0, 0, 36, color, 0.3);
+    const body = this.add.circle(0, 0, 24, color, 0.9).setStrokeStyle(2, 0xc79d62, 0.9);
+    const title = this.add.text(0, 35, label, { font: '11px monospace', fill: ARCANE_THEME.colors.textPrimary, align: 'center' }).setOrigin(0.5);
+    pad.add([glow, body, title]);
+
+    if (pulse) {
+      this.tweens.add({ targets: glow, scaleX: 1.22, scaleY: 1.22, alpha: 0.12, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    }
+
+    body.setInteractive({ useHandCursor: true });
+    body.on('pointerup', () => this.scene.start(scene));
+
+    const dot = this.add.circle(x + 20, y - 20, 5, ARCANE_THEME.colors.danger).setVisible(false);
+    if (dotKey) this._dotTargets[dotKey] = dot;
   }
 
-  _drawPrimaryActions() {
-    const y = 445;
-    this._collectBtn = this._makeNavButton({
-      x: 126,
-      y,
-      width: 214,
-      height: 50,
-      label: 'COLLECT IDLE GOLD',
-      onClick: () => this._collectIdleGold()
-    });
-
-    this._campaignBtn = this._makeNavButton({
-      x: 354,
-      y,
-      width: 214,
-      height: 50,
-      label: 'CAMPAIGN',
-      onClick: () => this.scene.start('Campaign')
-    });
-  }
-
-  _drawGridNav() {
-    const rows = [
-      [
-        { label: 'SUMMON', scene: 'Summon', dotKey: 'summon' },
-        { label: 'ROSTER', scene: 'Roster' },
-        { label: 'FORGE', scene: 'GearForge' }
-      ],
-      [
-        { label: 'TOWER', scene: 'EndlessTower' },
-        { label: 'ARENA', scene: 'Arena' },
-        { label: 'GUILD BOSS', scene: 'WorldBoss' }
-      ],
-      [
-        { label: 'CODEX', scene: 'DailyCodex', dotKey: 'codex' },
-        { label: 'ELDER TREE', scene: 'ElderTree' },
-        { label: 'MORE▼', action: () => this._toggleMoreMenu() }
-      ]
+  _drawSideButtons() {
+    const leftButtons = [
+      { label: '👥', toast: 'Friends' },
+      { label: '⚔️', scene: 'Arena' },
+      { label: '🏆', scene: 'EndlessTower' },
+      { label: '💬', toast: 'Chat' }
     ];
 
-    rows.forEach((row, rowIndex) => {
-      row.forEach((item, colIndex) => {
-        const x = 82 + (colIndex * 158);
-        const y = 520 + (rowIndex * 66);
-        const button = this._makeNavButton({
-          x,
-          y,
-          width: 146,
-          height: 50,
-          label: item.label,
-          scene: item.scene,
-          onClick: item.action
-        });
-        if (item.dotKey && button?.dot) this._dotTargets[item.dotKey] = button.dot;
-      });
+    const rightButtons = [
+      { label: '📜', scene: 'DailyCodex', dotKey: 'codex' },
+      { label: '✉️', toast: 'Mail' },
+      { label: '🎉', scene: 'Achievement', large: true, dotKey: 'events' },
+      { label: '🎫', toast: 'Battle Pass' },
+      { label: '🛍️', scene: 'GuildShop', dotKey: 'offers' }
+    ];
+
+    leftButtons.forEach((item, idx) => {
+      this._makeSideButton({ x: OUTER_PADDING + 22, y: 322 + (idx * 56), ...item });
+    });
+
+    rightButtons.forEach((item, idx) => {
+      this._makeSideButton({ x: W - OUTER_PADDING - 22, y: 296 + (idx * 56), ...item });
     });
   }
 
-  _drawMoreMenu() {
-    const x = W / 2;
-    const y = 760;
-    this._morePanel = this.add.container(0, 0).setVisible(false);
-    const panel = createPanel(this, { x, y, width: W - 40, height: 160, fill: 0x140c23, border: 0x7f5b37 });
-    this._morePanel.add(panel);
+  _makeSideButton({ x, y, label, scene, toast, large = false, dotKey = null }) {
+    const size = large ? 52 : 42;
+    const circle = this.add.circle(x, y, size / 2, 0x201335, 0.92).setStrokeStyle(2, 0xba915a, 0.95);
+    const icon = this.add.text(x, y, label, { font: `${large ? 20 : 16}px sans-serif` }).setOrigin(0.5);
+    const hit = this.add.zone(x, y, size, size).setInteractive({ useHandCursor: true });
+
+    this.tweens.add({ targets: [circle, icon], duration: 220, paused: true });
+    hit.on('pointerdown', () => this.tweens.add({ targets: [circle, icon], scale: 1.03, duration: 110, yoyo: true }));
+    hit.on('pointerup', () => {
+      if (scene) this.scene.start(scene);
+      else this._showToast(toast || 'Soon');
+    });
+
+    if (dotKey) {
+      const dot = this.add.circle(x + (size / 2) - 7, y - (size / 2) + 7, 5, ARCANE_THEME.colors.danger).setVisible(false);
+      this._dotTargets[dotKey] = dot;
+    }
+  }
+
+  _drawBottomNav() {
+    const navHeight = 92;
+    const y = H - (navHeight / 2);
+    createPanel(this, {
+      x: W / 2,
+      y,
+      width: W - (OUTER_PADDING * 2),
+      height: navHeight,
+      fill: 0x140e25,
+      border: 0x9a7340,
+      withInner: true
+    });
 
     const items = [
-      { label: 'Achievements', scene: 'Achievement' },
-      { label: 'Guild', scene: 'Guild' },
-      { label: 'Affinity Towers', scene: 'AffinityTowerSelection' },
-      { label: 'Awakening Altar', scene: 'AwakenAltar' },
-      { label: 'Login Streak', scene: 'LoginStreak', data: { returnScene: 'MainHub' } },
-      { label: 'Settings', scene: 'Settings' }
+      { label: 'Adventure', icon: '🗺️', scene: 'Campaign', x: 62 },
+      { label: 'Heroes', icon: '🛡️', scene: 'Roster', x: 142 },
+      { label: 'Academy', icon: '🏰', scene: 'AffinityTowerSelection', x: 222 },
+      { label: 'Summon', icon: '🔮', scene: 'Summon', x: 302, center: true, dotKey: 'summon' },
+      { label: 'Guild', icon: '🛡️', scene: 'Guild', x: 382 }
     ];
 
-    items.forEach((item, idx) => {
-      const tx = 66 + ((idx % 2) * 190);
-      const ty = 704 + (Math.floor(idx / 2) * 44);
-      const text = this.add.text(tx, ty, `• ${item.label}`, {
-        font: '16px monospace', fill: ARCANE_THEME.colors.textSecondary
-      }).setInteractive({ useHandCursor: true });
-      text.on('pointerup', () => this.scene.start(item.scene, item.data));
-      this._morePanel.add(text);
+    items.forEach(item => {
+      const buttonY = item.center ? y - 28 : y + 2;
+      const radius = item.center ? 34 : 25;
+      const ring = this.add.circle(item.x, buttonY, radius, item.center ? 0x3c2168 : 0x241639, 0.98)
+        .setStrokeStyle(2, item.center ? 0xd2ab6d : 0xa37d4a, 1);
+      const icon = this.add.text(item.x, buttonY - 7, item.icon, { font: `${item.center ? 20 : 16}px sans-serif` }).setOrigin(0.5);
+      const text = this.add.text(item.x, buttonY + (item.center ? 18 : 16), item.label, {
+        font: `${item.center ? 11 : 10}px monospace`,
+        fill: ARCANE_THEME.colors.textPrimary
+      }).setOrigin(0.5);
+
+      const hit = this.add.zone(item.x, buttonY, radius * 2, radius * 2).setInteractive({ useHandCursor: true });
+      hit.on('pointerdown', () => this.tweens.add({ targets: [ring, icon], scale: 1.03, duration: 110, yoyo: true }));
+      hit.on('pointerup', () => this.scene.start(item.scene));
+
+      if (item.center) {
+        this.tweens.add({ targets: ring, alpha: 0.78, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      }
+
+      if (item.dotKey) {
+        const dot = this.add.circle(item.x + radius - 8, buttonY - radius + 8, 5, ARCANE_THEME.colors.danger).setVisible(false);
+        this._dotTargets[item.dotKey] = dot;
+      }
     });
   }
 
   _buildIdleHeroAnimations() {
     this._heroLayer.removeAll(true);
     this._heroSprites = [];
-    const squad = GameState.getActiveSquadEntries();
-    const count = Math.max(1, squad.length);
 
-    for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 * i) / count;
-      const x = W / 2 + Math.cos(angle) * 120;
-      const y = 216 + Math.sin(angle) * 64;
-      const color = squad[i] ? 0x8ed8ff : 0x4d5a7a;
-      const hero = this.add.circle(x, y, squad[i] ? 8 : 6, color, squad[i] ? 1 : 0.5)
-        .setStrokeStyle(1, 0xffffff, 0.6);
-      this._heroLayer.add(hero);
-      this._heroSprites.push(hero);
+    const heroBaseX = W / 2;
+    const heroBaseY = 470;
+    const body = this.add.circle(heroBaseX, heroBaseY, 30, 0x301f4f, 1).setStrokeStyle(2, 0xe0b774, 0.9);
+    const aura = this.add.circle(heroBaseX, heroBaseY, 44, 0x7d42d6, 0.2);
+    this._heroLayer.add([aura, body]);
 
+    for (let i = 0; i < 4; i++) {
+      const orb = this.add.circle(heroBaseX + Phaser.Math.Between(-60, 60), heroBaseY - Phaser.Math.Between(40, 90), 4, 0xc28bff, 0.7);
+      this._heroLayer.add(orb);
+      this._heroSprites.push(orb);
       this.tweens.add({
-        targets: hero,
-        x: x + Phaser.Math.Between(-18, 18),
-        y: y + Phaser.Math.Between(-12, 12),
-        duration: Phaser.Math.Between(1200, 2600),
+        targets: orb,
+        y: orb.y - Phaser.Math.Between(18, 42),
+        alpha: 0.15,
+        duration: Phaser.Math.Between(1800, 2600),
         yoyo: true,
         repeat: -1,
         ease: 'Sine.inOut'
       });
     }
+
+    this.tweens.add({ targets: body, scaleY: 1.03, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: aura, scale: 1.08, alpha: 0.14, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   }
 
   _makeIconButton({ x, y, label, scene }) {
@@ -194,43 +247,6 @@ export default class MainHubScene extends Phaser.Scene {
       onClick: () => this.scene.start(scene)
     });
     return root;
-  }
-
-  _makeNavButton({ x, y, width, height, label, scene, onClick }) {
-    const unlockByScene = {
-      Summon: 'BASIC_SUMMON',
-      Arena: 'ARENA',
-      AffinityTowerSelection: 'AFFINITY_TOWERS',
-      Guild: 'GUILD'
-    };
-
-    const unlockKey = scene ? unlockByScene[scene] : null;
-    const sceneExists = !scene || this.scene.manager.getScene(scene) !== null;
-    const isUnlocked = !unlockKey || GameState.isUnlocked(unlockKey);
-    const active = sceneExists && isUnlocked;
-
-    const button = createArcaneButton(this, {
-      x,
-      y,
-      width,
-      height,
-      label,
-      enabled: active,
-      textColor: active ? ARCANE_THEME.colors.textPrimary : ARCANE_THEME.colors.textMuted,
-      onClick: () => {
-        if (onClick) onClick();
-        else if (scene) this.scene.start(scene);
-      }
-    });
-
-    const dot = this.add.circle(x + (width / 2) - 12, y - (height / 2) + 10, 5, ARCANE_THEME.colors.danger).setVisible(false);
-
-    return { bg: button.outer, dot };
-  }
-
-  _toggleMoreMenu() {
-    this._moreExpanded = !this._moreExpanded;
-    this._morePanel.setVisible(this._moreExpanded);
   }
 
   _isCodexNotifiable() {
@@ -247,32 +263,19 @@ export default class MainHubScene extends Phaser.Scene {
     return LoginStreakManager.canClaimToday();
   }
 
-  _isCollectNotifiable() {
-    return this._pendingIdleGold >= 10 && (Date.now() - this._lastCollectAt) >= this._collectCooldownMs;
-  }
-
   _updateNotificationDots() {
     const candidates = [
-      { key: 'collect', show: this._isCollectNotifiable(), dot: this._collectBtn?.dot },
       { key: 'codex', show: this._isCodexNotifiable(), dot: this._dotTargets.codex },
-      { key: 'summon', show: this._isSummonNotifiable(), dot: this._dotTargets.summon }
+      { key: 'summon', show: this._isSummonNotifiable(), dot: this._dotTargets.summon },
+      { key: 'events', show: LoginStreakManager.canClaimToday(), dot: this._dotTargets.events },
+      { key: 'offers', show: CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS) < 100, dot: this._dotTargets.offers }
     ];
 
-    const active = candidates.filter(c => c.show).slice(0, 3);
+    const active = candidates.filter(c => c.show).slice(0, 4);
     const activeKeys = new Set(active.map(a => a.key));
     candidates.forEach(candidate => {
       if (candidate.dot) candidate.dot.setVisible(activeKeys.has(candidate.key));
     });
-  }
-
-  _collectIdleGold() {
-    if (!this._isCollectNotifiable()) return;
-    const payout = Math.max(10, Math.floor(this._pendingIdleGold));
-    CurrencyManager.add(CURRENCY.GOLD, payout);
-    DailyCodexManager.increment('COLLECT_IDLE');
-    this._pendingIdleGold = 0;
-    this._lastCollectAt = Date.now();
-    this._refreshUI();
   }
 
   _idleTick() {
@@ -282,10 +285,38 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _refreshUI() {
-    this._marksText.setText(`💛 Marks: ${CurrencyManager.get(CURRENCY.GOLD).toLocaleString()}`);
-    this._lumensText.setText(`✨ Lumens: ${CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS).toLocaleString()}`);
-    this._etherText.setText(`🔵 Ether: ${CurrencyManager.get(CURRENCY.CRYSTALS).toLocaleString()}`);
-    this._resonanceText.setText(`🌀 Resonance: ${CurrencyManager.get(CURRENCY.AWAKENING_SHARDS).toLocaleString()}`);
+    this._currencyTexts[CURRENCY.GOLD]?.setText(this._compact(CurrencyManager.get(CURRENCY.GOLD)));
+    this._currencyTexts[CURRENCY.PREMIUM_CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS)));
+    this._currencyTexts[CURRENCY.CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.CRYSTALS)));
+    this._currencyTexts[CURRENCY.AWAKENING_SHARDS]?.setText(this._compact(CurrencyManager.get(CURRENCY.AWAKENING_SHARDS)));
+
+    this._levelText.setText(String(GameState.playerLevel || 1));
+    this._usernameText.setText(GameState.playerName || 'Arcanist');
+    this._powerText.setText(`Combat ${this._compact(GameState.getTeamPower())}`);
     this._updateNotificationDots();
+  }
+
+  _compact(value) {
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+    return `${Math.floor(value)}`;
+  }
+
+  _showToast(message) {
+    const toast = this.add.text(W / 2, H - 128, message, {
+      font: '14px monospace',
+      fill: ARCANE_THEME.colors.textPrimary,
+      backgroundColor: '#160f2acc',
+      padding: { x: 10, y: 6 }
+    }).setOrigin(0.5);
+
+    this.tweens.add({
+      targets: toast,
+      y: toast.y - 14,
+      alpha: 0,
+      duration: 700,
+      ease: 'Quad.Out',
+      onComplete: () => toast.destroy()
+    });
   }
 }
