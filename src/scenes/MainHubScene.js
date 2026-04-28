@@ -297,7 +297,6 @@ export default class MainHubScene extends Phaser.Scene {
     this._updateNotificationDots();
   }
 
-
   _getTeamPower() {
     if (typeof GameState.getTeamPower === 'function') {
       const statePower = GameState.getTeamPower();
