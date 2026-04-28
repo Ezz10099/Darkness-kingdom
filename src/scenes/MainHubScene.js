@@ -4,6 +4,7 @@ import IdleManager from '../systems/IdleManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import LoginStreakManager from '../systems/LoginStreakManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
+import HeroManager from '../systems/HeroManager.js';
 import { CURRENCY } from '../data/constants.js';
 import { ARCANE_THEME, addArcaneBackdrop, createPanel, createArcaneButton } from '../ui/ArcaneUI.js';
 
@@ -285,17 +286,34 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _refreshUI() {
-    this._currencyTexts[CURRENCY.GOLD]?.setText(this._compact(CurrencyManager.get(CURRENCY.GOLD)));
-    this._currencyTexts[CURRENCY.PREMIUM_CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS)));
-    this._currencyTexts[CURRENCY.CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.CRYSTALS)));
-    this._currencyTexts[CURRENCY.AWAKENING_SHARDS]?.setText(this._compact(CurrencyManager.get(CURRENCY.AWAKENING_SHARDS)));
+  this._currencyTexts[CURRENCY.GOLD]?.setText(this._compact(CurrencyManager.get(CURRENCY.GOLD)));
+  this._currencyTexts[CURRENCY.PREMIUM_CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.PREMIUM_CRYSTALS)));
+  this._currencyTexts[CURRENCY.CRYSTALS]?.setText(this._compact(CurrencyManager.get(CURRENCY.CRYSTALS)));
+  this._currencyTexts[CURRENCY.AWAKENING_SHARDS]?.setText(this._compact(CurrencyManager.get(CURRENCY.AWAKENING_SHARDS)));
 
-    this._levelText.setText(String(GameState.playerLevel || 1));
-    this._usernameText.setText(GameState.playerName || 'Arcanist');
-    this._powerText.setText(`Combat ${this._compact(GameState.getTeamPower())}`);
-    this._updateNotificationDots();
+  this._levelText.setText(String(GameState.playerLevel || 1));
+  this._usernameText.setText(GameState.playerName || 'Arcanist');
+  this._powerText.setText(`Combat ${this._compact(this._getTeamPower())}`);
+  this._updateNotificationDots();
+}
+
+_getTeamPower() {
+  if (typeof GameState.getTeamPower === 'function') {
+    const statePower = GameState.getTeamPower();
+    return Number.isFinite(statePower) ? statePower : 0;
   }
 
+  const entries = GameState.getActiveSquadEntries?.() || [];
+  if (!entries.length) return 0;
+
+  return entries.reduce((total, entry) => {
+    const hero = HeroManager.getHero(entry.heroId);
+    if (!hero?.computeStats) return total;
+    const stats = hero.computeStats();
+    const heroPower = (stats.damage || 0) + (stats.defense || 0) + Math.floor((stats.hp || 0) / 10);
+    return total + heroPower;
+  }, 0);
+}
   _compact(value) {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
