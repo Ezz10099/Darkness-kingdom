@@ -57,31 +57,43 @@ export default class CampaignScene extends Phaser.Scene {
     this._reset();
     const c = this._root;
     const W = 480;
+    const H = 854;
+    const TOP_H = 118;
+    const BOTTOM_H = 120;
+    const CONTENT_TOP = TOP_H + 10;
+    const CONTENT_BOTTOM = H - BOTTOM_H - 10;
+    const CONTENT_H = CONTENT_BOTTOM - CONTENT_TOP;
     const lastIdx = this._lastClearedIdx();
     const allRegions = getCampaignRegions();
 
-    c.add(this.add.rectangle(W / 2, 427, W, 854, 0x090813));
-    c.add(addPanelImage(this, W / 2, 427, 'panelLarge', { displayWidth: W - 12, displayHeight: 842, alpha: 0.9 }));
-    c.add(this.add.text(W / 2, 40, 'CAMPAIGN', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
-    c.add(this.add.text(30, 40, '< BACK', { font: '14px monospace', fill: '#aaaaaa' })
-      .setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
+    c.add(this.add.rectangle(W / 2, H / 2, W, H, 0x090813));
+    c.add(this.add.rectangle(W / 2, H / 2, W, H, 0x110a1f, 0.45));
+
+    c.add(addPanelImage(this, W / 2, TOP_H / 2, 'panelLarge', { displayWidth: W - 14, displayHeight: TOP_H - 8, alpha: 0.94 }));
+    c.add(addPanelImage(this, W / 2, H - (BOTTOM_H / 2), 'panelLarge', { displayWidth: W - 14, displayHeight: BOTTOM_H - 8, alpha: 0.94 }));
+
+    c.add(this.add.text(W / 2, 28, 'CAMPAIGN', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
+    c.add(addUIButton(this, 52, 56, 'buttonDanger', { displayWidth: 88, displayHeight: 26, alpha: 0.9 }));
+    c.add(this.add.text(52, 56, 'BACK', { font: '12px monospace', fill: '#ffd6d6' })
+      .setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.scene.start('MainHub')));
-    const formationBtn = this.add.rectangle(W - 58, 40, 94, 24, 0x1a1a33).setStrokeStyle(1, 0x887744)
+    const formationBtn = this.add.rectangle(W - 66, 56, 108, 26, 0x1a1a33, 0.2).setStrokeStyle(1, 0x887744)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor());
-    c.add(addUIButton(this, W - 58, 40, 'buttonSecondary', { displayWidth: 94, displayHeight: 24, alpha: 0.82 }));
+    c.add(addUIButton(this, W - 66, 56, 'buttonSecondary', { displayWidth: 108, displayHeight: 26, alpha: 0.9 }));
     c.add(formationBtn);
-    c.add(this.add.text(W - 58, 40, 'FORMATION', { font: '10px monospace', fill: '#ffd700' }).setOrigin(0.5));
+    c.add(this.add.text(W - 66, 56, 'FORMATION', { font: '10px monospace', fill: '#ffd700' }).setOrigin(0.5));
 
     const unlockedRegion = Math.max(1, STAGE_DEFINITIONS[Math.max(0, Math.min(lastIdx + 1, STAGE_DEFINITIONS.length - 1))]?.region || 1);
     allRegions.forEach((regionCfg, idx) => {
-      const x = 48 + idx * 96;
+      const x = 64 + idx * 88;
+      const y = TOP_H - 28;
       const isActive = regionCfg.region === this._selectedRegion;
       const isUnlocked = regionCfg.region <= unlockedRegion;
-      const bg = this.add.rectangle(x, 78, 86, 28, isActive ? 0x332200 : 0x1a1a33)
-        .setStrokeStyle(1, isUnlocked ? 0x887744 : 0x444466)
-        .setAlpha(isUnlocked ? 1 : 0.4);
+      c.add(addUIButton(this, x, y, isActive ? 'buttonPrimary' : 'buttonSecondary', { displayWidth: 82, displayHeight: 24, alpha: isUnlocked ? 0.88 : 0.45 }));
+      const bg = this.add.rectangle(x, y, 82, 24, isActive ? 0x332200 : 0x1a1a33, 0.15)
+        .setStrokeStyle(1, isUnlocked ? 0x887744 : 0x444466).setAlpha(isUnlocked ? 1 : 0.4);
       c.add(bg);
-      c.add(this.add.text(x, 78, `R${regionCfg.region}`, { font: '12px monospace', fill: '#ffd700' }).setOrigin(0.5).setAlpha(isUnlocked ? 1 : 0.4));
+      c.add(this.add.text(x, y, `R${regionCfg.region}`, { font: '12px monospace', fill: '#ffd700' }).setOrigin(0.5).setAlpha(isUnlocked ? 1 : 0.4));
       if (isUnlocked) {
         bg.setInteractive({ useHandCursor: true }).on('pointerup', () => {
           this._selectedRegion = regionCfg.region;
@@ -91,38 +103,52 @@ export default class CampaignScene extends Phaser.Scene {
     });
 
     const stageList = STAGE_DEFINITIONS.filter(stage => stage.region === this._selectedRegion);
+    const rowH = 56;
+    const rowGap = 8;
+    const maxRows = Math.max(1, Math.floor((CONTENT_H - 10) / (rowH + rowGap)));
     stageList.forEach((stage, localIdx) => {
+      if (localIdx >= maxRows) return;
       const globalIdx = this._stageIdx(stage.id);
       const cleared = globalIdx <= lastIdx;
       const unlocked = globalIdx <= lastIdx + 1;
-      const y = 128 + localIdx * 34;
+      const y = CONTENT_TOP + 8 + localIdx * (rowH + rowGap) + (rowH / 2);
       const bgColor = cleared ? 0x0a260a : 0x111128;
       const alpha = unlocked ? 1 : 0.4;
 
-      c.add(addPanelImage(this, W / 2, y, 'panelSmall', { displayWidth: 436, displayHeight: 28, alpha: 0.9 }));
-      c.add(addPanelImage(this, W / 2, y, 'cardFrameGold', { displayWidth: 436, displayHeight: 28, alpha: 0.7 }));
-      const bg = this.add.rectangle(W / 2, y, 436, 28, bgColor)
+      c.add(addPanelImage(this, W / 2, y, 'panelSmall', { displayWidth: 436, displayHeight: rowH, alpha: 0.9 }));
+      c.add(addPanelImage(this, W / 2, y, 'cardFrameGold', { displayWidth: 436, displayHeight: rowH, alpha: 0.72 }));
+      const bg = this.add.rectangle(W / 2, y, 436, rowH, bgColor)
         .setStrokeStyle(1, cleared ? 0x44bb44 : 0x333366)
-        .setAlpha(unlocked ? 0.45 : 0.25);
+        .setAlpha(unlocked ? 0.22 : 0.12);
       c.add(bg);
 
       const icon = cleared ? '✓' : (unlocked ? '▶' : '🔒');
-      c.add(this.add.text(38, y, `${icon} ${stage.id} ${stage.name}`,
-        { font: '12px monospace', fill: cleared ? '#66ff66' : '#ffffff' })
+      c.add(addIconImage(this, 38, y, 'iconFrameRound', { displayWidth: 28, displayHeight: 28, alpha: 0.9 }));
+      c.add(this.add.text(38, y, icon, { font: '13px monospace', fill: cleared ? '#66ff66' : '#ffffff' }).setOrigin(0.5).setAlpha(alpha));
+      c.add(this.add.text(58, y - 10, `${stage.id}`, { font: '11px monospace', fill: '#d0d0ff' }).setOrigin(0, 0.5).setAlpha(alpha));
+      c.add(this.add.text(58, y + 10, `${stage.name}`, { font: '12px monospace', fill: cleared ? '#66ff66' : '#ffffff' })
         .setOrigin(0, 0.5).setAlpha(alpha));
-      c.add(this.add.text(392, y, `+${stage.rewards.gold}g`, { font: '11px monospace', fill: '#ffd700' }).setOrigin(1, 0.5).setAlpha(alpha));
+      c.add(this.add.text(360, y, `+${stage.rewards.gold}g`, { font: '11px monospace', fill: '#ffd700' }).setOrigin(1, 0.5).setAlpha(alpha));
 
       if (unlocked && !cleared) {
         bg.setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor(stage));
       }
       if (cleared) {
         const skipCost = this._getStageSkipCost(stage);
-        const skipBtn = this.add.rectangle(430, y, 44, 18, 0x2e2400).setStrokeStyle(1, 0xaa8833);
+        c.add(addUIButton(this, 420, y, 'buttonPrimary', { displayWidth: 56, displayHeight: 24, alpha: 0.88 }));
+        const skipBtn = this.add.rectangle(420, y, 56, 24, 0x2e2400, 0.15).setStrokeStyle(1, 0xaa8833);
         c.add(skipBtn);
-        c.add(this.add.text(430, y, `${skipCost}g`, { font: '9px monospace', fill: '#ffdd88' }).setOrigin(0.5));
+        c.add(this.add.text(420, y, `${skipCost}g`, { font: '9px monospace', fill: '#ffdd88' }).setOrigin(0.5));
         skipBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => this._skipStage(stage));
       }
     });
+
+    c.add(this.add.text(26, H - BOTTOM_H + 24, `Region ${this._selectedRegion} · Cleared ${Math.max(lastIdx + 1, 0)}/${STAGE_DEFINITIONS.length}`,
+      { font: '11px monospace', fill: '#b8b8d6' }).setOrigin(0, 0.5));
+    c.add(this.add.text(26, H - BOTTOM_H + 48, `Gold: ${CurrencyManager.get(CURRENCY.GOLD)}`,
+      { font: '12px monospace', fill: '#ffd700' }).setOrigin(0, 0.5));
+    c.add(this.add.text(26, H - BOTTOM_H + 72, 'Tap unlocked stage to edit formation and battle.',
+      { font: '10px monospace', fill: '#9ab1d8' }).setOrigin(0, 0.5));
   }
 
   _getStageSkipCost(stage) {
