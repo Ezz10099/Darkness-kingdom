@@ -1,344 +1,341 @@
-PROJECT: Arcane-academy
-TASK: Build AAA-quality AFK Arena / Raid-style Main Screen UI Layout
-TARGET: Mobile Portrait
-STYLE: Premium Dark Arcane Fantasy UI
-Mood: Gothic, Luxurious, Mystical, High-End Mobile RPG
-References: AFK Arena dark variant, Raid Shadow Legends premium UI, Diablo Immortal menu polish
+# Darkness Kingdoms — UI Style and Layout Guide
 
-====================================================
-MAIN SCREEN STRUCTURE
-====================================================
+## Project
 
-SAFE AREA:
-- Respect notches / rounded corners
-- UI margins: 16px outer padding minimum
-- Bottom nav height: 92px
-- Top bar height: 72px
+**Project:** Darkness Kingdoms
 
-====================================================
+**Target:** Mobile portrait Phaser 3 idle RPG / hero collector / gacha
+
+**Style:** Premium gothic dark fantasy UI
+
+**Mood:** royal, cursed, ancient, luxurious, dangerous, mystical
+
+**References:** AFK Arena-style idle RPG structure, Raid-style premium UI polish, Diablo Immortal-like dark fantasy menu depth
+
+## Core UI Rule
+
+The game uses a persistent mobile RPG shell.
+
+The bottom navigation is the main mode selector.
+
+The center area must always show content that belongs to the currently selected bottom-nav tab.
+
+Do not create a disconnected hub where the center area shows unrelated decorative scenery while the bottom nav opens separate unrelated screens.
+
+## Global Screen Structure
+
+```text
 TOP BAR
-====================================================
+- ruler profile
+- player level / power
+- currencies
+- settings
 
-TOP LEFT:
-[Player Avatar Circle]
-- Tap opens profile
-- Level badge
-- Small online glow ring
+CENTER AREA
+- changes based on selected bottom-nav tab
+- must match the active tab
 
-NEXT TO AVATAR:
-- Username
-- Combat Power
+SIDE SHORTCUTS
+- optional secondary shortcuts
+- context-aware where possible
+- events, mail, quests, offers, rankings, arena, codex, etc.
 
-TOP RIGHT:
-Currency row horizontal:
+BOTTOM NAVIGATION
+- always visible on major shell screens
+- controls the main center content
+```
 
-[Gold]
-[Gems]
-[Summon Tickets]
-[Energy]
+## Locked Bottom Navigation
 
-Each currency:
-- Small + button
-- Tap opens purchase / source popup
+Use this main bottom navigation structure:
 
-Far top-right:
-[Settings Cog]
+```text
+Campaign | Heroes | Summon | Guild | More
+```
 
-====================================================
-CENTER SCENE (MOST IMPORTANT)
-====================================================
+## Center Content by Bottom Nav
 
-Animated magical academy city / floating castle scene.
+### Campaign
 
-Layers:
-1. Sky background
-2. Clouds drifting
-3. Floating towers
-4. Academy main building
-5. Foreground path / magical trees
-6. Hero character idle animation front-center
+Center area shows:
 
-Interactive buildings:
+- campaign chapter map
+- chapter background
+- stage nodes
+- boss node
+- reward preview
+- formation/start controls
 
-[Campaign Gate]
-- subtle glow
-- tap = campaign
+This should eventually replace plain stage lists.
 
-[Summon Portal]
-- magical beam animation
-- tap = summon
+### Heroes
 
-[Guild Hall]
-- banners waving
-- tap = guild
+Center area shows:
 
-[Academy Tower]
-- tap = systems hub
+- hero roster
+- selected hero preview
+- upgrade entry points
+- gear entry points
+- kingdom/faction/class/rarity filters
 
-Optional:
-Birds, particles, leaves, weather FX
+### Summon
 
-====================================================
-LEFT SIDE FLOATING BUTTON STACK
-====================================================
+Center area shows:
 
-Vertical aligned mid-left:
+- abyssal summon portal / altar
+- active banner
+- x1 and x10 summon buttons
+- pity/rates/wishlist access
+- summon currency display
 
-1. Friends
-2. Arena
-3. Rankings
-4. Chat
+### Guild
 
-Button style:
-- Circular gem buttons
-- Small icon + notification badge
+Center area shows:
 
-Spacing: 12px
+- guild hall / war council
+- guild boss
+- guild shop
+- guild quests
+- guild status
 
-====================================================
-RIGHT SIDE FLOATING BUTTON STACK
-====================================================
+### More
 
-Vertical aligned mid-right:
+Center area shows secondary systems:
 
-1. Quests
-2. Mail
-3. Events
-4. Battle Pass
-5. Limited Offers
+- Arena
+- Towers
+- World Boss
+- Codex / daily tasks
+- Elder Tree equivalent
+- Settings
+- other future systems
 
-Priority:
-Events button slightly larger
+## Main Hub Rule
 
-Use animated badges:
-- red dot
-- glow pulse
-- timer badge
+Do not treat Main Hub as a separate disconnected city screen.
 
-====================================================
-BOTTOM NAVIGATION BAR (PRIMARY)
-====================================================
+If a MainHub scene exists in code, it should behave as the global shell controller or default layout container.
 
-Height: 92px
-Rounded top corners
-Semi-transparent magical stone panel
-Soft glow top border
+The game should open on an active bottom-nav tab, most likely Campaign, unless a true Home tab is added later with a clear gameplay purpose.
 
-Buttons left -> right:
+## Safe Area and Measurements
 
-1. Adventure
-(icon: sword / map)
+Mobile portrait target:
 
-2. Heroes
-(icon: helmet / portrait)
+- Base canvas: 480 x 854
+- Respect notches / rounded corners
+- Outer padding minimum: 16px
+- Top bar target height: about 72px
+- Bottom nav target height: about 92px
+- Center area uses remaining safe space
 
-3. Academy
-(icon: tower / book)
+## Top Bar
 
-4. Summon (CENTER FEATURE BUTTON)
-(icon: crystal portal)
+Top bar should contain:
 
-5. Guild
-(icon: shield banner)
+- ruler avatar / profile button
+- player name or ruler title
+- combat power
+- currencies
+- small plus buttons where needed
+- settings button
 
-====================================================
-CENTER FEATURE BUTTON (SUMMON)
-====================================================
+Currency examples:
 
-- Larger than others (+20%)
-- Raised above nav bar
-- Circular crystal frame
-- Constant subtle pulse
-- Rare free summon badge appears here
+- Gold
+- Abyss Crystals
+- Summon Seals
+- Energy or stamina if used
 
-Reason:
-Highest monetization + strongest dopamine click target
+## Side Shortcuts
 
-====================================================
-SCREEN FLOW / PAGE DESTINATIONS
-====================================================
+Side shortcuts are secondary, not the main navigation.
 
-Adventure:
-- Campaign map
-- Chapters
-- Story mode
-- Trials
+Possible left side shortcuts:
 
-Heroes:
-- Hero roster
-- Gear
-- Skills
-- Ascension
-- Formations
+- Friends
+- Arena
+- Rankings
+- Chat
 
-Academy:
-- Affinity Towers
-- Elder Tree
-- Forge
-- Research Lab
-- Training Grounds
+Possible right side shortcuts:
 
-Summon:
-- Standard summon
-- Premium summon
-- Wishlist
-- Rates
-- Pity tracker
+- Quests
+- Mail
+- Events
+- Battle Pass
+- Limited Offers
 
-Guild:
-- Guild lobby
-- Guild boss
-- Guild shop
-- Guild quests
-- Guild chat
+Rule: avoid visual clutter. Do not show too many badges at once.
 
-====================================================
-NOTIFICATION RULES
-====================================================
+## Notification Rules
 
-Use badges only when necessary.
+Use badges only when useful.
 
-Red Dot:
-- unclaimed rewards
+Badge meanings:
 
-Gold Glow:
-- upgrade available
+- Red dot: unclaimed reward
+- Gold glow: upgrade available
+- Blue pulse: new content
+- Countdown: limited-time event
 
-Blue Pulse:
-- new content
+Never overload the screen with notification badges.
 
-Countdown:
-- limited event timer
+## Visual Identity
 
-Never place >4 badges simultaneously.
+The UI should feel like:
 
-====================================================
-ANIMATION PRIORITIES
-====================================================
+- premium gothic dark fantasy
+- royal dark kingdom
+- cursed throne
+- abyssal magic
+- ancient war
+- high-value mobile RPG
 
-Idle loop every 3–5 sec:
-- hero breathing
-- cape movement
-- spark particles
+Core colors:
 
-Background:
-- clouds move slowly
-- banners sway
-
-UI:
-- buttons scale 1.03 on tap
-- nav icon glow on selection
-- smooth transitions 220ms
-
-====================================================
-VISUAL HIERARCHY
-====================================================
-
-Player eyes should move:
-
-1. Center summon button
-2. Hero character
-3. Currency bar
-4. Event buttons
-5. Bottom nav options
-
-====================================================
-COLOR / FX RECOMMENDATION
-====================================================
-
-Primary:
-- Arcane blue
-- Royal purple
-- Gold trim
-
-Accent:
-- Cyan magic glow
+- black depth
+- royal purple magic
+- antique gold trim
+- crimson danger/event accents
+- muted bone/ivory text
 
 Materials:
-- Glass + carved stone + metallic trim
 
-====================================================
-UX RULES
-====================================================
+- dark carved stone
+- antique gold metal
+- abyss crystal
+- dark enchanted glass
+- worn royal banners
 
-- Max 1 tap to major feature
-- No submenu nesting deeper than 2 layers
-- Keep center scene clean
-- Avoid cluttering with 15 icons
-- Use expandable event drawer if crowded
+## Asset Placeholder Rule
 
-====================================================
-UNITY HIERARCHY EXAMPLE
-====================================================
+For now, keep UI visuals as placeholders.
 
-Canvas
- ├── TopBar
- │    ├── Profile
- │    ├── PowerText
- │    ├── CurrencyRow
- │    └── Settings
- │
- ├── BackgroundScene
- │    ├── Sky
- │    ├── AcademyCity
- │    ├── HeroCharacter
- │    └── FX
- │
- ├── LeftButtons
- │    ├── Friends
- │    ├── Arena
- │    ├── Ranking
- │    └── Chat
- │
- ├── RightButtons
- │    ├── Quests
- │    ├── Mail
- │    ├── Events
- │    ├── Pass
- │    └── Offers
- │
- └── BottomNav
-      ├── Adventure
-      ├── Heroes
-      ├── Academy
-      ├── Summon
-      └── Guild
+Do not overwork Phaser rectangles, gradients, fake borders, or procedural decoration trying to make the game beautiful in code.
 
-====================================================
-AAA POLISH DETAILS
-====================================================
+Phaser should focus on:
 
-- Every tap has sound
-- Every reward claim has burst particles
-- Currency numbers animate upward
-- Hover pulse on ready systems
-- Day/Night theme rotation optional
+- layout
+- hit zones
+- state
+- readable text
+- navigation
+- placeholder panels
+- functional screen structure
 
-====================================================
-FINAL RECOMMENDED HOME SCREEN
-====================================================
+Final beauty should come from proper high-resolution UI assets later.
 
-TOP:
-Profile | Power | Currency | Settings
+## Reusable UI Assets Needed Later
 
-CENTER:
-Animated Arcane Academy world + hero
+Core shell assets:
 
-LEFT:
-Friends / Arena / Rankings / Chat
+- top_panel_frame.png
+- bottom_nav_frame.png
+- side_panel_frame.png
+- panel_large.png
+- panel_small.png
+- card_frame_gold.png
+- icon_frame_round.png
+- tab_active.png
+- tab_inactive.png
 
-RIGHT:
-Quests / Mail / Events / Pass / Offers
+Button assets:
 
-BOTTOM:
-Adventure | Heroes | Academy | Summon | Guild
+- btn_primary.png
+- btn_secondary.png
+- btn_danger.png
+- btn_disabled.png
 
-====================================================
-NEXT CODEX TASK OPTIONS
-====================================================
+Notification assets:
 
-1. Generate Unity UI Canvas implementation
-2. Generate Unreal UMG version
-3. Generate Responsive HTML/CSS prototype
-4. Generate AFK Arena style animated mockup
-5. Generate summon screen layout
+- notification_badge_red.png
+- notification_badge_gold.png
+- notification_badge_blue.png
+- countdown_badge.png
+
+Bottom nav icons:
+
+- icon_campaign.png
+- icon_heroes.png
+- icon_summon.png
+- icon_guild.png
+- icon_more.png
+
+Campaign assets:
+
+- campaign_chapter_01_bg.png
+- campaign_chapter_02_bg.png
+- campaign_chapter_03_bg.png
+- campaign_stage_node_normal.png
+- campaign_stage_node_cleared.png
+- campaign_stage_node_locked.png
+- campaign_stage_node_boss.png
+
+Summon assets:
+
+- summon_portal_bg.png
+- summon_banner_frame.png
+- summon_result_card.png
+- summon_crystal_fx.png
+
+Hero assets:
+
+- hero_card_frame_common.png
+- hero_card_frame_rare.png
+- hero_card_frame_epic.png
+- hero_card_frame_legendary.png
+- class icons
+- kingdom/faction icons
+
+## Animation Priorities
+
+Only after layout is functional:
+
+- button press scale
+- nav selected glow
+- reward burst
+- currency count-up
+- summon portal pulse
+- subtle particles
+- banner sway
+- hero idle breathing later
+
+## UX Rules
+
+- one tap to main systems
+- no deep submenu chains early
+- keep center content readable
+- avoid cluttering the screen with too many shortcuts
+- keep top and bottom shell consistent
+- selected bottom nav tab must be obvious
+
+## Implementation Rule
+
+When coding UI:
+
+1. Make the layout correct first.
+2. Keep all controls functional.
+3. Use simple placeholders.
+4. Do not polish with complex Phaser shapes.
+5. Do not randomly layer PNGs over old UI.
+6. Replace old UI intentionally, one screen/tab at a time.
+7. After each change, verify with the SPCK browser console.
+
+## Current Priority
+
+First priority is not final art.
+
+First priority is:
+
+```text
+Everything in the right place and functional.
+```
+
+Build the persistent shell behavior first:
+
+```text
+Campaign | Heroes | Summon | Guild | More
+```
+
+Then improve each tab one by one.
