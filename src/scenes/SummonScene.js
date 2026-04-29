@@ -64,6 +64,19 @@ export default class SummonScene extends Phaser.Scene {
     this._build();
   }
 
+  _syncBasicSummonUnlock() {
+    if (GameState.isUnlocked('BASIC_SUMMON')) return;
+    const stageId = GameState.campaignProgress?.stageCleared;
+    if (stageId === '1-5') {
+      GameState.addUnlockedSystem('BASIC_SUMMON');
+      return;
+    }
+    const [r, st] = String(stageId || '').split('-').map(Number);
+    if (Number.isFinite(r) && Number.isFinite(st) && (r > 1 || (r === 1 && st >= 5))) {
+      GameState.addUnlockedSystem('BASIC_SUMMON');
+    }
+  }
+
   // ─── BUILD ────────────────────────────────────────────────────────────────────
 
   _build() {
