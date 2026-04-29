@@ -42,7 +42,7 @@ export default class RosterScene extends Phaser.Scene {
       .sort((a, b) => RARITY_ORDER[b.rarity] - RARITY_ORDER[a.rarity]);
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
-    c.add(addPanelImage(this, W / 2, 40, 'panelSmall', { displayWidth: 210, displayHeight: 42, alpha: 0.35 }));
+    c.add(addPanelImage(this, W / 2, 40, 'panelSmall', { displayWidth: 210, displayHeight: 42, alpha: 0.88 }));
     c.add(this.add.text(W / 2, 40, 'ROSTER', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(30, 40, '< BACK', { font: '14px monospace', fill: '#aaaaaa' })
       .setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
@@ -66,15 +66,15 @@ export default class RosterScene extends Phaser.Scene {
     const stars    = '★'.repeat(hero.stars) + '☆'.repeat(maxStars - hero.stars);
     const isActive = this._isActive(hero.id);
 
-    c.add(addPanelImage(this, W / 2, y, 'cardFrameGold', { displayWidth: 446, displayHeight: 80, alpha: 0.28 }));
+    c.add(addPanelImage(this, W / 2, y, 'cardFrameGold', { displayWidth: 446, displayHeight: 80, alpha: 0.9 }));
     const bg = this.add.rectangle(W / 2, y, 446, 80,
       CLASS_COLORS[hero.heroClass] || 0x333344)
       .setStrokeStyle(1, RARITY_HEX[hero.rarity] || 0xaaaaaa)
-      .setAlpha(0.82)
+      .setAlpha(0.55)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => bg.setAlpha(0.55))
-      .on('pointerout',  () => bg.setAlpha(0.82))
-      .on('pointerup',   () => { bg.setAlpha(0.82); this._showDetail(hero); });
+      .on('pointerout',  () => bg.setAlpha(0.55))
+      .on('pointerup',   () => { bg.setAlpha(0.55); this._showDetail(hero); });
     c.add(bg);
 
     // Left column
@@ -140,8 +140,8 @@ export default class RosterScene extends Phaser.Scene {
       { font: '15px monospace', fill: '#ffdd44' }).setOrigin(0.5));
 
     // Stats panel
-    c.add(addPanelImage(this, W / 2, 258, 'panelLarge', { displayWidth: 438, displayHeight: 100, alpha: 0.35 }));
-    c.add(this.add.rectangle(W / 2, 258, 438, 100, 0x111130).setStrokeStyle(1, 0x2a2a55));
+    c.add(addPanelImage(this, W / 2, 258, 'panelLarge', { displayWidth: 438, displayHeight: 100, alpha: 0.9 }));
+    c.add(this.add.rectangle(W / 2, 258, 438, 100, 0x111130).setStrokeStyle(1, 0x2a2a55).setAlpha(0.42));
     c.add(this.add.text(W / 2, 218, 'COMBAT STATS',
       { font: '12px monospace', fill: '#6666aa' }).setOrigin(0.5));
     [
@@ -154,8 +154,8 @@ export default class RosterScene extends Phaser.Scene {
     });
 
     // Level / XP panel
-    c.add(addPanelImage(this, W / 2, 368, 'panelSmall', { displayWidth: 438, displayHeight: 84, alpha: 0.35 }));
-    c.add(this.add.rectangle(W / 2, 368, 438, 84, 0x111130).setStrokeStyle(1, 0x2a2a55));
+    c.add(addPanelImage(this, W / 2, 368, 'panelSmall', { displayWidth: 438, displayHeight: 84, alpha: 0.9 }));
+    c.add(this.add.rectangle(W / 2, 368, 438, 84, 0x111130).setStrokeStyle(1, 0x2a2a55).setAlpha(0.42));
     c.add(this.add.text(W / 2, 337,
       `LEVEL  ${hero.level} / ${hero.currentStarLevelCap()}`,
       { font: '16px monospace', fill: '#ffffff' }).setOrigin(0.5));
@@ -194,8 +194,8 @@ export default class RosterScene extends Phaser.Scene {
       { font: '12px monospace', fill: '#6666aa' }).setOrigin(0.5));
     ['WEAPON', 'ROBE', 'ACCESSORY', 'RELIC', 'SIGIL'].forEach((slot, i) => {
       const x = 50 + i * 96;
-      c.add(addPanelImage(this, x, 558, 'panelSmall', { displayWidth: 84, displayHeight: 64, alpha: 0.28 }));
-      c.add(this.add.rectangle(x, 558, 84, 64, 0x111130).setStrokeStyle(1, 0x2a2a55));
+      c.add(addPanelImage(this, x, 558, 'panelSmall', { displayWidth: 84, displayHeight: 64, alpha: 0.86 }));
+      c.add(this.add.rectangle(x, 558, 84, 64, 0x111130).setStrokeStyle(1, 0x2a2a55).setAlpha(0.4));
       c.add(this.add.text(x, 536, slot.slice(0, 5),
         { font: '9px monospace', fill: '#555577' }).setOrigin(0.5));
       const equipped = hero.gear[slot];
@@ -222,7 +222,7 @@ export default class RosterScene extends Phaser.Scene {
     const btn = this.add.rectangle(W / 2, 448, 360, 54,
       active ? 0x0b3a0b : 0x141428)
       .setStrokeStyle(1, active ? 0x44ff44 : 0x333344);
-    c.add(addUIButton(this, W / 2, 448, active ? 'buttonPrimary' : 'buttonSecondary', { displayWidth: 360, displayHeight: 54, alpha: 0.28 }));
+    c.add(addUIButton(this, W / 2, 448, active ? 'buttonPrimary' : 'buttonSecondary', { displayWidth: 360, displayHeight: 54, alpha: 0.9 }));
     c.add(btn);
     c.add(this.add.text(W / 2, 448, label,
       { font: '14px monospace', fill: textColor }).setOrigin(0.5));

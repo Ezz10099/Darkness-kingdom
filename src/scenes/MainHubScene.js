@@ -46,7 +46,7 @@ export default class MainHubScene extends Phaser.Scene {
 
   create() {
     addArcaneBackdrop(this, W, H);
-    addFullscreenBackground(this, 'mainHubBackground', { alpha: 0.82, depth: -9 });
+    addFullscreenBackground(this, 'mainHubBackground', { alpha: 0.94, depth: -9 });
     this._drawCenterScene();
     this._drawTopBar();
     this._drawSideButtons();
@@ -79,7 +79,8 @@ export default class MainHubScene extends Phaser.Scene {
       height: topBarHeight,
       fill: 0x120c22,
       border: 0x89613f,
-      withInner: false
+      withInner: false,
+      alpha: 0.28
     });
 
     this._avatarRing = this.add.circle(OUTER_PADDING + 28, y, 24, 0x2a1d45, 0.95).setStrokeStyle(2, 0xc69d63, 1);
@@ -164,6 +165,7 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _drawResourceStrip() {
+    addPanelImage(this, W / 2, 540, 'panelSmall', { displayWidth: 312, displayHeight: 34, alpha: 0.86 });
     const panel = createPanel(this, {
       x: W / 2,
       y: 540,
@@ -171,7 +173,8 @@ export default class MainHubScene extends Phaser.Scene {
       height: 34,
       fill: 0x0f0a1c,
       border: 0x8d6940,
-      withInner: false
+      withInner: false,
+      alpha: 0.35
     });
 
     const defs = [
@@ -261,13 +264,14 @@ export default class MainHubScene extends Phaser.Scene {
       height: navHeight,
       fill: 0x140e25,
       border: 0x9a7340,
-      withInner: true
+      withInner: true,
+      alpha: 0.24
     });
 
     addPanelImage(this, W / 2, y, 'bottomNavFrame', {
       displayWidth: W - (OUTER_PADDING * 2),
       displayHeight: navHeight,
-      alpha: 0.96
+      alpha: 0.99
     });
 
     const items = [
