@@ -6,6 +6,7 @@ import DailyCodexManager from '../systems/DailyCodexManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY, CURRENCY_LABEL } from '../data/constants.js';
 import { ARCANE_THEME, addArcaneBackdrop, createPanel, createArcaneButton } from '../ui/ArcaneUI.js';
+import { addPanelImage, addUIButton } from '../ui/ArcaneAssets.js';
 
 const RARITY_HEX = {
   COMMON: 0x888888, UNCOMMON: 0x44aa44, RARE: 0x4488ff,
@@ -98,6 +99,7 @@ export default class SummonScene extends Phaser.Scene {
 
   _buildLocked() {
     const c = this._mainCont, W = this._W, H = this._H;
+    c.add(addPanelImage(this, W / 2, H / 2, 'panelLarge', { displayWidth: 340, displayHeight: 170, alpha: 0.9 }));
     c.add(createPanel(this, { x: W / 2, y: H / 2, width: 340, height: 170, title: 'LOCKED' }));
     c.add(this.add.text(W / 2, H / 2 + 10,
       '\uD83D\uDD12 Summon\nUnlock by finishing Onboarding or clearing Stage 1-5',
@@ -162,6 +164,11 @@ export default class SummonScene extends Phaser.Scene {
           this._build();
         }
       });
+      c.add(addUIButton(this, x, 82, active ? 'buttonPrimary' : 'buttonSecondary', {
+        displayWidth: 210,
+        displayHeight: 38,
+        alpha: enabled ? 0.78 : 0.62
+      }));
       c.add(button.root);
 
       if (!enabled) {
@@ -204,6 +211,11 @@ ${cost} ${bn.currencyLabel}`,
         textColor: can ? '#e6c9ff' : ARCANE_THEME.colors.textMuted,
         onClick: () => this._doPull(bn, count)
       });
+      c.add(addUIButton(this, x, 170, can ? 'buttonPrimary' : 'buttonDanger', {
+        displayWidth: 210,
+        displayHeight: 68,
+        alpha: 0.84
+      }));
       c.add(button.root);
     });
 
@@ -238,7 +250,8 @@ ${cost} ${bn.currencyLabel}`,
       const color = RARITY_HEX[r.rarity] || 0x555566;
       const name  = (r.def?.name || '???').slice(0, 7);
 
-      c.add(this.add.rectangle(x, y, cardW - 6, cardH, 0x0d0d22).setStrokeStyle(2, color));
+      c.add(addPanelImage(this, x, y, 'cardFrameGold', { displayWidth: cardW - 6, displayHeight: cardH, alpha: 0.88 }));
+      c.add(this.add.rectangle(x, y, cardW - 6, cardH, 0x0d0d22).setStrokeStyle(2, color).setAlpha(0.55));
       c.add(this.add.rectangle(x, y - cardH / 2 + 4, cardW - 6, 8, color));
       c.add(this.add.text(x, y - 26, name,
         { font: results.length > 5 ? '10px monospace' : '12px monospace', fill: '#ffffff' })

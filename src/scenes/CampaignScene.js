@@ -8,6 +8,7 @@ import BondManager from '../systems/BondManager.js';
 import STAGE_DEFINITIONS, { getCampaignRegions } from '../data/stageDefinitions.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
+import { addPanelImage, addUIButton, addIconImage } from '../ui/ArcaneAssets.js';
 
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
@@ -60,12 +61,14 @@ export default class CampaignScene extends Phaser.Scene {
     const allRegions = getCampaignRegions();
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
+    c.add(addPanelImage(this, W / 2, 427, 'panelLarge', { displayWidth: W - 12, displayHeight: 840, alpha: 0.68 }));
     c.add(this.add.text(W / 2, 40, 'CAMPAIGN', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(30, 40, '< BACK', { font: '14px monospace', fill: '#aaaaaa' })
       .setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.scene.start('MainHub')));
     const formationBtn = this.add.rectangle(W - 58, 40, 94, 24, 0x1a1a33).setStrokeStyle(1, 0x887744)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor());
+    c.add(addUIButton(this, W - 58, 40, 'buttonSecondary', { displayWidth: 94, displayHeight: 24, alpha: 0.78 }));
     c.add(formationBtn);
     c.add(this.add.text(W - 58, 40, 'FORMATION', { font: '10px monospace', fill: '#ffd700' }).setOrigin(0.5));
 
@@ -96,9 +99,10 @@ export default class CampaignScene extends Phaser.Scene {
       const bgColor = cleared ? 0x0a260a : 0x111128;
       const alpha = unlocked ? 1 : 0.4;
 
+      c.add(addPanelImage(this, W / 2, y, 'panelSmall', { displayWidth: 436, displayHeight: 28, alpha: 0.82 }));
       const bg = this.add.rectangle(W / 2, y, 436, 28, bgColor)
         .setStrokeStyle(1, cleared ? 0x44bb44 : 0x333366)
-        .setAlpha(alpha);
+        .setAlpha(0.52 * alpha);
       c.add(bg);
 
       const icon = cleared ? '✓' : (unlocked ? '▶' : '🔒');
@@ -175,6 +179,7 @@ export default class CampaignScene extends Phaser.Scene {
     };
 
     c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
+    c.add(addPanelImage(this, W / 2, 427, 'panelLarge', { displayWidth: W - 12, displayHeight: 840, alpha: 0.7 }));
     c.add(this.add.rectangle(W / 2, 56, 120, 18, hasUnsavedChanges ? 0x3a2a00 : 0x153315).setStrokeStyle(1, hasUnsavedChanges ? 0xffbb44 : 0x55cc88));
     c.add(this.add.text(W / 2, 56, hasUnsavedChanges ? 'UNSAVED CHANGES' : 'SAVED',
       { font: '9px monospace', fill: hasUnsavedChanges ? '#ffdd88' : '#99ffbb' }).setOrigin(0.5));
@@ -205,13 +210,16 @@ export default class CampaignScene extends Phaser.Scene {
       const pickedEntry = selected.find(e => e.heroId === hero.id);
       const row = pickedEntry?.row || '-';
       const rowColor = row === 'FRONT' ? '#ffb088' : row === 'BACK' ? '#88bbff' : '#666688';
+      c.add(addPanelImage(this, W / 2, y, 'cardFrameGold', { displayWidth: 444, displayHeight: 32, alpha: 0.84 }));
       const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1e3526 : 0x121226)
         .setStrokeStyle(1, picked ? 0x66dd88 : 0x333366)
+        .setAlpha(0.54)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => toggleHero(hero));
       c.add(card);
       c.add(this.add.text(30, y, hero.name, { font: '12px monospace', fill: '#ffffff' }).setOrigin(0, 0.5));
       c.add(this.add.text(250, y, hero.heroClass, { font: '10px monospace', fill: '#bbbbbb' }).setOrigin(0.5));
+      c.add(addIconImage(this, 408, y, 'iconFrameRound', { displayWidth: 62, displayHeight: 22, alpha: 0.72 }));
       const rowBtn = this.add.rectangle(408, y, 62, 22, picked ? 0x22334d : 0x222222).setStrokeStyle(1, 0x555577);
       c.add(rowBtn);
       c.add(this.add.text(408, y, row, { font: '10px monospace', fill: rowColor }).setOrigin(0.5));
@@ -229,10 +237,12 @@ export default class CampaignScene extends Phaser.Scene {
         if (stage) this._startBattle(stage);
         else this._showStageSelect();
       });
+    c.add(addUIButton(this, W / 2, 778, hasUnsavedChanges ? 'buttonPrimary' : 'buttonSecondary', { displayWidth: 220, displayHeight: 44, alpha: 0.84 }));
     c.add(saveBtn);
     c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: hasUnsavedChanges ? '#baffca' : '#88aa95' }).setOrigin(0.5));
     const clearBtn = this.add.rectangle(W / 2, 822, 220, 26, 0x2b1a1a).setStrokeStyle(1, 0x774444)
       .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor(stage, []));
+    c.add(addUIButton(this, W / 2, 822, 'buttonDanger', { displayWidth: 220, displayHeight: 26, alpha: 0.82 }));
     c.add(clearBtn);
     c.add(this.add.text(W / 2, 822, 'CLEAR SQUAD', { font: '11px monospace', fill: '#ffaaaa' }).setOrigin(0.5));
   }
