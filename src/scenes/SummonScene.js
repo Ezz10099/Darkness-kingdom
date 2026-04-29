@@ -109,6 +109,8 @@ export default class SummonScene extends Phaser.Scene {
 
   _buildHeader() {
     const c = this._mainCont, W = this._W;
+    c.add(addPanelImage(this, W / 2, 74, 'panelLarge', { displayWidth: 452, displayHeight: 132, alpha: 0.88 }));
+    c.add(this.add.rectangle(W / 2, 74, 452, 132, 0x110f1f).setAlpha(0.38));
     c.add(this.add.text(W / 2, 28, 'SUMMON',
       { font: '22px monospace', fill: ARCANE_THEME.colors.textPrimary }).setOrigin(0.5));
 
@@ -167,7 +169,7 @@ export default class SummonScene extends Phaser.Scene {
       c.add(addUIButton(this, x, 82, active ? 'buttonPrimary' : 'buttonSecondary', {
         displayWidth: 210,
         displayHeight: 38,
-        alpha: enabled ? 0.32 : 0.22
+        alpha: enabled ? 0.88 : 0.66
       }));
       c.add(button.root);
 
@@ -214,7 +216,7 @@ ${cost} ${bn.currencyLabel}`,
       c.add(addUIButton(this, x, 170, can ? 'buttonPrimary' : 'buttonDanger', {
         displayWidth: 210,
         displayHeight: 68,
-        alpha: 0.28
+        alpha: 0.92
       }));
       c.add(button.root);
     });
@@ -250,8 +252,8 @@ ${cost} ${bn.currencyLabel}`,
       const color = RARITY_HEX[r.rarity] || 0x555566;
       const name  = (r.def?.name || '???').slice(0, 7);
 
-      c.add(addPanelImage(this, x, y, 'cardFrameGold', { displayWidth: cardW - 6, displayHeight: cardH, alpha: 0.35 }));
-      c.add(this.add.rectangle(x, y, cardW - 6, cardH, 0x0d0d22).setStrokeStyle(2, color));
+      c.add(addPanelImage(this, x, y, 'cardFrameGold', { displayWidth: cardW - 6, displayHeight: cardH, alpha: 0.92 }));
+      c.add(this.add.rectangle(x, y, cardW - 6, cardH, 0x0d0d22).setStrokeStyle(2, color).setAlpha(0.5));
       c.add(this.add.rectangle(x, y - cardH / 2 + 4, cardW - 6, 8, color));
       c.add(this.add.text(x, y - 26, name,
         { font: results.length > 5 ? '10px monospace' : '12px monospace', fill: '#ffffff' })
