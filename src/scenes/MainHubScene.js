@@ -7,6 +7,7 @@ import DailyCodexManager from '../systems/DailyCodexManager.js';
 import HeroManager from '../systems/HeroManager.js';
 import { CURRENCY } from '../data/constants.js';
 import { ARCANE_THEME, addArcaneBackdrop, createPanel, createArcaneButton } from '../ui/ArcaneUI.js';
+import { addFullscreenBackground, addPanelImage, addUIButton, addIconImage } from '../ui/ArcaneAssets.js';
 
 const W = 480;
 const H = 854;
@@ -45,6 +46,7 @@ export default class MainHubScene extends Phaser.Scene {
 
   create() {
     addArcaneBackdrop(this, W, H);
+    addFullscreenBackground(this, 'mainHubBackground', { alpha: 0.82, depth: -9 });
     this._drawCenterScene();
     this._drawTopBar();
     this._drawSideButtons();
@@ -65,6 +67,11 @@ export default class MainHubScene extends Phaser.Scene {
   _drawTopBar() {
     const topBarHeight = 72;
     const y = topBarHeight / 2 + 6;
+    addPanelImage(this, W / 2, y, 'topBarFrame', {
+      displayWidth: W - (OUTER_PADDING * 2),
+      displayHeight: topBarHeight,
+      alpha: 0.96
+    });
     createPanel(this, {
       x: W / 2,
       y,
@@ -257,12 +264,18 @@ export default class MainHubScene extends Phaser.Scene {
       withInner: true
     });
 
+    addPanelImage(this, W / 2, y, 'bottomNavFrame', {
+      displayWidth: W - (OUTER_PADDING * 2),
+      displayHeight: navHeight,
+      alpha: 0.96
+    });
+
     const items = [
-      { label: 'Adventure', icon: ICONS.adventure, scene: 'Campaign', x: 62 },
-      { label: 'Heroes', icon: ICONS.heroes, scene: 'Roster', x: 142 },
+      { label: 'Adventure', icon: ICONS.adventure, scene: 'Campaign', x: 62, iconKey: 'iconCampaign' },
+      { label: 'Heroes', icon: ICONS.heroes, scene: 'Roster', x: 142, iconKey: 'iconHeroes' },
       { label: 'Academy', icon: ICONS.academy, scene: 'AffinityTowerSelection', x: 222 },
-      { label: 'Summon', icon: ICONS.summon, scene: 'Summon', x: 302, center: true, dotKey: 'summon' },
-      { label: 'Guild', icon: ICONS.guild, scene: 'Guild', x: 382 }
+      { label: 'Summon', icon: ICONS.summon, scene: 'Summon', x: 302, center: true, dotKey: 'summon', iconKey: 'iconSummon', buttonKey: 'buttonPrimary' },
+      { label: 'Guild', icon: ICONS.guild, scene: 'Guild', x: 382, iconKey: 'iconGuild' }
     ];
 
     items.forEach(item => {
@@ -272,6 +285,16 @@ export default class MainHubScene extends Phaser.Scene {
         .setStrokeStyle(2, item.center ? 0xd2ab6d : 0xa37d4a, 1);
       const core = this.add.circle(item.x, buttonY, radius - (item.center ? 9 : 7), 0x110a20, 0.7)
         .setStrokeStyle(1, 0x8f6841, 0.8);
+      const buttonAsset = addUIButton(this, item.x, buttonY, item.buttonKey || 'buttonSecondary', {
+        displayWidth: radius * 2,
+        displayHeight: radius * 2,
+        alpha: 0.9
+      });
+      const iconAsset = item.iconKey ? addIconImage(this, item.x, buttonY - 7, item.iconKey, {
+        displayWidth: item.center ? 24 : 20,
+        displayHeight: item.center ? 24 : 20,
+        alpha: 0.95
+      }) : null;
       const icon = this.add.text(item.x, buttonY - 7, item.icon, { font: `${item.center ? 22 : 17}px serif`, fill: '#f5dfbc' }).setOrigin(0.5);
       const text = this.add.text(item.x, buttonY + (item.center ? 18 : 16), item.label, {
         font: `${item.center ? 11 : 10}px monospace`,
@@ -279,7 +302,11 @@ export default class MainHubScene extends Phaser.Scene {
       }).setOrigin(0.5);
 
       const hit = this.add.zone(item.x, buttonY, radius * 2 + 10, radius * 2 + 10).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => this.tweens.add({ targets: [ring, core, icon], scale: 1.03, duration: 110, yoyo: true }));
+      hit.on('pointerdown', () => {
+        const pulseTargets = [ring, core, icon, text, buttonAsset];
+        if (iconAsset) pulseTargets.push(iconAsset);
+        this.tweens.add({ targets: pulseTargets, scale: 1.03, duration: 110, yoyo: true });
+      });
       hit.on('pointerup', () => {
         const gate = this._getSceneUnlock(item.scene);
         this._startSceneOrLocked(item.scene, gate?.unlockKey, gate?.lockedMsg);
@@ -353,6 +380,17 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _makeIconButton({ x, y, label, scene }) {
+    const buttonAsset = addUIButton(this, x, y, 'buttonDanger', {
+      displayWidth: 36,
+      displayHeight: 36,
+      alpha: 0.9
+    });
+    const iconAsset = addIconImage(this, x, y, 'iconSettings', {
+      displayWidth: 16,
+      displayHeight: 16,
+      alpha: 0.95
+    });
+
     const { root } = createArcaneButton(this, {
       x,
       y,
@@ -365,6 +403,8 @@ export default class MainHubScene extends Phaser.Scene {
         this._startSceneOrLocked(scene, gate?.unlockKey, gate?.lockedMsg);
       }
     });
+    buttonAsset.setDepth(root.depth - 1);
+    iconAsset.setDepth(root.depth + 1);
     return root;
   }
 
