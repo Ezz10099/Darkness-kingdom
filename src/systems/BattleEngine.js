@@ -70,6 +70,11 @@ export default class BattleEngine {
 
     for (const c of this._allCombatants()) {
       if (c.hp <= 0) continue;
+      if (StatusEffectManager.hasEffect(c.id, STATUS_EFFECT.FREEZE)) {
+        this.onEvent({ type: 'actionSkipped', heroId: c.id, reason: STATUS_EFFECT.FREEZE });
+        continue;
+      }
+
       this._chargeUltimate(c, ULTIMATE_CHARGE.PASSIVE_PER_SECOND);
       const abilityId = c.abilityIds[this.tick % c.abilityIds.length];
       const ability = ABILITY_DEFINITIONS.find(a => a.id === abilityId);
@@ -79,6 +84,10 @@ export default class BattleEngine {
         if (this._isHealingAbility(c, ability, target)) {
           const heal = this._calculateHealing(c, ability);
           this._heal(c, target, heal);
+          continue;
+        }
+        if (this._isSupportAbility(c, target)) {
+          this.onEvent({ type: 'support', casterId: c.id, targetId: target.id, abilityId: ability.id });
           continue;
         }
         const dmg = this._calculateDamage(c, target, ability);
@@ -114,6 +123,10 @@ export default class BattleEngine {
       if (this._isHealingAbility(c, ability, target)) {
         const heal = this._calculateHealing(c, ability);
         this._heal(c, target, heal);
+        continue;
+      }
+      if (this._isSupportAbility(c, target)) {
+        this.onEvent({ type: 'support', casterId: c.id, targetId: target.id, abilityId: ability.id });
         continue;
       }
       const dmg = this._calculateDamage(c, target, ability);
@@ -177,6 +190,10 @@ export default class BattleEngine {
 
   _isHealingAbility(attacker, ability, target) {
     return ability.abilityClass === CLASS.HEALER && attacker.isPlayer === target.isPlayer;
+  }
+
+  _isSupportAbility(attacker, target) {
+    return attacker.isPlayer === target.isPlayer;
   }
 
   _resolveAbilityPowerMultiplier(ability, isHeal = false) {
@@ -254,6 +271,12 @@ export default class BattleEngine {
         return validFront.length
           ? [validFront[Math.floor(Math.random() * validFront.length)]]
           : (validBack.length ? [validBack[0]] : []);
+      case 'all_allies': {
+        const allies = isPlayer
+          ? [...this.playerFormation.FRONT, ...this.playerFormation.BACK]
+          : [...this.enemyFormation.FRONT, ...this.enemyFormation.BACK];
+        return allies.filter(c => c.hp > 0);
+      }
       case 'lowest_hp_ally': {
         const allies  = isPlayer
           ? [...this.playerFormation.FRONT, ...this.playerFormation.BACK]

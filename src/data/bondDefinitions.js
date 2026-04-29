@@ -14,7 +14,7 @@ const BOND_DEFINITIONS = [
         hero_pyreth_the_branded: 0.12
       }
     },
-    bonusDescription: 'Cinder Vale +12% damage, Pyreth the Branded +12% damage'
+    bonusDescription: 'Cinder Vale and Pyreth gain +12% to HP, defense, and damage'
   },
   {
     id: 'bond_hearthbound',
@@ -27,7 +27,7 @@ const BOND_DEFINITIONS = [
         hero_sera_ashveil: 0.15
       }
     },
-    bonusDescription: 'Pyreth +20% ability power, Sera +15% heal potency'
+    bonusDescription: 'Pyreth gains +20% to HP, defense, and damage; Sera gains +15% to HP, defense, and damage'
   },
   {
     id: 'bond_cold_front',
@@ -40,7 +40,7 @@ const BOND_DEFINITIONS = [
         hero_yssa_driftborn: 0.15
       }
     },
-    bonusDescription: 'Kael +18% HP, Yssa +15% crit rate'
+    bonusDescription: 'Kael gains +18% to HP, defense, and damage; Yssa gains +15% to HP, defense, and damage'
   },
   {
     id: 'bond_unbroken',
@@ -53,7 +53,7 @@ const BOND_DEFINITIONS = [
         hero_briar_thornguard: 0.15
       }
     },
-    bonusDescription: 'Stone Sentinel Gorr +15% defense, Briar Thornguard +15% defense'
+    bonusDescription: 'Stone Sentinel Gorr and Briar Thornguard gain +15% to HP, defense, and damage'
   },
   {
     id: 'bond_eclipse',
@@ -66,7 +66,7 @@ const BOND_DEFINITIONS = [
         hero_vesper: 0.20
       }
     },
-    bonusDescription: 'Dusk +25% crit damage, Vesper +20% evasion'
+    bonusDescription: 'Dusk gains +25% to HP, defense, and damage; Vesper gains +20% to HP, defense, and damage'
   },
   {
     id: 'bond_founders_bond',

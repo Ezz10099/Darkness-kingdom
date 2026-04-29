@@ -24,7 +24,7 @@ export const ABILITY_DEFINITIONS = [
     id: 'wa_iron_resolve', name: 'Iron Resolve', abilityClass: CLASS.WARRIOR, affinity: null,
     type: 'ultimate', scalingBase: 30, scalingPerRarity: 10, statusEffect: null,
     targetLogic: 'random_enemy', requiresLegendary: true,
-    description: 'Channels unwavering will into a retaliatory blow, converting defense into bonus damage.'
+    description: 'Channels unwavering will into a heavy retaliatory blow against a random enemy.'
   },
 
   // ── TANK ────────────────────────────────────────────────────────────────────
@@ -32,25 +32,25 @@ export const ABILITY_DEFINITIONS = [
     id: 'tk_fortify', name: 'Fortify', abilityClass: CLASS.TANK, affinity: null,
     type: 'normal', scalingBase: 10, scalingPerRarity: 5, statusEffect: null,
     targetLogic: 'lowest_hp_ally', requiresLegendary: false,
-    description: 'Braces defensively, temporarily boosting own defense to shield the team.'
+    description: 'Braces defensively to reinforce the most wounded ally without dealing damage.'
   },
   {
     id: 'tk_provoke', name: 'Provoke', abilityClass: CLASS.TANK, affinity: null,
     type: 'normal', scalingBase: 12, scalingPerRarity: 5, statusEffect: null,
     targetLogic: 'front_row_enemy', requiresLegendary: false,
-    description: 'Taunts front-row enemies, redirecting their attacks onto the Tank.'
+    description: 'Slams into a front-row enemy to disrupt their formation.'
   },
   {
     id: 'tk_bulwark', name: 'Bulwark', abilityClass: CLASS.TANK, affinity: null,
     type: 'ultimate', scalingBase: 20, scalingPerRarity: 8, statusEffect: null,
     targetLogic: 'lowest_hp_ally', requiresLegendary: false,
-    description: 'Raises an impenetrable shield that absorbs the very next incoming hit entirely.'
+    description: 'Projects a bulwark onto the most wounded ally as a defensive support action.'
   },
   {
     id: 'tk_aegis_nova', name: 'Aegis Nova', abilityClass: CLASS.TANK, affinity: null,
     type: 'ultimate', scalingBase: 25, scalingPerRarity: 10, statusEffect: null,
     targetLogic: 'lowest_hp_ally', requiresLegendary: true,
-    description: 'Radiates protective energy across all allies, granting a temporary defense boost to the entire squad.'
+    description: 'Radiates protective energy to reinforce the most wounded ally without dealing damage.'
   },
 
   // ── MAGE ────────────────────────────────────────────────────────────────────
@@ -116,19 +116,19 @@ export const ABILITY_DEFINITIONS = [
     id: 'hl_purify', name: 'Purify', abilityClass: CLASS.HEALER, affinity: null,
     type: 'normal', scalingBase: 14, scalingPerRarity: 5, statusEffect: null,
     targetLogic: 'lowest_hp_ally', requiresLegendary: false,
-    description: 'Cleanses a harmful status effect from the lowest-HP ally while restoring a small amount of health.'
+    description: 'Restores a small amount of health to the most wounded ally.'
   },
   {
     id: 'hl_radiant_wave', name: 'Radiant Wave', abilityClass: CLASS.HEALER, affinity: null,
     type: 'ultimate', scalingBase: 18, scalingPerRarity: 7, statusEffect: null,
-    targetLogic: 'lowest_hp_ally', requiresLegendary: false,
-    description: 'Sends a wave of holy light washing over all allies, restoring a portion of each hero\'s HP.'
+    targetLogic: 'all_allies', requiresLegendary: false,
+    description: 'Sends a wave of holy light over all allies, restoring their HP.'
   },
   {
     id: 'hl_resurrection_hymn', name: 'Resurrection Hymn', abilityClass: CLASS.HEALER, affinity: null,
     type: 'ultimate', scalingBase: 40, scalingPerRarity: 12, statusEffect: null,
-    targetLogic: 'lowest_hp_ally', requiresLegendary: true,
-    description: 'Sings a divine hymn that restores massive HP to all allies and briefly shields them from death.'
+    targetLogic: 'all_allies', requiresLegendary: true,
+    description: 'Sings a divine hymn that restores massive HP to all allies.'
   },
 
   // ── ASSASSIN ────────────────────────────────────────────────────────────────
@@ -148,13 +148,13 @@ export const ABILITY_DEFINITIONS = [
     id: 'as_death_mark', name: 'Death Mark', abilityClass: CLASS.ASSASSIN, affinity: null,
     type: 'ultimate', scalingBase: 50, scalingPerRarity: 15, statusEffect: null,
     targetLogic: 'lowest_hp_enemy', requiresLegendary: false,
-    description: 'Marks the lowest-HP enemy for instant execution if they are below 25% health.'
+    description: 'Marks the lowest-HP enemy and strikes for massive damage.'
   },
   {
     id: 'as_voidwalk', name: 'Voidwalk', abilityClass: CLASS.ASSASSIN, affinity: null,
     type: 'ultimate', scalingBase: 35, scalingPerRarity: 12, statusEffect: null,
     targetLogic: 'back_row_enemy', requiresLegendary: true,
-    description: 'Phases through the void for three attacks, ignoring row protection on every strike.'
+    description: 'Phases through the void and strikes a back-row enemy with devastating force.'
   },
 
   // ── AFFINITY ────────────────────────────────────────────────────────────────
