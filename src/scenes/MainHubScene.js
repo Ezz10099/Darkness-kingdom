@@ -173,11 +173,13 @@ export default class MainHubScene extends Phaser.Scene {
     this._resourceTexts = defs.map((def, index) => {
       const x = -98 + (index * 98);
       panel.add(this.add.text(x, 0, def.icon, { font: '13px serif', fill: def.tint }).setOrigin(0.5));
+      const icon = this.add.text(x, 0, def.icon, { font: '13px serif', fill: def.tint }).setOrigin(0.5);
       const valueText = this.add.text(x + 24, 0, '0', {
         font: '14px monospace',
         fill: ARCANE_THEME.colors.textPrimary
       }).setOrigin(0.5);
       panel.add(valueText);
+      panel.add([icon, valueText]);
       return valueText;
     });
   }
