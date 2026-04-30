@@ -2,7 +2,7 @@ import BootScene          from './src/scenes/BootScene.js';
 import PreloadScene       from './src/scenes/PreloadScene.js';
 import OnboardingScene    from './src/scenes/OnboardingScene.js';
 import MainHubScene       from './src/scenes/MainHubScene.js';
-import CampaignScene      from './src/scenes/CampaignSceneSimple.js';
+import CampaignScene      from './src/scenes/CampaignScene.js';
 import RosterScene        from './src/scenes/RosterScene.js';
 import SummonScene        from './src/scenes/SummonScene.js';
 import EndlessTowerScene  from './src/scenes/EndlessTowerScene.js';
