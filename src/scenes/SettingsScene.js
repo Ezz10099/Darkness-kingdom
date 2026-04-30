@@ -1,4 +1,4 @@
-import { ARCANE_THEME, addArcaneBackdrop, createPanel, createArcaneButton } from '../ui/ArcaneUI.js';
+import { SIMPLE_UI, addScreenBg, addPanel, addButton, addLabel } from '../ui/SimpleUI.js';
 
 export default class SettingsScene extends Phaser.Scene {
   constructor() { super('Settings'); }
@@ -6,33 +6,17 @@ export default class SettingsScene extends Phaser.Scene {
   create() {
     const W = 480;
     const H = 854;
+    const c = this.add.container(0, 0);
+    addScreenBg(this, c, W, H);
+    addPanel(this, c, W / 2, 44, W - 20, 64, SIMPLE_UI.panel);
+    addLabel(this, c, W / 2, 44, 'SETTINGS', 24, SIMPLE_UI.gold);
+    addButton(this, c, 58, 44, 96, 34, 'BACK', () => this.scene.start('MainHub'));
 
-    addArcaneBackdrop(this, W, H);
-
-    createPanel(this, { x: W / 2, y: 44, width: W - 14, height: 88, fill: 0x120d24, withInner: false });
-    this.add.text(W / 2, 44, '⚙ SETTINGS', {
-      font: '24px monospace',
-      fill: ARCANE_THEME.colors.textPrimary
-    }).setOrigin(0.5);
-
-    createArcaneButton(this, {
-      x: 58,
-      y: 44,
-      width: 96,
-      height: 36,
-      label: 'BACK',
-      font: '13px monospace',
-      onClick: () => this.scene.start('MainHub')
-    });
-
-    createPanel(this, { x: W / 2, y: 250, width: 420, height: 220, title: 'CONFIGURATION' });
-    this.add.text(W / 2, 260,
-      'MainHub navigation now points to a\nregistered Phaser scene.\n\nUse this screen for future toggles\n(audio, notifications, accessibility, etc.).',
-      {
-        font: '13px monospace',
-        fill: ARCANE_THEME.colors.textSecondary,
-        align: 'center'
-      }
-    ).setOrigin(0.5);
+    addPanel(this, c, W / 2, 220, 444, 280, SIMPLE_UI.panelAlt);
+    addLabel(this, c, W / 2, 132, 'CONFIGURATION', 14, SIMPLE_UI.textDim);
+    c.add(this.add.text(W / 2, 230,
+      'Placeholder settings screen.\n\nFuture toggles:\n- Audio\n- Notifications\n- Accessibility\n- Input options',
+      { font: '14px monospace', fill: '#d8d8e8', align: 'center', lineSpacing: 8 }
+    ).setOrigin(0.5, 0));
   }
 }
