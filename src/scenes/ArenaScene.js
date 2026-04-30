@@ -6,10 +6,13 @@ import ArenaManager, { RANK_CONFIG } from '../systems/ArenaManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
 import { CURRENCY } from '../data/constants.js';
+import { SIMPLE_UI, addScreenBg, addHeader, addPanel, addButton, addLabel } from '../ui/SimpleUI.js';
 
+const W = 480;
+const H = 854;
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
-  ARCHER:  0x228844, HEALER: 0xaaaa11, ASSASSIN: 0x222255,
+  ARCHER: 0x228844, HEALER: 0xaaaa11, ASSASSIN: 0x222255
 };
 
 export default class ArenaScene extends Phaser.Scene {
@@ -27,12 +30,13 @@ export default class ArenaScene extends Phaser.Scene {
     this._showArenaHub();
   }
 
-  // ─── UTILITIES ──────────────────────────────────────────────────────────────
-
   _reset() {
     if (this._battleTimer) { this._battleTimer.remove(); this._battleTimer = null; }
     this._root.removeAll(true);
-    this._sprites = {}; this._ultBtns = []; this._logBuf = []; this._logText = null;
+    this._sprites = {};
+    this._ultBtns = [];
+    this._logBuf = [];
+    this._logText = null;
   }
 
   _log(msg) {
@@ -41,225 +45,146 @@ export default class ArenaScene extends Phaser.Scene {
     if (this._logText) this._logText.setText(this._logBuf.join('\n'));
   }
 
-  // ─── ARENA HUB ──────────────────────────────────────────────────────────────
-
   _showArenaHub() {
     this._reset();
-    const c = this._root, W = 480;
-    const rankCfg   = ArenaManager.getRankConfig();
-    const attempts  = ArenaManager.getAttemptsRemaining();
-    const maxAtt    = ArenaManager.getMaxAttempts();
-    const tokens    = CurrencyManager.get(CURRENCY.ARENA_TOKENS);
-    const history   = ArenaManager.battleHistory;
+    const c = this._root;
+    const rankCfg = ArenaManager.getRankConfig();
+    const attempts = ArenaManager.getAttemptsRemaining();
+    const maxAtt = ArenaManager.getMaxAttempts();
+    const tokens = CurrencyManager.get(CURRENCY.ARENA_TOKENS);
+    const history = ArenaManager.battleHistory;
     const opponents = ArenaManager.getOpponents();
     const hasHeroes = HeroManager.getAllHeroes().length > 0;
     const squadEntries = GameState.getBattleSquadEntries();
     const squadNames = squadEntries.map(e => HeroManager.getHero(e.heroId)?.name).filter(Boolean);
 
-    c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
+    addScreenBg(this, c);
+    addHeader(this, c, 'ARENA', () => this.scene.start('MainHub'), 'SHOP', () => this.scene.start('ArenaShop'));
 
-    c.add(this.add.text(W / 2, 40, 'ARENA', {
-      font: '24px monospace', fill: '#ffaa44',
-    }).setOrigin(0.5));
-    c.add(this.add.text(30, 40, '< BACK', { font: '14px monospace', fill: '#aaaaaa' })
-      .setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
-      .on('pointerup', () => this.scene.start('MainHub')));
-    c.add(this.add.text(W - 20, 40, 'SHOP >', { font: '14px monospace', fill: '#ffaa44' })
-      .setOrigin(1, 0.5).setInteractive({ useHandCursor: true })
-      .on('pointerup', () => this.scene.start('ArenaShop')));
+    addPanel(this, c, W / 2, 126, W - 32, 86);
+    addLabel(this, c, W / 2, 100, `${rankCfg.label} Rank`, 18, rankCfg.colorStr);
+    addLabel(this, c, W / 2, 126, `${tokens} Arena Tokens`, 12, SIMPLE_UI.gold);
+    addLabel(this, c, W / 2, 148, `Attempts: ${attempts}/${maxAtt}`, 12, attempts > 0 ? SIMPLE_UI.good : SIMPLE_UI.danger);
 
-    c.add(this.add.text(W / 2, 90, rankCfg.label + ' Rank', {
-      font: '22px monospace', fill: rankCfg.colorStr,
-    }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 120, tokens + ' Arena Tokens', {
-      font: '14px monospace', fill: '#ffaa44',
-    }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 144, 'Attempts: ' + attempts + ' / ' + maxAtt, {
-      font: '14px monospace', fill: attempts > 0 ? '#aaffaa' : '#ff6666',
-    }).setOrigin(0.5));
-    c.add(this.add.rectangle(W / 2, 164, 430, 20, 0x131326).setStrokeStyle(1, 0x334466));
-    c.add(this.add.text(W / 2, 164, `SQUAD ${squadEntries.length}/5: ${(squadNames.join(', ') || 'none').slice(0, 48)}`, {
-      font: '10px monospace', fill: '#99ccff',
-    }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 180, 'Arena uses a frozen squad snapshot at fight start', {
-      font: '9px monospace', fill: '#667799',
-    }).setOrigin(0.5));
+    addPanel(this, c, W / 2, 192, W - 32, 34);
+    addLabel(this, c, W / 2, 192, `SQUAD ${squadEntries.length}/5: ${(squadNames.join(', ') || 'none').slice(0, 48)}`, 10, '#99ccff');
 
-    let nextY = 194;
-
+    let y = 242;
     if (history.length > 0) {
-      c.add(this.add.text(W / 2, nextY, 'RECENT BATTLES', {
-        font: '11px monospace', fill: '#886699',
-      }).setOrigin(0.5));
-      nextY += 20;
-      for (const h of history) {
-        const col = h.result === 'WIN' ? '#44cc44' : '#cc4444';
-        const rs  = h.rankChange > 0 ? '+' + h.rankChange : String(h.rankChange);
-        c.add(this.add.text(W / 2, nextY,
-          h.result + '  ' + h.opponentName + '  ' + rs + '  +' + h.tokens + 'T', {
-            font: '12px monospace', fill: col,
-          }).setOrigin(0.5));
-        nextY += 22;
-      }
-      nextY += 10;
+      addLabel(this, c, W / 2, y, 'RECENT BATTLES', 12, SIMPLE_UI.muted);
+      y += 28;
+      history.slice(0, 3).forEach(h => {
+        addLabel(this, c, W / 2, y, `${h.result} ${h.opponentName} ${h.rankChange > 0 ? '+' : ''}${h.rankChange} +${h.tokens}T`, 11, h.result === 'WIN' ? SIMPLE_UI.good : SIMPLE_UI.danger);
+        y += 22;
+      });
+      y += 14;
     }
 
-    c.add(this.add.text(W / 2, nextY, 'CHALLENGERS', {
-      font: '13px monospace', fill: '#cccccc',
-    }).setOrigin(0.5));
-    nextY += 28;
+    addLabel(this, c, W / 2, y, 'CHALLENGERS', 14, SIMPLE_UI.gold);
+    y += 48;
 
     if (!hasHeroes) {
-      c.add(this.add.text(W / 2, nextY + 20, 'Need heroes in your roster', {
-        font: '14px monospace', fill: '#666666',
-      }).setOrigin(0.5));
-    } else if (attempts <= 0) {
-      c.add(this.add.text(W / 2, nextY + 20, 'No attempts remaining today', {
-        font: '14px monospace', fill: '#ff6666',
-      }).setOrigin(0.5));
-    } else {
-      for (const opp of opponents) {
-        const oy     = nextY + 44;
-        const oppCfg = RANK_CONFIG[opp.rankName];
-        const diffCol = opp.difficulty === 'hard' ? '#ff6666' : opp.difficulty === 'easy' ? '#66cc66' : '#ffcc44';
-
-        const bg = this.add.rectangle(W / 2, oy, W - 40, 78, 0x111122)
-          .setStrokeStyle(1, 0x334466).setInteractive({ useHandCursor: true });
-        c.add(bg);
-
-        c.add(this.add.text(28, oy - 24, opp.name, { font: '15px monospace', fill: '#ffffff' }));
-        c.add(this.add.text(28, oy - 4, oppCfg.label + '  ' + opp.difficulty.toUpperCase(), {
-          font: '12px monospace', fill: oppCfg.colorStr,
-        }));
-        c.add(this.add.text(28, oy + 18, opp.squad.map(h => h.name).join(', ').slice(0, 26), {
-          font: '10px monospace', fill: '#888888',
-        }));
-
-        const fBtn = this.add.rectangle(W - 56, oy, 76, 40, 0x1a0a2a)
-          .setStrokeStyle(1, 0xaa44ff).setInteractive({ useHandCursor: true });
-        c.add(fBtn);
-        c.add(this.add.text(W - 56, oy, 'FIGHT', { font: '13px monospace', fill: '#cc88ff' }).setOrigin(0.5));
-
-        bg.on('pointerup',     () => this._startBattle(opp));
-        fBtn.on('pointerdown', () => fBtn.setFillStyle(0x0d0520));
-        fBtn.on('pointerout',  () => fBtn.setFillStyle(0x1a0a2a));
-        fBtn.on('pointerup',   () => this._startBattle(opp));
-
-        nextY += 90;
-      }
+      addLabel(this, c, W / 2, y, 'Need heroes in your roster.', 14, SIMPLE_UI.muted);
+      return;
     }
-  }
+    if (attempts <= 0) {
+      addLabel(this, c, W / 2, y, 'No attempts remaining today.', 14, SIMPLE_UI.danger);
+      return;
+    }
 
-  // ─── BATTLE ─────────────────────────────────────────────────────────────────
+    opponents.forEach(opp => {
+      const oppCfg = RANK_CONFIG[opp.rankName];
+      addPanel(this, c, W / 2, y, W - 40, 78);
+      addLabel(this, c, 30, y - 22, opp.name, 14, SIMPLE_UI.text, 0);
+      addLabel(this, c, 30, y, `${oppCfg.label} · ${opp.difficulty.toUpperCase()}`, 11, oppCfg.colorStr, 0);
+      addLabel(this, c, 30, y + 20, opp.squad.map(h => h.name).join(', ').slice(0, 32), 9, SIMPLE_UI.muted, 0);
+      addButton(this, c, W - 58, y, 78, 40, 'FIGHT', () => this._startBattle(opp));
+      y += 92;
+    });
+  }
 
   _startBattle(opponent) {
     if (!ArenaManager.canAttempt()) return;
     this._selectedOpponent = opponent;
-
     const frozen = ArenaManager.freezeSquadFromEntries(GameState.getBattleSquadEntries(), id => HeroManager.getHero(id));
-    const playerSquad = frozen
-      .map(snapshot => {
-        const combatHero = {
-          id: snapshot.id,
-          name: snapshot.name,
-          heroClass: snapshot.heroClass,
-          affinity: snapshot.affinity,
-          range: snapshot.range,
-          normalAbilityIds: snapshot.abilityIds,
-          ultimateAbilityId: snapshot.ultimateAbilityId,
-          ultimateAbilityId2: snapshot.ultimateAbilityId2,
-          computeStats: () => ({ ...snapshot.stats })
-        };
-        return { hero: combatHero, row: snapshot.row };
-      });
+    const playerSquad = frozen.map(snapshot => ({
+      hero: {
+        id: snapshot.id,
+        name: snapshot.name,
+        heroClass: snapshot.heroClass,
+        affinity: snapshot.affinity,
+        range: snapshot.range,
+        normalAbilityIds: snapshot.abilityIds,
+        ultimateAbilityId: snapshot.ultimateAbilityId,
+        ultimateAbilityId2: snapshot.ultimateAbilityId2,
+        computeStats: () => ({ ...snapshot.stats })
+      },
+      row: snapshot.row
+    }));
 
-    this._engine = new BattleEngine({
-      playerSquad,
-      enemySquad: opponent.squad,
-      onEvent: ev => this._onBattleEvent(ev),
-    });
+    this._engine = new BattleEngine({ playerSquad, enemySquad: opponent.squad, onEvent: ev => this._onBattleEvent(ev) });
     this._engine.start();
     this._showBattleView(opponent);
-    this._battleTimer = this.time.addEvent({
-      delay: 900, loop: true,
-      callback: () => { if (this._engine?.running) this._engine.step(); },
-    });
+    this._battleTimer = this.time.addEvent({ delay: 900, loop: true, callback: () => { if (this._engine?.running) this._engine.step(); } });
   }
 
   _showBattleView(opponent) {
     this._reset();
-    const c = this._root, W = 480;
+    const c = this._root;
     const rankCfg = RANK_CONFIG[opponent.rankName];
-
-    c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
-    c.add(this.add.text(W / 2, 26, 'ARENA  vs  ' + opponent.name, {
-      font: '15px monospace', fill: '#ffaa44',
-    }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 48, rankCfg.label, {
-      font: '12px monospace', fill: rankCfg.colorStr,
-    }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 70, 'OPPONENT', { font: '11px monospace', fill: '#ff7766' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 470, 'YOUR SQUAD', { font: '11px monospace', fill: '#66ccff' }).setOrigin(0.5));
-
-    c.add(this.add.rectangle(W / 2, 335, W - 16, 110, 0x0c0c1e).setStrokeStyle(1, 0x2a1a4a));
-    this._logText = this.add.text(W / 2, 335, '',
-      { font: '12px monospace', fill: '#bbbbbb', align: 'center' }).setOrigin(0.5);
-    c.add(this._logText);
+    addScreenBg(this, c);
+    addHeader(this, c, `ARENA vs ${opponent.name}`, () => this._showArenaHub());
+    addLabel(this, c, W / 2, 76, rankCfg.label, 12, rankCfg.colorStr);
+    addLabel(this, c, W / 2, 110, 'OPPONENT', 11, SIMPLE_UI.danger);
+    addLabel(this, c, W / 2, 465, 'YOUR SQUAD', 11, '#66ccff');
+    addPanel(this, c, W / 2, 335, W - 16, 110);
+    this._logText = addLabel(this, c, W / 2, 335, '', 12, SIMPLE_UI.muted);
 
     const enemies = [...this._engine.enemyFormation.FRONT, ...this._engine.enemyFormation.BACK];
-    const heroes  = [...this._engine.playerFormation.FRONT, ...this._engine.playerFormation.BACK];
-    this._drawRow(enemies, 160, c);
-    this._drawRow(heroes,  530, c);
+    const heroes = [...this._engine.playerFormation.FRONT, ...this._engine.playerFormation.BACK];
+    this._drawRow(enemies, 175, c);
+    this._drawRow(heroes, 535, c);
     this._drawUltBtns(heroes, c);
   }
 
   _drawRow(combatants, cy, c) {
     if (!combatants.length) return;
-    const W = 480, slotW = Math.min(82, (W - 36) / combatants.length), barW = slotW - 10;
+    const slotW = Math.min(82, (W - 36) / combatants.length);
+    const barW = slotW - 10;
     const startX = (W - slotW * combatants.length) / 2 + slotW / 2;
     combatants.forEach((com, i) => {
-      const x  = startX + i * slotW;
-      const bg = this.add.rectangle(x, cy, slotW - 6, 62, CLASS_COLORS[com.heroClass] || 0x445566)
-        .setStrokeStyle(1, 0xcccccc);
+      const x = startX + i * slotW;
+      const bg = this.add.rectangle(x, cy, slotW - 6, 62, CLASS_COLORS[com.heroClass] || 0x445566).setStrokeStyle(1, 0xcccccc);
       c.add(bg);
-      c.add(this.add.text(x, cy - 38, com.name.slice(0, 6),
-        { font: '11px monospace', fill: '#ffffff' }).setOrigin(0.5));
+      addLabel(this, c, x, cy - 38, com.name.slice(0, 6), 10, SIMPLE_UI.text);
       c.add(this.add.rectangle(x, cy + 38, barW, 8, 0x440000));
       const hpBar = this.add.rectangle(x - barW / 2, cy + 38, barW, 8, 0x22cc55).setOrigin(0, 0.5);
-      const hpTxt = this.add.text(x, cy + 50, '' + com.hp,
-        { font: '9px monospace', fill: '#aaffaa' }).setOrigin(0.5);
-      c.add(hpBar); c.add(hpTxt);
+      const hpTxt = addLabel(this, c, x, cy + 50, `${com.hp}`, 9, '#aaffaa');
+      c.add(hpBar);
       this._sprites[com.id] = { bg, hpBar, barMaxW: barW, hpTxt };
     });
   }
 
   _drawUltBtns(heroes, c) {
     if (!heroes.length) return;
-    const W = 480, btnW = Math.min(88, (W - 16) / heroes.length);
+    const btnW = Math.min(88, (W - 16) / heroes.length);
     const startX = (W - btnW * heroes.length) / 2 + btnW / 2;
     heroes.forEach((hero, i) => {
-      const x  = startX + i * btnW;
+      const x = startX + i * btnW;
       const hasDual = Boolean(hero.ultimateAbilityId2);
-      const bg = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530)
-        .setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'primary'); });
-      const chgTxt = this.add.text(x, hasDual ? 632 : 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
+      const bg = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530).setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true }).on('pointerup', () => this._engine?.triggerUltimate(hero.id, 'primary'));
+      const chgTxt = addLabel(this, c, x, hasDual ? 632 : 644, '0%', 11, '#887799');
       c.add(bg);
-      c.add(this.add.text(x, hasDual ? 618 : 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
-      c.add(chgTxt);
+      addLabel(this, c, x, hasDual ? 618 : 626, hero.name.slice(0, 5), 10, '#cc88ff');
       this._ultBtns.push({ heroId: hero.id, slot: 'primary', bg, chgTxt });
       if (hasDual) {
-        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530)
-          .setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true })
-          .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'secondary'); });
-        const chgTxt2 = this.add.text(x, 656, '0%', { font: '11px monospace', fill: '#aa99dd' }).setOrigin(0.5);
-        c.add(bg2); c.add(chgTxt2);
+        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530).setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true }).on('pointerup', () => this._engine?.triggerUltimate(hero.id, 'secondary'));
+        const chgTxt2 = addLabel(this, c, x, 656, '0%', 11, '#aa99dd');
+        c.add(bg2);
         this._ultBtns.push({ heroId: hero.id, slot: 'secondary', bg: bg2, chgTxt: chgTxt2 });
       }
     });
   }
-
-  // ─── BATTLE EVENTS ───────────────────────────────────────────────────────────
 
   _onBattleEvent(ev) {
     switch (ev.type) {
@@ -269,53 +194,43 @@ export default class ArenaScene extends Phaser.Scene {
           const pct = Math.max(0, ev.finalHp / ev.maxHp);
           sp.hpBar.setDisplaySize(sp.barMaxW * pct, 8);
           sp.hpBar.setFillStyle(pct > 0.5 ? 0x22cc55 : pct > 0.25 ? 0xffaa00 : 0xff2200);
-          sp.hpTxt.setText('' + ev.finalHp);
+          sp.hpTxt.setText(`${ev.finalHp}`);
         }
-        this._log('-' + ev.amount + ' dmg');
+        this._log(`-${ev.amount} dmg`);
         break;
       }
       case 'heroDefeated': {
         const sp = this._sprites[ev.id];
-        if (sp) { sp.bg.setFillStyle(0x222222); sp.hpTxt.setText('\u2715'); }
+        if (sp) { sp.bg.setFillStyle(0x222222); sp.hpTxt.setText('x'); }
         break;
       }
       case 'ultimateReady': {
         const btn = this._ultBtns.find(b => b.heroId === ev.id && b.slot === (ev.slot || 'primary'));
-        if (btn) { btn.bg.setFillStyle(0x5500bb); btn.chgTxt.setText('\u25b6ULT').setStyle({ fill: '#ffaaff' }); }
+        if (btn) { btn.bg.setFillStyle(0x5500bb); btn.chgTxt.setText('ULT'); }
         break;
       }
       case 'ultimateTriggered': {
-        for (const btn of this._ultBtns.filter(b => b.heroId === ev.heroId)) {
-          btn.bg.setFillStyle(0x1a0530);
-          btn.chgTxt.setText('0%').setStyle({ fill: btn.slot === 'secondary' ? '#aa99dd' : '#887799' });
-        }
+        this._ultBtns.filter(b => b.heroId === ev.heroId).forEach(btn => { btn.bg.setFillStyle(0x1a0530); btn.chgTxt.setText('0%'); });
         this._log('ULTIMATE!');
         break;
       }
-      case 'statusApplied':
-        this._log(ev.effect + '!');
-        break;
+      case 'statusApplied': this._log(ev.effect + '!'); break;
       case 'tick': {
         const all = [...ev.state.playerFormation.FRONT, ...ev.state.playerFormation.BACK];
-        for (const btn of this._ultBtns) {
+        this._ultBtns.forEach(btn => {
           const com = all.find(x => x.id === btn.heroId);
-          if (com && com.ultimateCharge < 100) btn.chgTxt.setText(com.ultimateCharge + '%');
-        }
+          if (com && com.ultimateCharge < 100) btn.chgTxt.setText(`${com.ultimateCharge}%`);
+        });
         break;
       }
-      case 'battleEnd':
-        this._onBattleEnd(ev.result);
-        break;
+      case 'battleEnd': this._onBattleEnd(ev.result); break;
     }
   }
 
-  // ─── RESULTS ────────────────────────────────────────────────────────────────
-
   _onBattleEnd(result) {
     if (this._battleTimer) { this._battleTimer.remove(); this._battleTimer = null; }
-    const W = 480, isWin = result === 'player_win';
+    const isWin = result === 'player_win';
     const c = this._root;
-
     const entry = ArenaManager.recordBattle(this._selectedOpponent.id, isWin);
     CurrencyManager.add(CURRENCY.ARENA_TOKENS, entry.tokens);
     DailyCodexManager.increment('ARENA_FIGHTS');
@@ -323,28 +238,11 @@ export default class ArenaScene extends Phaser.Scene {
     GameState.save();
 
     const newRankCfg = ArenaManager.getRankConfig();
-    c.add(this.add.rectangle(W / 2, 427, W, 854, 0x000000).setAlpha(0.78));
-    c.add(this.add.text(W / 2, 220, isWin ? 'VICTORY!' : 'DEFEATED', {
-      font: '40px monospace', fill: isWin ? '#ffaa44' : '#ff4444',
-    }).setOrigin(0.5));
-
-    const rankStr = entry.rankChange > 0 ? ' (+1)' : entry.rankChange < 0 ? ' (-1)' : '';
-    c.add(this.add.text(W / 2, 300, 'Rank: ' + newRankCfg.label + rankStr, {
-      font: '18px monospace', fill: newRankCfg.colorStr,
-    }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 340, '+' + entry.tokens + ' Arena Tokens', {
-      font: '17px monospace', fill: '#ffaa44',
-    }).setOrigin(0.5));
-
-    const dBtn = this.add.rectangle(W / 2, 430, 260, 62, isWin ? 0x1a0a00 : 0x0d0520)
-      .setStrokeStyle(2, isWin ? 0xffaa44 : 0x5511aa)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerup', () => this._showArenaHub());
-    c.add(dBtn);
-    c.add(this.add.text(W / 2, 430, 'BACK TO ARENA', {
-      font: '20px monospace', fill: isWin ? '#ffaa44' : '#aa66ff',
-    }).setOrigin(0.5));
-
+    c.add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.78));
+    addLabel(this, c, W / 2, 220, isWin ? 'VICTORY!' : 'DEFEATED', 36, isWin ? SIMPLE_UI.gold : SIMPLE_UI.danger);
+    addLabel(this, c, W / 2, 300, `Rank: ${newRankCfg.label}${entry.rankChange > 0 ? ' (+1)' : entry.rankChange < 0 ? ' (-1)' : ''}`, 16, newRankCfg.colorStr);
+    addLabel(this, c, W / 2, 340, `+${entry.tokens} Arena Tokens`, 16, SIMPLE_UI.gold);
+    addButton(this, c, W / 2, 430, 260, 58, 'BACK TO ARENA', () => this._showArenaHub());
     AchievementManager.showPopups(this);
   }
 }
