@@ -460,7 +460,7 @@ export default class CampaignScene extends Phaser.Scene {
 
   _exitToMap() {
     if (this._returnToHub) {
-      this.scene.start('MainHub', { tab: 'Campaign' });
+      this.scene.start('MainHub', { tab: 'Campaign', focusCurrentStage: true });
       return;
     }
     this._showStageSelect();
