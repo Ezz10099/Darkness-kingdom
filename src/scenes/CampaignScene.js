@@ -19,7 +19,7 @@ const CLASS_COLORS = {
 export default class CampaignScene extends Phaser.Scene {
   constructor() { super('Campaign'); }
 
-  create() {
+  create(data = {}) {
     this._engine      = null;
     this._battleTimer = null;
     this._sprites     = {};   // combatantId → { bg, hpBar, barMaxW, hpTxt }
@@ -28,7 +28,14 @@ export default class CampaignScene extends Phaser.Scene {
     this._logBuf      = [];
     this._curStage    = null;
     this._selectedRegion = 1;
+    this._returnToHub = Boolean(data.returnToHub);
     this._root        = this.add.container(0, 0);
+    if (data.directStageId) {
+      const stage = STAGE_DEFINITIONS.find(s => s.id === data.directStageId);
+      if (stage) this._showFormationEditor(stage);
+      else this._showStageSelect();
+      return;
+    }
     this._showStageSelect();
   }
 
@@ -196,7 +203,7 @@ export default class CampaignScene extends Phaser.Scene {
       { font: '9px monospace', fill: hasUnsavedChanges ? '#ffdd88' : '#99ffbb' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 30, 'FORMATION', { font: '24px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(22, 34, '< MAP', { font: '14px monospace', fill: '#aaaaaa' }).setOrigin(0, 0.5)
-      .setInteractive({ useHandCursor: true }).on('pointerup', () => this._showStageSelect()));
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => this._exitToMap()));
     const counts = countByRow();
     c.add(this.add.text(W / 2, 64,
       `Selected ${selected.length}/5  FRONT ${counts.FRONT}/3  BACK ${counts.BACK}/3`,
@@ -246,7 +253,7 @@ export default class CampaignScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true }).on('pointerup', () => {
         GameState.setActiveSquad(selected);
         if (stage) this._startBattle(stage);
-        else this._showStageSelect();
+        else this._exitToMap();
       });
     c.add(saveBtn);
     c.add(this.add.text(W / 2, 778, stage ? 'SAVE + BATTLE' : 'SAVE', { font: '14px monospace', fill: hasUnsavedChanges ? '#baffca' : '#88aa95' }).setOrigin(0.5));
@@ -428,7 +435,7 @@ export default class CampaignScene extends Phaser.Scene {
         .on('pointerup', () => this._startBattle(this._curStage));
       const mBtn = this.add.rectangle(W / 2, 490, 240, 62, 0x111130)
         .setStrokeStyle(1, 0x4444aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => this._showStageSelect());
+        .on('pointerup', () => this._exitToMap());
       c.add(rBtn);
       c.add(this.add.text(W / 2, 410, 'RETRY', { font: '22px monospace', fill: '#ff6666' }).setOrigin(0.5));
       c.add(mBtn);
@@ -447,8 +454,16 @@ export default class CampaignScene extends Phaser.Scene {
       if (stage.region) AchievementManager.checkRegionReached(stage.region);
     }
     GameState.save();
-    this._showStageSelect();
+    this._exitToMap();
     AchievementManager.showPopups(this);
+  }
+
+  _exitToMap() {
+    if (this._returnToHub) {
+      this.scene.start('MainHub', { tab: 'Campaign' });
+      return;
+    }
+    this._showStageSelect();
   }
 
   _applyMilestone(m) {
