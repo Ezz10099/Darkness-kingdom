@@ -25,6 +25,8 @@ export default class MainHubScene extends Phaser.Scene {
     this._pendingIdleGold = 0;
     this._currencyTexts = {};
     this._dotTargets = {};
+    this._campaignChapter = 1;
+    this._selectedCampaignStageId = null;
   }
 
   create(data = {}) {
@@ -123,31 +125,81 @@ export default class MainHubScene extends Phaser.Scene {
   }
 
   _drawCampaignTab(c) {
-    this._drawTabHeader(c, 'CAMPAIGN', 'placeholder map area');
-    addPanel(this, c, W / 2, 350, 360, 300, 0x10101c);
-    addLabel(this, c, W / 2, 235, 'CHAPTER BACKGROUND ASSET HERE', 12, SIMPLE_UI.muted);
-    const nodes = STAGE_DEFINITIONS.slice(0, 4).map((stage, i) => ({
-      x: [130, 190, 255, 325][i] || (130 + i * 50),
-      y: [410, 365, 330, 285][i] || (410 - i * 35),
-      stage,
-      t: stage.id
-    }));
+    const chapterMap = STAGE_DEFINITIONS.reduce((acc, stage) => {
+      const list = acc.get(stage.region) || [];
+      list.push(stage);
+      acc.set(stage.region, list);
+      return acc;
+    }, new Map());
+    const chapterIds = [...chapterMap.keys()].sort((a, b) => a - b);
     const lastClearedIdx = STAGE_DEFINITIONS.findIndex(s => s.id === GameState.campaignProgress.stageCleared);
-    nodes.forEach((n, i) => {
-      if (i > 0) c.add(this.add.line(0, 0, nodes[i - 1].x, nodes[i - 1].y, n.x, n.y, 0x666677).setOrigin(0));
-      const stageIdx = STAGE_DEFINITIONS.findIndex(s => s.id === n.stage.id);
+    const currentStage = STAGE_DEFINITIONS[Math.min(lastClearedIdx + 1, STAGE_DEFINITIONS.length - 1)] || STAGE_DEFINITIONS[0];
+    if (!chapterIds.includes(this._campaignChapter)) this._campaignChapter = currentStage?.region || chapterIds[0] || 1;
+
+    const chapterStages = chapterMap.get(this._campaignChapter) || [];
+    if (!this._selectedCampaignStageId || !chapterStages.some(s => s.id === this._selectedCampaignStageId)) {
+      this._selectedCampaignStageId = (chapterStages.find(s => STAGE_DEFINITIONS.findIndex(x => x.id === s.id) <= lastClearedIdx + 1) || chapterStages[0])?.id || null;
+    }
+
+    const selectedStage = chapterStages.find(s => s.id === this._selectedCampaignStageId) || chapterStages[0];
+    this._drawTabHeader(c, 'CAMPAIGN', 'chapter progression');
+
+    const chapterPos = chapterIds.indexOf(this._campaignChapter);
+    addButton(this, c, 96, 120, 42, 28, '<', () => {
+      this._campaignChapter = chapterIds[Math.max(0, chapterPos - 1)];
+      this._drawTabContent();
+    }, chapterPos > 0);
+    addButton(this, c, W - 96, 120, 42, 28, '>', () => {
+      this._campaignChapter = chapterIds[Math.min(chapterIds.length - 1, chapterPos + 1)];
+      this._drawTabContent();
+    }, chapterPos < chapterIds.length - 1);
+    addLabel(this, c, W / 2, 120, `CHAPTER ${this._campaignChapter}: ${(chapterStages[0]?.regionName || '').toUpperCase()}`, 12, SIMPLE_UI.gold);
+
+    addPanel(this, c, W / 2, 320, 388, 260, 0x10101c);
+    const focusStageIdx = chapterStages.findIndex(s => s.id === currentStage?.id);
+    const displayCount = Math.min(7, chapterStages.length);
+    const start = Math.max(0, Math.min(chapterStages.length - displayCount, focusStageIdx - 3));
+    const visibleStages = chapterStages.slice(start, start + displayCount);
+
+    const xStart = 86;
+    const xStep = visibleStages.length > 1 ? 308 / (visibleStages.length - 1) : 0;
+    visibleStages.forEach((stage, i) => {
+      const x = xStart + i * xStep;
+      const y = 370 - Math.sin(i * 0.8) * 48;
+      if (i > 0) c.add(this.add.line(0, 0, xStart + (i - 1) * xStep, 370 - Math.sin((i - 1) * 0.8) * 48, x, y, 0x666677).setOrigin(0));
+      const stageIdx = STAGE_DEFINITIONS.findIndex(s => s.id === stage.id);
       const cleared = stageIdx <= lastClearedIdx;
       const unlocked = stageIdx <= lastClearedIdx + 1;
-      const node = this.add.circle(n.x, n.y, 18, cleared ? 0x1f3a1f : 0x222238).setStrokeStyle(1, unlocked ? SIMPLE_UI.borderActive : 0x444455).setAlpha(unlocked ? 1 : 0.45);
+      const isCurrent = stage.id === currentStage?.id;
+      const fill = cleared ? 0x1f7a39 : isCurrent ? 0x6d4cff : 0x222238;
+      const stroke = isCurrent ? 0xf8d65c : unlocked ? SIMPLE_UI.borderActive : 0x444455;
+      const radius = isCurrent ? 23 : 17;
+      const node = this.add.circle(x, y, radius, fill).setStrokeStyle(isCurrent ? 3 : 1, stroke).setAlpha(unlocked ? 1 : 0.45);
       c.add(node);
-      addLabel(this, c, n.x, n.y, n.t, 9, SIMPLE_UI.text);
+      addLabel(this, c, x, y, stage.id, 9, SIMPLE_UI.text);
       if (unlocked) {
         node.setInteractive({ useHandCursor: true }).on('pointerup', () => {
-          this.scene.start('Campaign', { directStageId: n.stage.id, returnToHub: true });
+          this._selectedCampaignStageId = stage.id;
+          this.scene.start('Campaign', { directStageId: stage.id, returnToHub: true });
+        });
+      } else {
+        node.setInteractive({ useHandCursor: true }).on('pointerup', () => {
+          this._selectedCampaignStageId = stage.id;
+          this._drawTabContent();
         });
       }
     });
-    addLabel(this, c, W / 2, 548, `Last cleared: ${GameState.campaignProgress.stageCleared || 'none'}`, 12, SIMPLE_UI.muted);
+
+    addPanel(this, c, W / 2, 548, 388, 118, 0x151525);
+    addLabel(this, c, 82, 512, selectedStage?.id || '--', 13, SIMPLE_UI.gold, 0);
+    addLabel(this, c, 82, 536, selectedStage?.name || 'Unknown Stage', 12, SIMPLE_UI.text, 0);
+    addLabel(this, c, 82, 560, `Rewards: Gold ${selectedStage?.rewards?.gold || 0} • XP ${selectedStage?.rewards?.xp || 0}`, 10, SIMPLE_UI.muted, 0);
+    const selectedStageIdx = STAGE_DEFINITIONS.findIndex(s => s.id === selectedStage?.id);
+    const selectedUnlocked = selectedStageIdx <= lastClearedIdx + 1;
+    addButton(this, c, 382, 548, 120, 44, selectedUnlocked ? 'BATTLE' : 'LOCKED', () => {
+      if (!selectedUnlocked) return this._showToast('Stage locked');
+      this.scene.start('Campaign', { directStageId: selectedStage.id, returnToHub: true });
+    }, selectedUnlocked);
   }
 
   _drawHeroesTab(c) {
