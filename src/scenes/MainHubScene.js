@@ -31,6 +31,7 @@ export default class MainHubScene extends Phaser.Scene {
 
   create(data = {}) {
     this._selectedTab = data.tab || 'Campaign';
+    this._selectedCampaignStageId = data.focusStageId || null;
     this._currencyTexts = {};
     this._dotTargets = {};
 
@@ -144,8 +145,14 @@ export default class MainHubScene extends Phaser.Scene {
       this._campaignChapter = currentStage?.region || chapterIds[0] || 1;
     }
 
+    if (this._selectedCampaignStageId) {
+      const focusedStage = STAGE_DEFINITIONS.find(s => s.id === this._selectedCampaignStageId);
+      if (focusedStage) this._campaignChapter = focusedStage.region;
+    }
     const chapterStages = chapterMap.get(this._campaignChapter) || [];
-    this._selectedCampaignStageId = currentStage?.id || chapterStages[0]?.id || null;
+    if (!chapterStages.find(s => s.id === this._selectedCampaignStageId)) {
+      this._selectedCampaignStageId = currentStage?.id || chapterStages[0]?.id || null;
+    }
 
     const selectedStage = chapterStages.find(s => s.id === this._selectedCampaignStageId) || chapterStages[0];
     this._drawTabHeader(c, 'CAMPAIGN', 'chapter progression');

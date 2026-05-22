@@ -32,8 +32,10 @@ export default class CampaignScene extends Phaser.Scene {
     this._root        = this.add.container(0, 0);
     if (data.directStageId) {
       const stage = STAGE_DEFINITIONS.find(s => s.id === data.directStageId);
-      if (stage) this._showFormationEditor(stage);
-      else this._showStageSelect();
+      if (stage) {
+        this._selectedRegion = stage.region || 1;
+        this._showFormationEditor(stage);
+      } else this._showStageSelect();
       return;
     }
     this._showStageSelect();
@@ -76,7 +78,7 @@ export default class CampaignScene extends Phaser.Scene {
 
     addScreenBg(this, c);
     addLabel(this, c, W / 2, 30, 'CAMPAIGN', 22, SIMPLE_UI.gold);
-    addButton(this, c, 60, 56, 90, 28, 'BACK', () => this.scene.start('MainHub'));
+    addButton(this, c, 60, 56, 90, 28, 'BACK', () => this.scene.start('MainHub', { tab: 'Campaign', focusStageId: this._getCurrentPlayableStage()?.id }));
     addButton(this, c, W - 70, 56, 120, 28, 'FORMATION', () => this._showFormationEditor());
 
     const unlockedRegion = Math.max(1, STAGE_DEFINITIONS[Math.max(0, Math.min(lastIdx + 1, STAGE_DEFINITIONS.length - 1))]?.region || 1);
@@ -263,6 +265,10 @@ export default class CampaignScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, 822, 'CLEAR SQUAD', { font: '11px monospace', fill: '#ffaaaa' }).setOrigin(0.5));
   }
 
+  _getCurrentPlayableStage() {
+    return STAGE_DEFINITIONS[Math.min(this._lastClearedIdx() + 1, STAGE_DEFINITIONS.length - 1)] || STAGE_DEFINITIONS[0] || null;
+  }
+
   _startBattle(stage) {
     this._curStage = stage;
     const squad = GameState.getBattleSquadEntries()
@@ -430,16 +436,20 @@ export default class CampaignScene extends Phaser.Scene {
       c.add(cBtn);
       c.add(this.add.text(W / 2, 490, 'COLLECT', { font: '22px monospace', fill: '#66ff66' }).setOrigin(0.5));
     } else {
-      const rBtn = this.add.rectangle(W / 2, 410, 240, 62, 0x2e0b0b)
-        .setStrokeStyle(2, 0xff4444).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => this._startBattle(this._curStage));
-      const mBtn = this.add.rectangle(W / 2, 490, 240, 62, 0x111130)
-        .setStrokeStyle(1, 0x4444aa).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => this._exitToMap());
-      c.add(rBtn);
-      c.add(this.add.text(W / 2, 410, 'RETRY', { font: '22px monospace', fill: '#ff6666' }).setOrigin(0.5));
-      c.add(mBtn);
-      c.add(this.add.text(W / 2, 490, 'MAP', { font: '22px monospace', fill: '#aaaaff' }).setOrigin(0.5));
+      c.add(this.add.text(W / 2, 350, 'Adjust squad/power, then retry this same stage.',
+        { font: '12px monospace', fill: '#ffaaaa' }).setOrigin(0.5));
+      const btns = [
+        { y: 410, label: 'RETRY', fill: '#ff6666', bg: 0x2e0b0b, stroke: 0xff4444, onClick: () => this._startBattle(this._curStage) },
+        { y: 476, label: 'FORMATION', fill: '#88ccff', bg: 0x102338, stroke: 0x66aaff, onClick: () => this._showFormationEditor(this._curStage) },
+        { y: 542, label: 'HEROES / UPGRADE', fill: '#ffd28a', bg: 0x2b2410, stroke: 0xccaa55, onClick: () => this.scene.start('MainHub', { tab: 'Heroes' }) },
+        { y: 608, label: 'MAP', fill: '#aaaaff', bg: 0x111130, stroke: 0x4444aa, onClick: () => this._exitToMap() }
+      ];
+      btns.forEach(({ y, label, fill, bg, stroke, onClick }) => {
+        const btn = this.add.rectangle(W / 2, y, 300, 54, bg).setStrokeStyle(2, stroke)
+          .setInteractive({ useHandCursor: true }).on('pointerup', onClick);
+        c.add(btn);
+        c.add(this.add.text(W / 2, y, label, { font: '18px monospace', fill }).setOrigin(0.5));
+      });
     }
   }
 
@@ -460,9 +470,10 @@ export default class CampaignScene extends Phaser.Scene {
 
   _exitToMap() {
     if (this._returnToHub) {
-      this.scene.start('MainHub', { tab: 'Campaign', focusCurrentStage: true });
+      this.scene.start('MainHub', { tab: 'Campaign', focusCurrentStage: true, focusStageId: this._getCurrentPlayableStage()?.id });
       return;
     }
+    this._selectedRegion = this._getCurrentPlayableStage()?.region || this._selectedRegion;
     this._showStageSelect();
   }
 
