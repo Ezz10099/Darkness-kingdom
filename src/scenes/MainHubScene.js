@@ -137,8 +137,11 @@ export default class MainHubScene extends Phaser.Scene {
     if (!chapterIds.includes(this._campaignChapter)) this._campaignChapter = currentStage?.region || chapterIds[0] || 1;
 
     const chapterStages = chapterMap.get(this._campaignChapter) || [];
+    const currentStageInChapter = chapterStages.find(s => s.id === currentStage?.id) || null;
     if (!this._selectedCampaignStageId || !chapterStages.some(s => s.id === this._selectedCampaignStageId)) {
-      this._selectedCampaignStageId = (chapterStages.find(s => STAGE_DEFINITIONS.findIndex(x => x.id === s.id) <= lastClearedIdx + 1) || chapterStages[0])?.id || null;
+      this._selectedCampaignStageId = currentStageInChapter?.id
+        || (chapterStages.find(s => STAGE_DEFINITIONS.findIndex(x => x.id === s.id) <= lastClearedIdx + 1) || chapterStages[0])?.id
+        || null;
     }
 
     const selectedStage = chapterStages.find(s => s.id === this._selectedCampaignStageId) || chapterStages[0];
@@ -177,17 +180,10 @@ export default class MainHubScene extends Phaser.Scene {
       const node = this.add.circle(x, y, radius, fill).setStrokeStyle(isCurrent ? 3 : 1, stroke).setAlpha(unlocked ? 1 : 0.45);
       c.add(node);
       addLabel(this, c, x, y, stage.id, 9, SIMPLE_UI.text);
-      if (unlocked) {
-        node.setInteractive({ useHandCursor: true }).on('pointerup', () => {
-          this._selectedCampaignStageId = stage.id;
-          this.scene.start('Campaign', { directStageId: stage.id, returnToHub: true });
-        });
-      } else {
-        node.setInteractive({ useHandCursor: true }).on('pointerup', () => {
-          this._selectedCampaignStageId = stage.id;
-          this._drawTabContent();
-        });
-      }
+      node.setInteractive({ useHandCursor: true }).on('pointerup', () => {
+        this._selectedCampaignStageId = stage.id;
+        this._drawTabContent();
+      });
     });
 
     addPanel(this, c, W / 2, 548, 388, 118, 0x151525);
