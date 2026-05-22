@@ -6,6 +6,7 @@ import LoginStreakManager from '../systems/LoginStreakManager.js';
 import DailyCodexManager from '../systems/DailyCodexManager.js';
 import HeroManager from '../systems/HeroManager.js';
 import { CURRENCY } from '../data/constants.js';
+import STAGE_DEFINITIONS from '../data/stageDefinitions.js';
 import { SIMPLE_UI, addScreenBg, addPanel, addButton, addLabel } from '../ui/SimpleUI.js';
 
 const W = 480;
@@ -125,14 +126,28 @@ export default class MainHubScene extends Phaser.Scene {
     this._drawTabHeader(c, 'CAMPAIGN', 'placeholder map area');
     addPanel(this, c, W / 2, 350, 360, 300, 0x10101c);
     addLabel(this, c, W / 2, 235, 'CHAPTER BACKGROUND ASSET HERE', 12, SIMPLE_UI.muted);
-    const nodes = [{ x: 130, y: 410, t: '1-1' }, { x: 190, y: 365, t: '1-2' }, { x: 255, y: 330, t: '1-3' }, { x: 325, y: 285, t: 'BOSS' }];
+    const nodes = STAGE_DEFINITIONS.slice(0, 4).map((stage, i) => ({
+      x: [130, 190, 255, 325][i] || (130 + i * 50),
+      y: [410, 365, 330, 285][i] || (410 - i * 35),
+      stage,
+      t: stage.id
+    }));
+    const lastClearedIdx = STAGE_DEFINITIONS.findIndex(s => s.id === GameState.campaignProgress.stageCleared);
     nodes.forEach((n, i) => {
       if (i > 0) c.add(this.add.line(0, 0, nodes[i - 1].x, nodes[i - 1].y, n.x, n.y, 0x666677).setOrigin(0));
-      c.add(this.add.circle(n.x, n.y, 18, 0x222238).setStrokeStyle(1, SIMPLE_UI.borderActive));
+      const stageIdx = STAGE_DEFINITIONS.findIndex(s => s.id === n.stage.id);
+      const cleared = stageIdx <= lastClearedIdx;
+      const unlocked = stageIdx <= lastClearedIdx + 1;
+      const node = this.add.circle(n.x, n.y, 18, cleared ? 0x1f3a1f : 0x222238).setStrokeStyle(1, unlocked ? SIMPLE_UI.borderActive : 0x444455).setAlpha(unlocked ? 1 : 0.45);
+      c.add(node);
       addLabel(this, c, n.x, n.y, n.t, 9, SIMPLE_UI.text);
+      if (unlocked) {
+        node.setInteractive({ useHandCursor: true }).on('pointerup', () => {
+          this.scene.start('Campaign', { directStageId: n.stage.id, returnToHub: true });
+        });
+      }
     });
     addLabel(this, c, W / 2, 548, `Last cleared: ${GameState.campaignProgress.stageCleared || 'none'}`, 12, SIMPLE_UI.muted);
-    addButton(this, c, W / 2, 594, 230, 42, 'OPEN CAMPAIGN', () => this.scene.start('Campaign'));
   }
 
   _drawHeroesTab(c) {
