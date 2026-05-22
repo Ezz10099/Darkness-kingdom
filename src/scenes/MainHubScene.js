@@ -124,6 +124,12 @@ export default class MainHubScene extends Phaser.Scene {
     addLabel(this, c, W / 2, CENTER_TOP + 58, subtitle, 11, SIMPLE_UI.muted);
   }
 
+
+  _getCurrentCampaignStage() {
+    const lastClearedIdx = STAGE_DEFINITIONS.findIndex(s => s.id === GameState.campaignProgress.stageCleared);
+    return STAGE_DEFINITIONS[Math.min(lastClearedIdx + 1, STAGE_DEFINITIONS.length - 1)] || STAGE_DEFINITIONS[0] || null;
+  }
+
   _drawCampaignTab(c) {
     const chapterMap = STAGE_DEFINITIONS.reduce((acc, stage) => {
       const list = acc.get(stage.region) || [];
@@ -133,16 +139,13 @@ export default class MainHubScene extends Phaser.Scene {
     }, new Map());
     const chapterIds = [...chapterMap.keys()].sort((a, b) => a - b);
     const lastClearedIdx = STAGE_DEFINITIONS.findIndex(s => s.id === GameState.campaignProgress.stageCleared);
-    const currentStage = STAGE_DEFINITIONS[Math.min(lastClearedIdx + 1, STAGE_DEFINITIONS.length - 1)] || STAGE_DEFINITIONS[0];
-    if (!chapterIds.includes(this._campaignChapter)) this._campaignChapter = currentStage?.region || chapterIds[0] || 1;
+    const currentStage = this._getCurrentCampaignStage();
+    if (!chapterIds.includes(this._campaignChapter) || currentStage?.region !== this._campaignChapter) {
+      this._campaignChapter = currentStage?.region || chapterIds[0] || 1;
+    }
 
     const chapterStages = chapterMap.get(this._campaignChapter) || [];
-    const currentStageInChapter = chapterStages.find(s => s.id === currentStage?.id) || null;
-    if (!this._selectedCampaignStageId || !chapterStages.some(s => s.id === this._selectedCampaignStageId)) {
-      this._selectedCampaignStageId = currentStageInChapter?.id
-        || (chapterStages.find(s => STAGE_DEFINITIONS.findIndex(x => x.id === s.id) <= lastClearedIdx + 1) || chapterStages[0])?.id
-        || null;
-    }
+    this._selectedCampaignStageId = currentStage?.id || chapterStages[0]?.id || null;
 
     const selectedStage = chapterStages.find(s => s.id === this._selectedCampaignStageId) || chapterStages[0];
     this._drawTabHeader(c, 'CAMPAIGN', 'chapter progression');
@@ -191,11 +194,14 @@ export default class MainHubScene extends Phaser.Scene {
     addLabel(this, c, 82, 536, selectedStage?.name || 'Unknown Stage', 12, SIMPLE_UI.text, 0);
     addLabel(this, c, 82, 560, `Rewards: Gold ${selectedStage?.rewards?.gold || 0} • XP ${selectedStage?.rewards?.xp || 0}`, 10, SIMPLE_UI.muted, 0);
     const selectedStageIdx = STAGE_DEFINITIONS.findIndex(s => s.id === selectedStage?.id);
-    const selectedUnlocked = selectedStageIdx <= lastClearedIdx + 1;
-    addButton(this, c, 382, 548, 120, 44, selectedUnlocked ? 'BATTLE' : 'LOCKED', () => {
-      if (!selectedUnlocked) return this._showToast('Stage locked');
+    const selectedCleared = selectedStageIdx <= lastClearedIdx;
+    const selectedCurrent = selectedStage?.id === currentStage?.id;
+    const selectedLocked = selectedStageIdx > lastClearedIdx + 1;
+    const battleLabel = selectedCurrent ? 'BATTLE' : (selectedCleared ? 'CLEARED' : 'LOCKED');
+    addButton(this, c, 382, 548, 120, 44, battleLabel, () => {
+      if (!selectedCurrent) return this._showToast(selectedCleared ? 'Stage already cleared' : 'Stage locked');
       this.scene.start('Campaign', { directStageId: selectedStage.id, returnToHub: true });
-    }, selectedUnlocked);
+    }, selectedCurrent && !selectedLocked);
   }
 
   _drawHeroesTab(c) {
