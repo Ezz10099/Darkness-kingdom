@@ -26,7 +26,7 @@ const ENEMY_BATTLE_SPRITE_BY_CLASS = {
   ASSASSIN: 'hero_vesper'
 };
 
-const DEBUG_BATTLE_SLOT_CALIBRATION = true;
+const DEBUG_BATTLE_SLOT_CALIBRATION = false;
 
 const CAMPAIGN_BG_BY_REGION = {
   1: 'campaignBgChapter1',
@@ -48,6 +48,13 @@ export default class CampaignScene extends Phaser.Scene {
     this._logBuf      = [];
     this._curStage    = null;
     this._selectedRegion = 1;
+    this._battleStarted = false;
+    this._battlePaused = false;
+    this._battleTickDelay = 900;
+    this._autoUltimate = false;
+    this._beginBattleBtn = null;
+    this._battleControlTexts = {};
+    this._settingsOverlay = null;
     this._returnToHub = Boolean(data.returnToHub);
     this._root        = this.add.container(0, 0);
     if (data.directStageId) {
@@ -69,6 +76,9 @@ export default class CampaignScene extends Phaser.Scene {
     if (this._formationScrollApi) { this._formationScrollApi.destroy(); this._formationScrollApi = null; }
     this._root.removeAll(true);
     this._sprites = {}; this._ultBtns = []; this._logBuf = []; this._logText = null;
+    this._beginBattleBtn = null;
+    this._battleControlTexts = {};
+    this._settingsOverlay = null;
   }
 
   _stageIdx(id)      { return STAGE_DEFINITIONS.findIndex(s => s.id === id); }
@@ -318,6 +328,10 @@ export default class CampaignScene extends Phaser.Scene {
 
   _startBattle(stage) {
     this._curStage = stage;
+    this._battleStarted = false;
+    this._battlePaused = false;
+    this._battleTickDelay = 900;
+    this._autoUltimate = false;
     const squad = GameState.getBattleSquadEntries()
       .map(entry => {
         const hero = HeroManager.getHero(entry.heroId);
@@ -329,11 +343,33 @@ export default class CampaignScene extends Phaser.Scene {
       enemySquad:  stage.enemies,
       onEvent:     ev => this._onBattleEvent(ev)
     });
-    this._engine.start();
     this._showBattleView(stage);
+  }
+
+
+  _startBattleLoop() {
+    if (this._battleTimer) this._battleTimer.remove();
     this._battleTimer = this.time.addEvent({
-      delay: 900, loop: true,
-      callback: () => { if (this._engine?.running) this._engine.step(); }
+      delay: this._battleTickDelay,
+      loop: true,
+      callback: () => {
+        if (!this._battleStarted || this._battlePaused) return;
+        if (this._engine?.running) this._engine.step();
+      }
+    });
+  }
+
+  _refreshControlLabels() {
+    if (this._battleControlTexts.pause) this._battleControlTexts.pause.setText(this._battlePaused ? 'PLAY' : 'PAUSE');
+    if (this._battleControlTexts.speed) this._battleControlTexts.speed.setText(this._battleTickDelay < 900 ? 'x2' : 'x1');
+    if (this._battleControlTexts.auto) this._battleControlTexts.auto.setText(this._autoUltimate ? 'AUTO ON' : 'AUTO OFF');
+  }
+
+  _triggerAutoUltimates(state) {
+    if (!this._autoUltimate || !this._engine) return;
+    const all = [...state.playerFormation.FRONT, ...state.playerFormation.BACK];
+    all.forEach(com => {
+      if (com.ultimateCharge >= 100) this._engine.triggerUltimate(com.id, 'primary');
     });
   }
 
@@ -344,10 +380,9 @@ export default class CampaignScene extends Phaser.Scene {
     this._addCampaignBackground(c, stage.region, 0.28);
 
     if (DEBUG_BATTLE_SLOT_CALIBRATION) this._drawBattleSlotCalibration(c);
-    c.add(this.add.text(W / 2, 26, `${stage.id} — ${stage.name}`,
-      { font: '15px monospace', fill: '#ffd700' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 70, 'ENEMIES',    { font: '11px monospace', fill: '#ff7766' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 470, 'YOUR SQUAD', { font: '11px monospace', fill: '#66ccff' }).setOrigin(0.5));
+    c.add(this.add.rectangle(W / 2, 60, W - 16, 60, 0x101322, 0.55).setStrokeStyle(1, 0x2b3355));
+    c.add(this.add.text(24, 48, `${stage.id} — ${stage.name}`, { font: '12px monospace', fill: '#ffd700' }).setOrigin(0, 0.5));
+    c.add(this.add.text(24, 70, 'PWR P: --   E: --', { font: '10px monospace', fill: '#9fb1d8' }).setOrigin(0, 0.5));
 
     // Battle log
     c.add(this.add.rectangle(W / 2, 335, W - 16, 110, 0x0c0c1e).setStrokeStyle(1, 0x2a2a4a));
@@ -362,6 +397,57 @@ export default class CampaignScene extends Phaser.Scene {
     this._drawFormationUnits(enemyFormation.FRONT, enemyFormation.BACK, false, c);
     this._drawFormationUnits(playerFormation.FRONT, playerFormation.BACK, true, c);
     this._drawUltBtns(heroes, c);
+
+    const makeTopBtn = (x, y, w, label, onClick) => {
+      const btn = this.add.rectangle(x, y, w, 24, 0x1a2038, 0.9).setStrokeStyle(1, 0x5560aa)
+        .setInteractive({ useHandCursor: true }).on('pointerup', onClick);
+      c.add(btn);
+      const txt = this.add.text(x, y, label, { font: '10px monospace', fill: '#d7dcff' }).setOrigin(0.5);
+      c.add(txt);
+      return txt;
+    };
+
+    this._battleControlTexts.pause = makeTopBtn(314, 26, 58, 'PAUSE', () => {
+      this._battlePaused = !this._battlePaused;
+      this._refreshControlLabels();
+    });
+    this._battleControlTexts.speed = makeTopBtn(374, 26, 46, 'x1', () => {
+      this._battleTickDelay = this._battleTickDelay < 900 ? 900 : 450;
+      if (this._battleStarted) this._startBattleLoop();
+      this._refreshControlLabels();
+    });
+    this._battleControlTexts.auto = makeTopBtn(428, 26, 58, 'AUTO OFF', () => {
+      this._autoUltimate = !this._autoUltimate;
+      this._refreshControlLabels();
+    });
+    makeTopBtn(458, 26, 34, '⚙', () => {
+      if (this.scene.manager.keys.Settings) {
+        this.scene.start('Settings');
+        return;
+      }
+      if (this._settingsOverlay) { this._settingsOverlay.destroy(); this._settingsOverlay = null; return; }
+      this._settingsOverlay = this.add.container(0, 0);
+      const bg = this.add.rectangle(W / 2, 427, 320, 160, 0x000000, 0.8).setStrokeStyle(1, 0x7788aa);
+      const txt = this.add.text(W / 2, 427, 'Settings not available in this build.\nTap to close.', { font: '11px monospace', fill: '#dde6ff', align: 'center' }).setOrigin(0.5);
+      bg.setInteractive({ useHandCursor: true }).on('pointerup', () => { this._settingsOverlay?.destroy(); this._settingsOverlay = null; });
+      this._settingsOverlay.add([bg, txt]);
+      c.add(this._settingsOverlay);
+    });
+
+    this._beginBattleBtn = this.add.container(W / 2, 778);
+    const beginBg = this.add.rectangle(0, 0, 240, 44, 0x2b4d1f, 0.9).setStrokeStyle(2, 0x99dd77)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => {
+        if (this._battleStarted) return;
+        this._battleStarted = true;
+        this._engine?.start();
+        this._startBattleLoop();
+        this._beginBattleBtn?.destroy();
+        this._beginBattleBtn = null;
+      });
+    const beginTxt = this.add.text(0, 0, 'BEGIN BATTLE', { font: '16px monospace', fill: '#d9ffd0' }).setOrigin(0.5);
+    this._beginBattleBtn.add([beginBg, beginTxt]);
+    c.add(this._beginBattleBtn);
+    this._refreshControlLabels();
   }
 
 
@@ -602,6 +688,7 @@ export default class CampaignScene extends Phaser.Scene {
         break;
       case 'tick': {
         const all = [...ev.state.playerFormation.FRONT, ...ev.state.playerFormation.BACK];
+        this._triggerAutoUltimates(ev.state);
         for (const btn of this._ultBtns) {
           const com = all.find(x => x.id === btn.heroId);
           if (com && com.ultimateCharge < 100) btn.chgTxt.setText(`${com.ultimateCharge}%`);
