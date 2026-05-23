@@ -26,7 +26,7 @@ const ENEMY_BATTLE_SPRITE_BY_CLASS = {
   ASSASSIN: 'hero_vesper'
 };
 
-const DEBUG_BATTLE_SLOT_CALIBRATION = false;
+const DEBUG_BATTLE_SLOT_CALIBRATION = true;
 
 const CAMPAIGN_BG_BY_REGION = {
   1: 'campaignBgChapter1',
@@ -467,6 +467,21 @@ export default class CampaignScene extends Phaser.Scene {
       { x: 310, y: 270 }
     ];
 
+    const playerStart = [
+      { x: 44, y: 210 },
+      { x: 44, y: 260 },
+      { x: 44, y: 310 },
+      { x: 44, y: 360 },
+      { x: 44, y: 410 }
+    ];
+    const enemyStart = [
+      { x: 436, y: 210 },
+      { x: 436, y: 260 },
+      { x: 436, y: 310 },
+      { x: 436, y: 360 },
+      { x: 436, y: 410 }
+    ];
+
     const makeMarker = (label, x, y, fillColor) => {
       const marker = this.add.container(x, y);
       const dot = this.add.circle(0, 0, 20, fillColor, 0.8).setStrokeStyle(2, 0xffffff);
@@ -483,10 +498,24 @@ export default class CampaignScene extends Phaser.Scene {
       return marker;
     };
 
-    const playerMarkers = playerSlots.map((slot, i) => makeMarker(`P${i + 1}`, slot.x, slot.y, 0x6c56ff));
-    const enemyMarkers = enemySlots.map((slot, i) => makeMarker(`E${i + 1}`, slot.x, slot.y, 0xff5555));
+    const playerMarkers = playerStart.map((slot, i) => makeMarker(`P${i + 1}`, slot.x, slot.y, 0x6c56ff));
+    const enemyMarkers = enemyStart.map((slot, i) => makeMarker(`E${i + 1}`, slot.x, slot.y, 0xff5555));
 
-    const outputText = this.add.text(16, 96, 'Drag P/E markers, then tap PRINT SLOTS.', {
+
+    playerSlots.forEach((slot, i) => {
+      const guide = this.add.circle(slot.x, slot.y, 16, 0x7d65ff, 0.2).setStrokeStyle(2, 0xb6abff, 0.9);
+      const tag = this.add.text(slot.x, slot.y - 26, `P${i + 1}`, { font: '10px monospace', fill: '#cfc6ff' }).setOrigin(0.5);
+      c.add(guide);
+      c.add(tag);
+    });
+    enemySlots.forEach((slot, i) => {
+      const guide = this.add.circle(slot.x, slot.y, 16, 0xff6666, 0.2).setStrokeStyle(2, 0xffb0b0, 0.9);
+      const tag = this.add.text(slot.x, slot.y - 26, `E${i + 1}`, { font: '10px monospace', fill: '#ffc5c5' }).setOrigin(0.5);
+      c.add(guide);
+      c.add(tag);
+    });
+
+    const outputText = this.add.text(16, 96, 'Drag P1-P5 to purple runes and E1-E5 to red runes. Tap PRINT SLOTS.', {
       font: '10px monospace',
       fill: '#fff3a8',
       wordWrap: { width: 448 }
