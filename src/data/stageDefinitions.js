@@ -4,7 +4,7 @@
 // stats {hp,defense,damage}, row, abilityIds, ultimateAbilityId, ultimateCharge.
 
 const REGION_SCHEDULE = [
-  { region: 1, name: 'The Academy Grounds',      stages: 12, unlockSystem: 'BASIC_SUMMON' },
+  { region: 1, name: 'The Fallen Road',          stages: 12, unlockSystem: 'BASIC_SUMMON' },
   { region: 2, name: 'The Shattered Lowlands',   stages: 15, unlockSystem: 'ARENA' },
   { region: 3, name: 'The Thornwood',            stages: 15, unlockSystem: 'ADVANCED_SUMMON' },
   { region: 4, name: 'The Ashen Expanse',        stages: 18, unlockSystem: 'WORLD_BOSS_HARD_TIER' },
@@ -12,7 +12,7 @@ const REGION_SCHEDULE = [
 ];
 
 const REGION_THEME_BY_ID = {
-  1: 'The Academy and its surroundings.',
+  1: 'The road back to the fallen dark kingdom.',
   2: 'War-torn plains and ancient ruins.',
   3: 'A corrupted ancient forest.',
   4: 'A vast volcanic wasteland.',
@@ -27,20 +27,20 @@ const ENEMY_ARCHETYPES = [
 ];
 
 const PRESET_STAGE_OVERRIDES = {
-  '1-1': { name: 'Academy Gates', enemies: [{ ...ENEMY_ARCHETYPES[0], id: 'e_1_1_a', stats: { hp: 95, defense: 8, damage: 12 }, ultimateCharge: 0 }] },
-  '1-2': { name: 'Training Yard', enemies: [
+  '1-1': { name: 'Broken Crown Gate', enemies: [{ ...ENEMY_ARCHETYPES[0], id: 'e_1_1_a', stats: { hp: 95, defense: 8, damage: 12 }, ultimateCharge: 0 }] },
+  '1-2': { name: 'Ruined Mustering Yard', enemies: [
     { ...ENEMY_ARCHETYPES[0], id: 'e_1_2_a', stats: { hp: 115, defense: 10, damage: 14 }, abilityIds: ['wa_slash', 'wa_shield_bash'], ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[2], id: 'e_1_2_b', stats: { hp: 75, defense: 6, damage: 16 }, ultimateCharge: 0 }
   ] },
-  '1-3': { name: 'The East Wing', enemies: [
+  '1-3': { name: 'The Outer Rampart', enemies: [
     { ...ENEMY_ARCHETYPES[0], id: 'e_1_3_a', stats: { hp: 145, defense: 14, damage: 18 }, abilityIds: ['wa_slash', 'aff_burning_touch'], ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[2], id: 'e_1_3_b', stats: { hp: 90, defense: 8, damage: 20 }, abilityIds: ['ar_piercing_arrow'], ultimateCharge: 0 }
   ], milestoneRewards: [{ type: 'giftHero', heroDefId: 'hero_stone_sentinel_gorr', hint: 'Stone Sentinel Gorr joins your team!' }] },
-  '1-4': { name: 'The Grand Hall', enemies: [
+  '1-4': { name: 'The Blackened Hall', enemies: [
     { ...ENEMY_ARCHETYPES[1], id: 'e_1_4_a', stats: { hp: 230, defense: 28, damage: 14 }, ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[3], id: 'e_1_4_b', stats: { hp: 82, defense: 8, damage: 26 }, abilityIds: ['mg_arcane_bolt', 'aff_glacial_spike'], affinity: 'ICE', ultimateCharge: 0 }
   ] },
-  '1-5': { name: "Headmaster's Trial", enemies: [
+  '1-5': { name: "Fallen Crown Trial", enemies: [
     { ...ENEMY_ARCHETYPES[1], id: 'e_1_5_a', stats: { hp: 265, defense: 32, damage: 16 }, ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[0], id: 'e_1_5_b', stats: { hp: 175, defense: 18, damage: 22 }, abilityIds: ['wa_slash', 'aff_burning_touch'], ultimateCharge: 0 },
     { ...ENEMY_ARCHETYPES[3], id: 'e_1_5_c', stats: { hp: 95, defense: 10, damage: 30 }, abilityIds: ['mg_arcane_bolt', 'aff_burning_touch'], affinity: 'FIRE', ultimateCharge: 0 }

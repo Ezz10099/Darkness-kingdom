@@ -38,7 +38,7 @@ export default class OnboardingScene extends Phaser.Scene {
     c.add(this.add.rectangle(240, 427, 480, 854, 0x0a0a1a));
     c.add(this.add.rectangle(240, 330, 380, 220, 0x15253f, 0.35).setStrokeStyle(1, 0x334466, 0.8));
     c.add(this.add.text(240, 360,
-      'The Academy has stood for centuries.\nToday, it needs a champion.',
+      'The fallen kingdom has waited in darkness.\nToday, its ruler returns.',
       { font: '18px monospace', fill: '#ffd700', align: 'center' }).setOrigin(0.5));
     c.add(this.add.text(240, 435, '[ TAP TO SKIP ]',
       { font: '11px monospace', fill: '#888888' }).setOrigin(0.5));
@@ -135,7 +135,7 @@ export default class OnboardingScene extends Phaser.Scene {
 
     this.time.delayedCall(1200, () => {
       c.add(this.add.rectangle(240, 620, 360, 130, 0x121224).setStrokeStyle(1, 0x6666aa));
-      c.add(this.add.text(240, 592, '+ 500 Arcane Marks  + 120 XP',
+      c.add(this.add.text(240, 592, '+ 500 Gold  + 120 XP',
         { font: '15px monospace', fill: '#66ff66' }).setOrigin(0.5));
       c.add(this.add.text(240, 640,
         'Idle rewards now active. Come back later to collect.',
@@ -162,7 +162,7 @@ export default class OnboardingScene extends Phaser.Scene {
     c.add(this.add.rectangle(240, 427, 480, 854, 0x0c1024));
     c.add(this.add.text(240, 130, 'Stage 1-2 complete!',
       { font: '22px monospace', fill: '#ffd700' }).setOrigin(0.5));
-    c.add(this.add.text(240, 170, 'A new hero joins your Academy.',
+    c.add(this.add.text(240, 170, 'A new hero joins your kingdom.',
       { font: '15px monospace', fill: '#dddddd' }).setOrigin(0.5));
 
     if (giftedDef) {
@@ -211,12 +211,12 @@ export default class OnboardingScene extends Phaser.Scene {
     btn.on('pointerup', () => {
       btn.disableInteractive();
       CurrencyManager.add(CURRENCY.GOLD, 200);
-      const gain = this.add.text(240, 300, '+200 Arcane Marks',
+      const gain = this.add.text(240, 300, '+200 Gold',
         { font: '16px monospace', fill: '#66ff66' }).setOrigin(0.5);
       c.add(gain);
       this.tweens.add({ targets: gain, y: 250, alpha: 0, duration: 1000, onComplete: () => gain.destroy() });
 
-      c.add(this.add.text(240, 470, 'Your Academy earns even when you rest.',
+      c.add(this.add.text(240, 470, 'Your kingdom gathers power even while you rest.',
         { font: '14px monospace', fill: '#ffd700' }).setOrigin(0.5));
 
       let advanced = false;
