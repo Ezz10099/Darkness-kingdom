@@ -12,6 +12,22 @@ import { SIMPLE_UI, addScreenBg, addPanel, addButton, addLabel } from '../ui/Sim
 import { getHeroAssetBundle } from '../data/heroAssetManifest.js';
 import { createVerticalScroll } from '../ui/ScrollPane.js';
 
+
+const ENEMY_BATTLE_SPRITE_BY_ARCHETYPE = {
+  'Guard': 'hero_cinder_vale',
+  'Warden': 'hero_stone_sentinel_gorr',
+  'Archer': 'hero_frost_warden_kael',
+  'Sorc': 'hero_pyreth_the_branded'
+};
+
+function resolveBattleSpriteHeroId(combatant) {
+  if (!combatant) return null;
+  if (combatant.heroDefId) return combatant.heroDefId;
+  if (typeof combatant.id === 'string' && combatant.id.startsWith('hero_')) return combatant.id;
+  if (ENEMY_BATTLE_SPRITE_BY_ARCHETYPE[combatant.name]) return ENEMY_BATTLE_SPRITE_BY_ARCHETYPE[combatant.name];
+  return null;
+}
+
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
   ARCHER:  0x228844, HEALER: 0xaaaa11, ASSASSIN: 0x222255
@@ -325,19 +341,21 @@ export default class CampaignScene extends Phaser.Scene {
 
   _drawRow(combatants, cy, c) {
     if (!combatants.length) return;
+    const isPlayerRow = combatants[0]?.isPlayer === true;
     const W = 480, slotW = Math.min(82, (W - 36) / combatants.length), barW = slotW - 10;
     const startX = (W - slotW * combatants.length) / 2 + slotW / 2;
 
     combatants.forEach((com, i) => {
       const x  = startX + i * slotW;
-      const battleKey = getHeroAssetBundle(com.id).battleKey;
+      const spriteHeroId = resolveBattleSpriteHeroId(com);
+      const battleKey = spriteHeroId ? getHeroAssetBundle(spriteHeroId).battleKey : null;
       const bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566)
         .setStrokeStyle(1, 0xcccccc);
       c.add(bg);
-      if (this.textures.exists(battleKey)) {
-        const battleImg = this.add.image(x, cy + 4, battleKey);
-        const scale = Math.min((slotW - 14) / battleImg.width, 62 / battleImg.height);
-        battleImg.setScale(scale).setOrigin(0.5, 1);
+      if (battleKey && this.textures.exists(battleKey)) {
+        const battleImg = this.add.image(x, cy + 30, battleKey);
+        const scale = Math.min((slotW - 14) / battleImg.width, 54 / battleImg.height);
+        battleImg.setScale(scale).setOrigin(0.5, 1).setFlipX(!isPlayerRow);
         c.add(battleImg);
       }
       c.add(this.add.text(x, cy - 38, com.name.slice(0, 6),

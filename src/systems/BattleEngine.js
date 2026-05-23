@@ -26,7 +26,7 @@ export default class BattleEngine {
         damage: Math.floor(stats.damage * (1 + bondBonus))
       };
       const combatant = {
-        id: entry.hero.id, name: entry.hero.name, heroClass: entry.hero.heroClass,
+        id: entry.hero.id, heroDefId: entry.hero.heroDefId, name: entry.hero.name, heroClass: entry.hero.heroClass,
         affinity: entry.hero.affinity, range: entry.hero.range || 'melee',
         hp: boostedStats.hp, maxHp: boostedStats.hp,
         stats: boostedStats, ultimateCharge: 0, ultimateReadyNotified: false,

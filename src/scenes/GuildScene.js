@@ -7,6 +7,7 @@ import GuildManager, {
 } from '../systems/GuildManager.js';
 import AchievementManager from '../systems/AchievementManager.js';
 import { CURRENCY } from '../data/constants.js';
+import { getHeroAssetBundle } from '../data/heroAssetManifest.js';
 
 const CLASS_COLORS = {
   WARRIOR: 0xcc5522, TANK: 0x2266cc, MAGE: 0x882299,
@@ -337,13 +338,21 @@ export default class GuildScene extends Phaser.Scene {
 
   _drawRow(combatants, cy, c) {
     if (!combatants.length) return;
+    const isPlayerRow = combatants[0]?.isPlayer === true;
     const W = 480, slotW = Math.min(82, (W - 36) / combatants.length), barW = slotW - 10;
     const startX = (W - slotW * combatants.length) / 2 + slotW / 2;
     combatants.forEach((com, i) => {
       const x  = startX + i * slotW;
-      const bg = this.add.rectangle(x, cy, slotW - 6, 62, CLASS_COLORS[com.heroClass] || 0x445566)
+      const battleKey = getHeroAssetBundle(com.id).battleKey;
+      const bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566)
         .setStrokeStyle(1, 0xcccccc);
       c.add(bg);
+      if (this.textures.exists(battleKey)) {
+        const battleImg = this.add.image(x, cy + 30, battleKey);
+        const scale = Math.min((slotW - 14) / battleImg.width, 54 / battleImg.height);
+        battleImg.setScale(scale).setOrigin(0.5, 1).setFlipX(!isPlayerRow);
+        c.add(battleImg);
+      }
       c.add(this.add.text(x, cy - 38, com.name.slice(0, 8), { font: '10px monospace', fill: '#ffffff' }).setOrigin(0.5));
       c.add(this.add.rectangle(x, cy + 38, barW, 8, 0x440000));
       const hpBar = this.add.rectangle(x - barW / 2, cy + 38, barW, 8, 0x22cc55).setOrigin(0, 0.5);
