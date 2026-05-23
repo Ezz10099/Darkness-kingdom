@@ -327,16 +327,50 @@ export default class CampaignScene extends Phaser.Scene {
 
     const enemies = [...this._engine.enemyFormation.FRONT, ...this._engine.enemyFormation.BACK];
     const heroes  = [...this._engine.playerFormation.FRONT, ...this._engine.playerFormation.BACK];
-    this._drawRow(enemies, 160, c);
-    this._drawRow(heroes,  530, c);
+    this._drawRow(enemies, 170, c);
+    this._drawRow(heroes,  510, c);
     this._drawUltBtns(heroes, c);
   }
 
   _resolveBattleSpriteKey(combatant, isPlayerRow) {
-    const spriteHeroId = isPlayerRow
-      ? combatant.id
-      : (ENEMY_BATTLE_SPRITE_BY_CLASS[combatant.heroClass] || 'hero_stone_sentinel_gorr');
-    return getHeroAssetBundle(spriteHeroId).battleKey;
+    const candidateHeroIds = [];
+    const pushCandidate = (value) => {
+      if (typeof value !== 'string') return;
+      const trimmed = value.trim();
+      if (!trimmed || candidateHeroIds.includes(trimmed)) return;
+      candidateHeroIds.push(trimmed);
+    };
+
+    if (isPlayerRow) {
+      pushCandidate(combatant.heroDefId);
+      pushCandidate(combatant.heroId);
+      pushCandidate(combatant.assetId);
+      pushCandidate(combatant.baseId);
+      pushCandidate(combatant.key);
+      pushCandidate(combatant.id);
+      const rosterHero = HeroManager.getHero(combatant.id);
+      if (rosterHero) {
+        pushCandidate(rosterHero.heroDefId);
+        pushCandidate(rosterHero.id);
+        pushCandidate(rosterHero.name);
+      }
+    } else {
+      pushCandidate(combatant.heroDefId);
+      pushCandidate(combatant.heroId);
+      pushCandidate(combatant.id);
+      pushCandidate(ENEMY_BATTLE_SPRITE_BY_CLASS[combatant.heroClass]);
+    }
+
+    for (const heroId of candidateHeroIds) {
+      const battleKey = getHeroAssetBundle(heroId).battleKey;
+      if (this.textures.exists(battleKey)) return battleKey;
+    }
+
+    if (isPlayerRow) {
+      const attemptedKey = candidateHeroIds[0] ? getHeroAssetBundle(candidateHeroIds[0]).battleKey : null;
+      console.warn('[CampaignScene] Player combatant battle sprite unresolved.', { combatant, candidateHeroIds, attemptedKey });
+    }
+    return null;
   }
 
   _drawRow(combatants, cy, c) {
@@ -348,24 +382,24 @@ export default class CampaignScene extends Phaser.Scene {
     combatants.forEach((com, i) => {
       const x  = startX + i * slotW;
       const battleKey = this._resolveBattleSpriteKey(com, isPlayerRow);
-      const hasSprite = this.textures.exists(battleKey);
+      const hasSprite = Boolean(battleKey);
       let bg = null;
       if (!hasSprite) {
-        bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566)
+        bg = this.add.rectangle(x, cy + 18, slotW - 8, 66, CLASS_COLORS[com.heroClass] || 0x445566)
           .setStrokeStyle(1, 0xcccccc);
         c.add(bg);
       }
       if (hasSprite) {
-        const battleImg = this.add.image(x, cy + 30, battleKey);
-        const scale = Math.min((slotW - 14) / battleImg.width, 54 / battleImg.height);
+        const battleImg = this.add.image(x, cy + 24, battleKey);
+        const scale = Math.min((slotW - 14) / battleImg.width, 66 / battleImg.height);
         battleImg.setScale(scale).setOrigin(0.5, 1).setFlipX(!isPlayerRow);
         c.add(battleImg);
       }
-      c.add(this.add.text(x, cy - 38, com.name.slice(0, 6),
+      c.add(this.add.text(x, cy - 22, com.name.slice(0, 8),
         { font: '11px monospace', fill: '#ffffff' }).setOrigin(0.5));
-      c.add(this.add.rectangle(x, cy + 38, barW, 8, 0x440000));
-      const hpBar = this.add.rectangle(x - barW / 2, cy + 38, barW, 8, 0x22cc55).setOrigin(0, 0.5);
-      const hpTxt = this.add.text(x, cy + 50, `${com.hp}`,
+      c.add(this.add.rectangle(x, cy + 40, barW, 8, 0x440000));
+      const hpBar = this.add.rectangle(x - barW / 2, cy + 40, barW, 8, 0x22cc55).setOrigin(0, 0.5);
+      const hpTxt = this.add.text(x, cy + 52, `${com.hp}`,
         { font: '9px monospace', fill: '#aaffaa' }).setOrigin(0.5);
       c.add(hpBar); c.add(hpTxt);
       this._sprites[com.id] = { bg, hpBar, barMaxW: barW, hpTxt };
@@ -374,24 +408,24 @@ export default class CampaignScene extends Phaser.Scene {
 
   _drawUltBtns(heroes, c) {
     if (!heroes.length) return;
-    const W = 480, btnW = Math.min(88, (W - 16) / heroes.length);
+    const W = 480, btnW = Math.min(86, (W - 20) / heroes.length);
     const startX = (W - btnW * heroes.length) / 2 + btnW / 2;
     heroes.forEach((hero, i) => {
       const x  = startX + i * btnW;
       const hasDual = Boolean(hero.ultimateAbilityId2);
-      const bg = this.add.rectangle(x, hasDual ? 632 : 640, btnW - 6, hasDual ? 22 : 50, 0x1a0530)
-        .setStrokeStyle(1, 0x5511aa).setInteractive({ useHandCursor: true })
+      const bg = this.add.rectangle(x, hasDual ? 698 : 708, btnW - 10, hasDual ? 18 : 34, 0x160a2a, 0.85)
+        .setStrokeStyle(1, 0x553388).setInteractive({ useHandCursor: true })
         .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'primary'); });
-      const chgTxt = this.add.text(x, hasDual ? 632 : 644, '0%', { font: '11px monospace', fill: '#887799' }).setOrigin(0.5);
+      const chgTxt = this.add.text(x, hasDual ? 698 : 714, '0%', { font: '10px monospace', fill: '#9d90b8' }).setOrigin(0.5);
       c.add(bg);
-      c.add(this.add.text(x, hasDual ? 618 : 626, hero.name.slice(0, 5), { font: '10px monospace', fill: '#cc88ff' }).setOrigin(0.5));
+      c.add(this.add.text(x, hasDual ? 686 : 700, hero.name.slice(0, 6), { font: '9px monospace', fill: '#cc88ff' }).setOrigin(0.5));
       c.add(chgTxt);
       this._ultBtns.push({ heroId: hero.id, slot: 'primary', bg, chgTxt });
       if (hasDual) {
-        const bg2 = this.add.rectangle(x, 656, btnW - 6, 22, 0x1a0530)
+        const bg2 = this.add.rectangle(x, 720, btnW - 10, 18, 0x160a2a, 0.85)
           .setStrokeStyle(1, 0x7744cc).setInteractive({ useHandCursor: true })
           .on('pointerup', () => { if (this._engine) this._engine.triggerUltimate(hero.id, 'secondary'); });
-        const chgTxt2 = this.add.text(x, 656, '0%', { font: '11px monospace', fill: '#aa99dd' }).setOrigin(0.5);
+        const chgTxt2 = this.add.text(x, 720, '0%', { font: '10px monospace', fill: '#aa99dd' }).setOrigin(0.5);
         c.add(bg2); c.add(chgTxt2);
         this._ultBtns.push({ heroId: hero.id, slot: 'secondary', bg: bg2, chgTxt: chgTxt2 });
       }
