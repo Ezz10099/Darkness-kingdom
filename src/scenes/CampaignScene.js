@@ -320,9 +320,13 @@ export default class CampaignScene extends Phaser.Scene {
 
     combatants.forEach((com, i) => {
       const x  = startX + i * slotW;
+      const battleKey = `hero_battle_${com.id}`;
       const bg = this.add.rectangle(x, cy, slotW - 6, 62, CLASS_COLORS[com.heroClass] || 0x445566)
         .setStrokeStyle(1, 0xcccccc);
       c.add(bg);
+      if (this.textures.exists(battleKey)) {
+        c.add(this.add.image(x, cy, battleKey).setDisplaySize(slotW - 10, 58));
+      }
       c.add(this.add.text(x, cy - 38, com.name.slice(0, 6),
         { font: '11px monospace', fill: '#ffffff' }).setOrigin(0.5));
       c.add(this.add.rectangle(x, cy + 38, barW, 8, 0x440000));
