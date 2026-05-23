@@ -325,6 +325,7 @@ export default class CampaignScene extends Phaser.Scene {
 
   _drawRow(combatants, cy, c) {
     if (!combatants.length) return;
+    const isPlayerRow = combatants[0]?.isPlayer === true;
     const W = 480, slotW = Math.min(82, (W - 36) / combatants.length), barW = slotW - 10;
     const startX = (W - slotW * combatants.length) / 2 + slotW / 2;
 
@@ -335,9 +336,9 @@ export default class CampaignScene extends Phaser.Scene {
         .setStrokeStyle(1, 0xcccccc);
       c.add(bg);
       if (this.textures.exists(battleKey)) {
-        const battleImg = this.add.image(x, cy + 4, battleKey);
-        const scale = Math.min((slotW - 14) / battleImg.width, 62 / battleImg.height);
-        battleImg.setScale(scale).setOrigin(0.5, 1);
+        const battleImg = this.add.image(x, cy + 30, battleKey);
+        const scale = Math.min((slotW - 14) / battleImg.width, 54 / battleImg.height);
+        battleImg.setScale(scale).setOrigin(0.5, 1).setFlipX(!isPlayerRow);
         c.add(battleImg);
       }
       c.add(this.add.text(x, cy - 38, com.name.slice(0, 6),
