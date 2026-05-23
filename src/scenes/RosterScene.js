@@ -28,16 +28,14 @@ const AFF_ICON = { FIRE: '🔥', ICE: '❄', EARTH: '🌿', SHADOW: '🌑', LIGH
 export default class RosterScene extends Phaser.Scene {
   constructor() { super('Roster'); }
   _heroAssetKey(type, heroId) { return `hero_${type}_${heroId}`; }
-  _addHeroImage(c, type, heroId, x, y, w, h) {
-    const key = this._heroAssetKey(type, heroId);
-    if (this.textures.exists(key)) {
-      const img = this.add.image(x, y, key);
-      img.setDisplaySize(w, h);
-      img.setCrop(0, 0, img.width, img.height);
-      c.add(img);
-      return true;
-    }
-    return false;
+  _addHeroImage(c, type, heroDefId, x, y, w, h) {
+    const key = this._heroAssetKey(type, heroDefId);
+    if (!this.textures.exists(key)) return false;
+    const img = this.add.image(x, y, key);
+    const scale = Math.min(w / img.width, h / img.height);
+    img.setScale(scale);
+    c.add(img);
+    return true;
   }
 
   create() {
@@ -108,11 +106,9 @@ export default class RosterScene extends Phaser.Scene {
       });
     c.add(bg);
 
-    const hasPortrait = this._addHeroImage(c, 'portrait', hero.id, 58, y + CARD_H / 2, 56, 56);
-    if (!hasPortrait) {
-      c.add(this.add.rectangle(58, y + CARD_H / 2, 52, 52, 0x1b1b2c).setStrokeStyle(1, 0x444466));
-      c.add(this.add.text(58, y + CARD_H / 2, 'HERO', { font: '9px monospace', fill: '#777799' }).setOrigin(0.5));
-    }
+    c.add(this.add.rectangle(58, y + CARD_H / 2, 56, 56, 0x1b1b2c).setStrokeStyle(1, 0x444466));
+    const hasPortrait = this._addHeroImage(c, 'portrait', hero.heroDefId, 58, y + CARD_H / 2, 56, 56);
+    if (!hasPortrait) c.add(this.add.text(58, y + CARD_H / 2, 'HERO', { font: '9px monospace', fill: '#777799' }).setOrigin(0.5));
 
     c.add(this.add.text(90, y + 20, `${hero.name}${hero.title ? '  ' + hero.title : ''}`,
       { font: '15px monospace', fill: '#ffffff' }).setOrigin(0, 0.5));
@@ -137,7 +133,7 @@ export default class RosterScene extends Phaser.Scene {
     const maxStars = RARITY_CONFIG[hero.rarity].maxStars;
     const stars = '★'.repeat(hero.stars) + '☆'.repeat(maxStars - hero.stars);
 
-    this._drawBase('HERO DETAIL', '< ROSTER', () => this._showList());
+    this._drawBase('HERO DETAIL', '< HEROES', () => this._showList());
     c.add(this.add.rectangle(W / 2, HEADER_H + 52, W, 104,
       CLASS_COLORS[hero.heroClass] || 0x333344).setAlpha(0.55));
     c.add(this.add.text(W / 2, HEADER_H + 24, hero.name, { font: '24px monospace', fill: '#ffffff' }).setOrigin(0.5));
@@ -145,7 +141,7 @@ export default class RosterScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, HEADER_H + 74, `${hero.heroClass} | ${hero.affinity} | ${hero.rarity}`,
       { font: '12px monospace', fill: RARITY_STR[hero.rarity] }).setOrigin(0.5));
     c.add(this.add.text(W / 2, HEADER_H + 96, stars.slice(0, 9), { font: '14px monospace', fill: '#ffdd44' }).setOrigin(0.5));
-    const hasFull = this._addHeroImage(c, 'full', hero.id, W / 2, HEADER_H + 210, 240, 240);
+    const hasFull = this._addHeroImage(c, 'full', hero.heroDefId, W / 2, HEADER_H + 210, 240, 240);
     if (!hasFull) {
       c.add(this.add.rectangle(W / 2, HEADER_H + 205, 180, 180, 0x101025).setStrokeStyle(1, 0x333355));
       c.add(this.add.text(W / 2, HEADER_H + 205, 'FULL ART\nMISSING', { font: '12px monospace', fill: '#666688', align: 'center' }).setOrigin(0.5));
