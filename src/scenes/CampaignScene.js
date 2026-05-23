@@ -9,6 +9,7 @@ import STAGE_DEFINITIONS, { getCampaignRegions } from '../data/stageDefinitions.
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS, CURRENCY } from '../data/constants.js';
 import { SIMPLE_UI, addScreenBg, addPanel, addButton, addLabel } from '../ui/SimpleUI.js';
+import { getHeroAssetBundle } from '../data/heroAssetManifest.js';
 import { createVerticalScroll } from '../ui/ScrollPane.js';
 
 const CLASS_COLORS = {
@@ -241,7 +242,10 @@ export default class CampaignScene extends Phaser.Scene {
       const card = this.add.rectangle(W / 2, y, 444, 32, picked ? 0x1e3526 : 0x121226)
         .setStrokeStyle(1, picked ? 0x66dd88 : 0x333366)
         .setInteractive({ useHandCursor: true })
-        .on('pointerup', () => toggleHero(hero));
+        .on('pointerup', (pointer) => {
+        if (!this._formationScrollApi?.isTap(pointer)) return;
+        toggleHero(hero);
+      });
       heroRows.add(card);
       heroRows.add(this.add.text(30, y, hero.name, { font: '12px monospace', fill: '#ffffff' }).setOrigin(0, 0.5));
       heroRows.add(this.add.text(250, y, hero.heroClass, { font: '10px monospace', fill: '#bbbbbb' }).setOrigin(0.5));
@@ -326,12 +330,15 @@ export default class CampaignScene extends Phaser.Scene {
 
     combatants.forEach((com, i) => {
       const x  = startX + i * slotW;
-      const battleKey = `hero_battle_${com.id}`;
-      const bg = this.add.rectangle(x, cy, slotW - 6, 62, CLASS_COLORS[com.heroClass] || 0x445566)
+      const battleKey = getHeroAssetBundle(com.id).battleKey;
+      const bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566)
         .setStrokeStyle(1, 0xcccccc);
       c.add(bg);
       if (this.textures.exists(battleKey)) {
-        c.add(this.add.image(x, cy, battleKey).setDisplaySize(slotW - 10, 58));
+        const battleImg = this.add.image(x, cy + 4, battleKey);
+        const scale = Math.min((slotW - 14) / battleImg.width, 62 / battleImg.height);
+        battleImg.setScale(scale).setOrigin(0.5, 1);
+        c.add(battleImg);
       }
       c.add(this.add.text(x, cy - 38, com.name.slice(0, 6),
         { font: '11px monospace', fill: '#ffffff' }).setOrigin(0.5));

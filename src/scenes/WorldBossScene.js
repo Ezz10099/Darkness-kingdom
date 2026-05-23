@@ -140,8 +140,15 @@ export default class WorldBossScene extends Phaser.Scene {
     const startX = (W - slotW * combatants.length) / 2 + slotW / 2;
     combatants.forEach((com, i) => {
       const x = startX + i * slotW;
-      const bg = this.add.rectangle(x, cy, slotW - 6, 62, CLASS_COLORS[com.heroClass] || 0x445566).setStrokeStyle(1, 0xcccccc);
+      const bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566).setStrokeStyle(1, 0xcccccc);
       c.add(bg);
+      const battleKey = getHeroAssetBundle(com.id).battleKey;
+      if (this.textures.exists(battleKey)) {
+        const battleImg = this.add.image(x, cy + 4, battleKey);
+        const scale = Math.min((slotW - 14) / battleImg.width, 62 / battleImg.height);
+        battleImg.setScale(scale).setOrigin(0.5, 1);
+        c.add(battleImg);
+      }
       addLabel(this, c, x, cy - 38, com.name.slice(0, 8), 10, SIMPLE_UI.text);
       c.add(this.add.rectangle(x, cy + 38, barW, 8, 0x440000));
       const hpBar = this.add.rectangle(x - barW / 2, cy + 38, barW, 8, 0x22cc55).setOrigin(0, 0.5);

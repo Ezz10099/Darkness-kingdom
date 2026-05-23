@@ -10,7 +10,7 @@ export function createVerticalScroll(scene, container, {
   let dragStart = null;
   let dragDistance = 0;
   let currentContentHeight = contentHeight;
-  const tapThreshold = 10;
+  const tapThreshold = 16;
 
   const maskGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
   maskGraphics.fillStyle(0xffffff);
