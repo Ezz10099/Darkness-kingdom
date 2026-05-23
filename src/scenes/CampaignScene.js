@@ -125,14 +125,20 @@ export default class CampaignScene extends Phaser.Scene {
       list.add(this.add.text(360, y, `+${stage.rewards.gold}g`, { font: '11px monospace', fill: '#ffd700' }).setOrigin(1, 0.5).setAlpha(alpha));
 
       if (unlocked && !cleared) {
-        bg.setInteractive({ useHandCursor: true }).on('pointerup', () => this._showFormationEditor(stage));
+        bg.setInteractive({ useHandCursor: true }).on('pointerup', (pointer) => {
+          if (!this._scrollApi?.isTap(pointer)) return;
+          this._showFormationEditor(stage);
+        });
       }
       if (cleared) {
         const skipCost = this._getStageSkipCost(stage);
         const skipBtn = this.add.rectangle(420, y, 56, 24, 0x2e2400, 0.15).setStrokeStyle(1, 0xaa8833);
         list.add(skipBtn);
         list.add(this.add.text(420, y, `${skipCost}g`, { font: '9px monospace', fill: '#ffdd88' }).setOrigin(0.5));
-        skipBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => this._skipStage(stage));
+        skipBtn.setInteractive({ useHandCursor: true }).on('pointerup', (pointer) => {
+          if (!this._scrollApi?.isTap(pointer)) return;
+          this._skipStage(stage);
+        });
       }
     });
     this._scrollApi = createVerticalScroll(this, list, { x: 20, y: 130, width: 440, height: 580, contentHeight: stageList.length * (rowH + rowGap) + 20 });

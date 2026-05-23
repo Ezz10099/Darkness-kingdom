@@ -78,7 +78,10 @@ export default class AffinityTowerSelectionScene extends Phaser.Scene {
       font: '13px monospace', fill: cfg.textColor
     }).setOrigin(0.5));
 
-    const onEnter = () => this.scene.start('AffinityTower', { affinity });
+    const onEnter = (pointer) => {
+      if (!this._scrollApi?.isTap(pointer)) return;
+      this.scene.start('AffinityTower', { affinity });
+    };
 
     bg.on('pointerup', onEnter)
       .on('pointerdown', () => bg.setAlpha(0.7))

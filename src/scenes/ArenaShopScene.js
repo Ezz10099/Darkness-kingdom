@@ -63,7 +63,10 @@ export default class ArenaShopScene extends Phaser.Scene {
     c.add(this.add.text(W - 66, iy, alreadyOwned ? 'OWNED' : 'BUY', {
       font: '15px monospace', fill: canAfford ? '#ffaa44' : '#444444'
     }).setOrigin(0.5));
-    if (canAfford) buyBtn.setInteractive({ useHandCursor: true }).on('pointerup', () => this._buyItem(item));
+    if (canAfford) buyBtn.setInteractive({ useHandCursor: true }).on('pointerup', (pointer) => {
+      if (!this._scroll?.isTap(pointer)) return;
+      this._buyItem(item);
+    });
   }
 
   _buyItem(item) {
