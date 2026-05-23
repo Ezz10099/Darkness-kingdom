@@ -26,6 +26,14 @@ const ENEMY_BATTLE_SPRITE_BY_CLASS = {
   ASSASSIN: 'hero_vesper'
 };
 
+const CAMPAIGN_BG_BY_REGION = {
+  1: 'campaignBgChapter1',
+  2: 'campaignBgChapter2',
+  3: 'campaignBgChapter3',
+  4: 'campaignBgChapter4',
+  5: 'campaignBgChapter5'
+};
+
 export default class CampaignScene extends Phaser.Scene {
   constructor() { super('Campaign'); }
 
@@ -71,6 +79,24 @@ export default class CampaignScene extends Phaser.Scene {
     this._logBuf.push(msg);
     if (this._logBuf.length > 4) this._logBuf.shift();
     if (this._logText) this._logText.setText(this._logBuf.join('\n'));
+  }
+
+  _addCampaignBackground(c, region = 1, overlayAlpha = 0.35) {
+    const key = CAMPAIGN_BG_BY_REGION[region] || CAMPAIGN_BG_BY_REGION[1];
+
+    if (key && this.textures.exists(key)) {
+      const bg = this.add.image(240, 427, key).setOrigin(0.5);
+      const scale = Math.max(480 / bg.width, 854 / bg.height);
+      bg.setScale(scale);
+      c.add(bg);
+
+      // Dark overlay keeps UI, heroes, and text readable
+      c.add(this.add.rectangle(240, 427, 480, 854, 0x000000, overlayAlpha));
+      return;
+    }
+
+    // Safe fallback if a texture is missing
+    c.add(this.add.rectangle(240, 427, 480, 854, 0x0a0a1a));
   }
 
   // ─── STAGE SELECT ───────────────────────────────────────────────────────────
@@ -313,7 +339,7 @@ export default class CampaignScene extends Phaser.Scene {
     this._reset();
     const c = this._root, W = 480;
 
-    c.add(this.add.rectangle(W / 2, 427, W, 854, 0x0a0a1a));
+    this._addCampaignBackground(c, stage.region, 0.28);
     c.add(this.add.text(W / 2, 26, `${stage.id} — ${stage.name}`,
       { font: '15px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 70, 'ENEMIES',    { font: '11px monospace', fill: '#ff7766' }).setOrigin(0.5));
