@@ -27,6 +27,15 @@ const AFF_ICON = { FIRE: '🔥', ICE: '❄', EARTH: '🌿', SHADOW: '🌑', LIGH
 
 export default class RosterScene extends Phaser.Scene {
   constructor() { super('Roster'); }
+  _heroAssetKey(type, heroId) { return `hero_${type}_${heroId}`; }
+  _addHeroImage(c, type, heroId, x, y, w, h) {
+    const key = this._heroAssetKey(type, heroId);
+    if (this.textures.exists(key)) {
+      c.add(this.add.image(x, y, key).setDisplaySize(w, h));
+      return true;
+    }
+    return false;
+  }
 
   create() {
     this._root = this.add.container(0, 0);
@@ -93,11 +102,17 @@ export default class RosterScene extends Phaser.Scene {
       .on('pointerup', () => this._showDetail(hero));
     c.add(bg);
 
-    c.add(this.add.text(30, y + 20, `${hero.name}${hero.title ? '  ' + hero.title : ''}`,
+    const hasPortrait = this._addHeroImage(c, 'portrait', hero.id, 58, y + CARD_H / 2, 52, 52);
+    if (!hasPortrait) {
+      c.add(this.add.rectangle(58, y + CARD_H / 2, 52, 52, 0x1b1b2c).setStrokeStyle(1, 0x444466));
+      c.add(this.add.text(58, y + CARD_H / 2, 'HERO', { font: '9px monospace', fill: '#777799' }).setOrigin(0.5));
+    }
+
+    c.add(this.add.text(90, y + 20, `${hero.name}${hero.title ? '  ' + hero.title : ''}`,
       { font: '15px monospace', fill: '#ffffff' }).setOrigin(0, 0.5));
-    c.add(this.add.text(30, y + 42, `${hero.heroClass}  ${AFF_ICON[hero.affinity] || hero.affinity}`,
+    c.add(this.add.text(90, y + 42, `${hero.heroClass}  ${AFF_ICON[hero.affinity] || hero.affinity}`,
       { font: '12px monospace', fill: '#dddddd' }).setOrigin(0, 0.5));
-    c.add(this.add.text(30, y + 64, stars.slice(0, 9),
+    c.add(this.add.text(90, y + 64, stars.slice(0, 9),
       { font: '12px monospace', fill: '#ffdd44' }).setOrigin(0, 0.5));
 
     c.add(this.add.text(W - 30, y + 20, `LV ${hero.level}`,
@@ -124,6 +139,11 @@ export default class RosterScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, HEADER_H + 74, `${hero.heroClass} | ${hero.affinity} | ${hero.rarity}`,
       { font: '12px monospace', fill: RARITY_STR[hero.rarity] }).setOrigin(0.5));
     c.add(this.add.text(W / 2, HEADER_H + 96, stars.slice(0, 9), { font: '14px monospace', fill: '#ffdd44' }).setOrigin(0.5));
+    const hasFull = this._addHeroImage(c, 'full', hero.id, W / 2, HEADER_H + 205, 180, 180);
+    if (!hasFull) {
+      c.add(this.add.rectangle(W / 2, HEADER_H + 205, 180, 180, 0x101025).setStrokeStyle(1, 0x333355));
+      c.add(this.add.text(W / 2, HEADER_H + 205, 'FULL ART\nMISSING', { font: '12px monospace', fill: '#666688', align: 'center' }).setOrigin(0.5));
+    }
 
     const detail = this.add.container(0, 0);
     c.add(detail);
@@ -177,9 +197,9 @@ export default class RosterScene extends Phaser.Scene {
 
     this._scroll = createVerticalScroll(this, detail, {
       x: 0,
-      y: HEADER_H + 118,
+      y: HEADER_H + 306,
       width: W,
-      height: H - HEADER_H - 118,
+      height: H - HEADER_H - 306,
       contentHeight: y
     });
   }

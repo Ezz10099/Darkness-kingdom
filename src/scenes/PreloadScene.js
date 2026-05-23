@@ -1,11 +1,15 @@
 import IMAGE_ASSET_MANIFEST from '../data/assetManifest.js';
 import GameState from '../systems/GameState.js';
+import HERO_ASSET_MANIFEST from '../data/heroAssetManifest.js';
 
 export default class PreloadScene extends Phaser.Scene {
   constructor() { super('Preload'); }
 
   preload() {
     IMAGE_ASSET_MANIFEST.forEach(({ key, path }) => {
+      this.load.image(key, path);
+    });
+    HERO_ASSET_MANIFEST.forEach(({ key, path }) => {
       this.load.image(key, path);
     });
   }
