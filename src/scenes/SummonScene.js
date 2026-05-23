@@ -6,6 +6,7 @@ import DailyCodexManager from '../systems/DailyCodexManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CURRENCY, CURRENCY_LABEL } from '../data/constants.js';
 import { SIMPLE_UI, addScreenBg, addHeader, addPanel, addButton, addLabel } from '../ui/SimpleUI.js';
+import { getHeroAssetBundle } from '../data/heroAssetManifest.js';
 
 const W = 480;
 const H = 854;
@@ -145,7 +146,13 @@ export default class SummonScene extends Phaser.Scene {
       const x = startX + (i % cols) * cardW;
       const y = 565 + Math.floor(i / cols) * 88;
       addPanel(this, this._root, x, y, 74, 76, 0x151525);
-      addLabel(this, this._root, x, y - 18, (result.def?.name || '???').slice(0, 7), 9, SIMPLE_UI.text);
+      const portraitKey = result.def?.id ? getHeroAssetBundle(result.def.id).portraitKey : null;
+      if (portraitKey && this.textures.exists(portraitKey)) {
+        this._root.add(this.add.image(x, y + 2, portraitKey).setDisplaySize(44, 44));
+      } else {
+        this._root.add(this.add.rectangle(x, y + 2, 44, 44, 0x1b1b2c).setStrokeStyle(1, 0x444466));
+      }
+      addLabel(this, this._root, x, y - 28, (result.def?.name || '???').slice(0, 7), 9, SIMPLE_UI.text);
       addLabel(this, this._root, x, y + 2, result.rarity.slice(0, 4), 9, RARITY_STR[result.rarity] || SIMPLE_UI.muted);
       addLabel(this, this._root, x, y + 22, result.isNew ? 'NEW' : 'SHARD', 9, result.isNew ? SIMPLE_UI.good : SIMPLE_UI.gold);
     });

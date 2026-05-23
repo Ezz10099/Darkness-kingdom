@@ -31,7 +31,10 @@ export default class RosterScene extends Phaser.Scene {
   _addHeroImage(c, type, heroId, x, y, w, h) {
     const key = this._heroAssetKey(type, heroId);
     if (this.textures.exists(key)) {
-      c.add(this.add.image(x, y, key).setDisplaySize(w, h));
+      const img = this.add.image(x, y, key);
+      img.setDisplaySize(w, h);
+      img.setCrop(0, 0, img.width, img.height);
+      c.add(img);
       return true;
     }
     return false;
@@ -105,7 +108,7 @@ export default class RosterScene extends Phaser.Scene {
       });
     c.add(bg);
 
-    const hasPortrait = this._addHeroImage(c, 'portrait', hero.id, 58, y + CARD_H / 2, 52, 52);
+    const hasPortrait = this._addHeroImage(c, 'portrait', hero.id, 58, y + CARD_H / 2, 56, 56);
     if (!hasPortrait) {
       c.add(this.add.rectangle(58, y + CARD_H / 2, 52, 52, 0x1b1b2c).setStrokeStyle(1, 0x444466));
       c.add(this.add.text(58, y + CARD_H / 2, 'HERO', { font: '9px monospace', fill: '#777799' }).setOrigin(0.5));
@@ -142,7 +145,7 @@ export default class RosterScene extends Phaser.Scene {
     c.add(this.add.text(W / 2, HEADER_H + 74, `${hero.heroClass} | ${hero.affinity} | ${hero.rarity}`,
       { font: '12px monospace', fill: RARITY_STR[hero.rarity] }).setOrigin(0.5));
     c.add(this.add.text(W / 2, HEADER_H + 96, stars.slice(0, 9), { font: '14px monospace', fill: '#ffdd44' }).setOrigin(0.5));
-    const hasFull = this._addHeroImage(c, 'full', hero.id, W / 2, HEADER_H + 205, 180, 180);
+    const hasFull = this._addHeroImage(c, 'full', hero.id, W / 2, HEADER_H + 210, 240, 240);
     if (!hasFull) {
       c.add(this.add.rectangle(W / 2, HEADER_H + 205, 180, 180, 0x101025).setStrokeStyle(1, 0x333355));
       c.add(this.add.text(W / 2, HEADER_H + 205, 'FULL ART\nMISSING', { font: '12px monospace', fill: '#666688', align: 'center' }).setOrigin(0.5));
