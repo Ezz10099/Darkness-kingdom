@@ -17,6 +17,15 @@ const CLASS_COLORS = {
   ARCHER:  0x228844, HEALER: 0xaaaa11, ASSASSIN: 0x222255
 };
 
+const ENEMY_BATTLE_SPRITE_BY_CLASS = {
+  WARRIOR: 'hero_stone_sentinel_gorr',
+  TANK: 'hero_briar_thornguard',
+  MAGE: 'hero_archmage_eloris',
+  ARCHER: 'hero_yssa_driftborn',
+  HEALER: 'hero_lumen_solis',
+  ASSASSIN: 'hero_vesper'
+};
+
 export default class CampaignScene extends Phaser.Scene {
   constructor() { super('Campaign'); }
 
@@ -323,6 +332,13 @@ export default class CampaignScene extends Phaser.Scene {
     this._drawUltBtns(heroes, c);
   }
 
+  _resolveBattleSpriteKey(combatant, isPlayerRow) {
+    const spriteHeroId = isPlayerRow
+      ? combatant.id
+      : (ENEMY_BATTLE_SPRITE_BY_CLASS[combatant.heroClass] || 'hero_stone_sentinel_gorr');
+    return getHeroAssetBundle(spriteHeroId).battleKey;
+  }
+
   _drawRow(combatants, cy, c) {
     if (!combatants.length) return;
     const isPlayerRow = combatants[0]?.isPlayer === true;
@@ -331,11 +347,15 @@ export default class CampaignScene extends Phaser.Scene {
 
     combatants.forEach((com, i) => {
       const x  = startX + i * slotW;
-      const battleKey = getHeroAssetBundle(com.id).battleKey;
-      const bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566)
-        .setStrokeStyle(1, 0xcccccc);
-      c.add(bg);
-      if (this.textures.exists(battleKey)) {
+      const battleKey = this._resolveBattleSpriteKey(com, isPlayerRow);
+      const hasSprite = this.textures.exists(battleKey);
+      let bg = null;
+      if (!hasSprite) {
+        bg = this.add.rectangle(x, cy, slotW - 6, 72, CLASS_COLORS[com.heroClass] || 0x445566)
+          .setStrokeStyle(1, 0xcccccc);
+        c.add(bg);
+      }
+      if (hasSprite) {
         const battleImg = this.add.image(x, cy + 30, battleKey);
         const scale = Math.min((slotW - 14) / battleImg.width, 54 / battleImg.height);
         battleImg.setScale(scale).setOrigin(0.5, 1).setFlipX(!isPlayerRow);
@@ -395,7 +415,7 @@ export default class CampaignScene extends Phaser.Scene {
       }
       case 'heroDefeated': {
         const sp = this._sprites[ev.id];
-        if (sp) { sp.bg.setFillStyle(0x222222); sp.hpTxt.setText('✕'); }
+        if (sp) { if (sp.bg) sp.bg.setFillStyle(0x222222); sp.hpTxt.setText('✕'); }
         break;
       }
       case 'ultimateReady': {
