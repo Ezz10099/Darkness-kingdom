@@ -26,6 +26,8 @@ const ENEMY_BATTLE_SPRITE_BY_CLASS = {
   ASSASSIN: 'hero_vesper'
 };
 
+const DEBUG_BATTLE_SLOT_CALIBRATION = true;
+
 const CAMPAIGN_BG_BY_REGION = {
   1: 'campaignBgChapter1',
   2: 'campaignBgChapter2',
@@ -340,6 +342,8 @@ export default class CampaignScene extends Phaser.Scene {
     const c = this._root, W = 480;
 
     this._addCampaignBackground(c, stage.region, 0.28);
+
+    if (DEBUG_BATTLE_SLOT_CALIBRATION) this._drawBattleSlotCalibration(c);
     c.add(this.add.text(W / 2, 26, `${stage.id} — ${stage.name}`,
       { font: '15px monospace', fill: '#ffd700' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, 70, 'ENEMIES',    { font: '11px monospace', fill: '#ff7766' }).setOrigin(0.5));
@@ -358,6 +362,62 @@ export default class CampaignScene extends Phaser.Scene {
     this._drawFormationUnits(enemyFormation.FRONT, enemyFormation.BACK, false, c);
     this._drawFormationUnits(playerFormation.FRONT, playerFormation.BACK, true, c);
     this._drawUltBtns(heroes, c);
+  }
+
+
+  _drawBattleSlotCalibration(c) {
+    const playerSlots = [
+      { x: 95, y: 515 },
+      { x: 240, y: 505 },
+      { x: 385, y: 515 },
+      { x: 170, y: 590 },
+      { x: 310, y: 590 }
+    ];
+    const enemySlots = [
+      { x: 95, y: 205 },
+      { x: 240, y: 195 },
+      { x: 385, y: 205 },
+      { x: 170, y: 270 },
+      { x: 310, y: 270 }
+    ];
+
+    const makeMarker = (label, x, y, fillColor) => {
+      const marker = this.add.container(x, y);
+      const dot = this.add.circle(0, 0, 20, fillColor, 0.8).setStrokeStyle(2, 0xffffff);
+      const txt = this.add.text(0, 0, label, { font: '14px monospace', fill: '#ffffff' }).setOrigin(0.5);
+      marker.add([dot, txt]);
+      marker.setSize(44, 44);
+      marker.setInteractive({ draggable: true, useHandCursor: true });
+      this.input.setDraggable(marker);
+      marker.on('drag', (pointer, dragX, dragY) => {
+        marker.x = Phaser.Math.Clamp(dragX, 24, 456);
+        marker.y = Phaser.Math.Clamp(dragY, 96, 760);
+      });
+      c.add(marker);
+      return marker;
+    };
+
+    const playerMarkers = playerSlots.map((slot, i) => makeMarker(`P${i + 1}`, slot.x, slot.y, 0x6c56ff));
+    const enemyMarkers = enemySlots.map((slot, i) => makeMarker(`E${i + 1}`, slot.x, slot.y, 0xff5555));
+
+    const outputText = this.add.text(16, 96, 'Drag P/E markers, then tap PRINT SLOTS.', {
+      font: '10px monospace',
+      fill: '#fff3a8',
+      wordWrap: { width: 448 }
+    }).setOrigin(0, 0);
+    c.add(outputText);
+
+    const formatList = markers => markers.map(m => `  { x: ${Math.round(m.x)}, y: ${Math.round(m.y)} }`).join(',\n');
+    const emitSlots = () => {
+      const playerBlock = `const PLAYER_SIDE_SLOTS = [\n${formatList(playerMarkers)}\n];`;
+      const enemyBlock = `const ENEMY_SIDE_SLOTS = [\n${formatList(enemyMarkers)}\n];`;
+      console.log(playerBlock);
+      console.log(enemyBlock);
+      outputText.setText(`${playerBlock}\n\n${enemyBlock}`);
+    };
+
+    addButton(this, c, 398, 94, 120, 26, 'PRINT SLOTS', emitSlots);
+    emitSlots();
   }
 
   _resolveBattleSpriteKey(combatant, isPlayerRow) {
