@@ -99,7 +99,10 @@ export default class RosterScene extends Phaser.Scene {
       .setStrokeStyle(1, RARITY_HEX[hero.rarity] || 0xaaaaaa)
       .setAlpha(0.62)
       .setInteractive({ useHandCursor: true })
-      .on('pointerup', () => this._showDetail(hero));
+      .on('pointerup', (pointer) => {
+        if (!this._scroll?.isTap(pointer)) return;
+        this._showDetail(hero);
+      });
     c.add(bg);
 
     const hasPortrait = this._addHeroImage(c, 'portrait', hero.id, 58, y + CARD_H / 2, 52, 52);

@@ -73,7 +73,10 @@ export default class GuildShopScene extends Phaser.Scene {
     c.add(buyBg);
     c.add(this.add.text(ix, iy - CARD_H / 2 + 150, btnLbl, { font: '14px monospace', fill: btnClr }).setOrigin(0.5));
     if (!purchased && canAfford) {
-      buyBg.setInteractive({ useHandCursor: true }).on('pointerup', () => this._buy(item.id));
+      buyBg.setInteractive({ useHandCursor: true }).on('pointerup', (pointer) => {
+        if (!this._scroll?.isTap(pointer)) return;
+        this._buy(item.id);
+      });
     }
   }
 

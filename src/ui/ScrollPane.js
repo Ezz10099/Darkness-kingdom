@@ -8,7 +8,9 @@ export function createVerticalScroll(scene, container, {
 } = {}) {
   let scrollY = 0;
   let dragStart = null;
+  let dragDistance = 0;
   let currentContentHeight = contentHeight;
+  const tapThreshold = 10;
 
   const maskGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
   maskGraphics.fillStyle(0xffffff);
@@ -30,9 +32,11 @@ export function createVerticalScroll(scene, container, {
   const onPointerDown = (pointer) => {
     if (!inBounds(pointer)) return;
     dragStart = { y: pointer.y, scrollY };
+    dragDistance = 0;
   };
   const onPointerMove = (pointer) => {
     if (!dragStart || !pointer.isDown) return;
+    dragDistance = Math.max(dragDistance, Math.abs(pointer.y - dragStart.y));
     apply(dragStart.scrollY + (pointer.y - dragStart.y));
   };
   const onPointerUp = () => { dragStart = null; };
@@ -48,6 +52,11 @@ export function createVerticalScroll(scene, container, {
     setContentHeight(nextHeight) {
       currentContentHeight = Math.max(height, nextHeight || height);
       apply(scrollY);
+    },
+    isTap(pointer, threshold = tapThreshold) {
+      if (!pointer) return dragDistance < threshold;
+      const pointerDistance = Phaser.Math.Distance.Between(pointer.downX, pointer.downY, pointer.x, pointer.y);
+      return dragDistance < threshold && pointerDistance < threshold;
     },
     destroy() {
       scene.input.off('wheel', onWheel);

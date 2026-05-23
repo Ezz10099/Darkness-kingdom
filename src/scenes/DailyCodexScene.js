@@ -106,7 +106,10 @@ export default class DailyCodexScene extends Phaser.Scene {
 
     if (task.scene && task.scene !== 'DailyCodex') {
       c.add(this.add.text(W - 26, rowY + 18, '>', { font: '11px monospace', fill: '#555577' }).setOrigin(0.5));
-      rowBg.on('pointerup', () => this.scene.start(task.scene));
+      rowBg.on('pointerup', (pointer) => {
+        if (!this._scroll?.isTap(pointer)) return;
+        this.scene.start(task.scene);
+      });
     }
   }
 
@@ -125,7 +128,10 @@ export default class DailyCodexScene extends Phaser.Scene {
       c.add(this.add.text(W / 2, y - 11, label, { font: '15px monospace', fill }).setOrigin(0.5));
       c.add(this.add.text(W / 2, y + 13, `+${reward.gold} Gold  +${reward.crystals} Crystals  +${reward.shards} Shards`,
         { font: '11px monospace', fill: '#aaffaa' }).setOrigin(0.5));
-      btn.setInteractive({ useHandCursor: true }).on('pointerup', () => this._claimDailyChest());
+      btn.setInteractive({ useHandCursor: true }).on('pointerup', (pointer) => {
+        if (!this._scroll?.isTap(pointer)) return;
+        this._claimDailyChest();
+      });
     } else {
       c.add(this.add.text(W / 2, y, label, { font: claimed ? '14px monospace' : '12px monospace', fill }).setOrigin(0.5));
     }
@@ -146,7 +152,10 @@ export default class DailyCodexScene extends Phaser.Scene {
       c.add(this.add.text(W / 2, y - 10, label, { font: '15px monospace', fill }).setOrigin(0.5));
       c.add(this.add.text(W / 2, y + 13, `+${reward.premiumCrystals} Premium Crystals`,
         { font: '12px monospace', fill: '#ddaaff' }).setOrigin(0.5));
-      btn.setInteractive({ useHandCursor: true }).on('pointerup', () => this._claimWeeklyChest());
+      btn.setInteractive({ useHandCursor: true }).on('pointerup', (pointer) => {
+        if (!this._scroll?.isTap(pointer)) return;
+        this._claimWeeklyChest();
+      });
     } else {
       c.add(this.add.text(W / 2, y, label, { font: claimed ? '14px monospace' : '12px monospace', fill }).setOrigin(0.5));
     }
