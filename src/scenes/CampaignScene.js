@@ -351,10 +351,27 @@ export default class CampaignScene extends Phaser.Scene {
       { font: '12px monospace', fill: '#bbbbbb', align: 'center' }).setOrigin(0.5);
     c.add(this._logText);
 
-    const enemies = [...this._engine.enemyFormation.FRONT, ...this._engine.enemyFormation.BACK];
-    const heroes  = [...this._engine.playerFormation.FRONT, ...this._engine.playerFormation.BACK];
-    this._drawRow(enemies, 170, c);
-    this._drawRow(heroes,  510, c);
+    const enemyFormation = this._engine.enemyFormation;
+    const playerFormation = this._engine.playerFormation;
+    const enemies = [...enemyFormation.FRONT, ...enemyFormation.BACK];
+    const heroes  = [...playerFormation.FRONT, ...playerFormation.BACK];
+
+    this._drawFormationSlots({
+      front: enemyFormation.FRONT,
+      back: enemyFormation.BACK,
+      frontSlots: [{ x: 196, y: 210 }, { x: 284, y: 210 }],
+      backSlots: [{ x: 130, y: 168 }, { x: 240, y: 156 }, { x: 350, y: 168 }],
+      c,
+      isPlayerRow: false
+    });
+    this._drawFormationSlots({
+      front: playerFormation.FRONT,
+      back: playerFormation.BACK,
+      frontSlots: [{ x: 196, y: 548 }, { x: 284, y: 548 }],
+      backSlots: [{ x: 130, y: 500 }, { x: 240, y: 488 }, { x: 350, y: 500 }],
+      c,
+      isPlayerRow: true
+    });
     this._drawUltBtns(heroes, c);
   }
 
@@ -399,37 +416,51 @@ export default class CampaignScene extends Phaser.Scene {
     return null;
   }
 
-  _drawRow(combatants, cy, c) {
-    if (!combatants.length) return;
-    const isPlayerRow = combatants[0]?.isPlayer === true;
-    const W = 480, slotW = Math.min(82, (W - 36) / combatants.length), barW = slotW - 10;
-    const startX = (W - slotW * combatants.length) / 2 + slotW / 2;
+  _centeredSlots(slots, count) {
+    if (!count || count >= slots.length) return slots.slice(0, count);
+    const offset = Math.floor((slots.length - count) / 2);
+    return slots.slice(offset, offset + count);
+  }
 
-    combatants.forEach((com, i) => {
-      const x  = startX + i * slotW;
+  _drawFormationSlots({ front = [], back = [], frontSlots = [], backSlots = [], c, isPlayerRow }) {
+    const frontList = front.slice(0, frontSlots.length);
+    const backList = back.slice(0, backSlots.length);
+    const frontTargets = this._centeredSlots(frontSlots, frontList.length);
+    const backTargets = this._centeredSlots(backSlots, backList.length);
+
+    const drawAt = (com, slot, isFront) => {
+      const x = slot.x;
+      const y = slot.y;
+      const boxW = isFront ? 86 : 80;
+      const maxSpriteH = isFront ? 98 : 90;
+      const barW = boxW - 14;
       const battleKey = this._resolveBattleSpriteKey(com, isPlayerRow);
       const hasSprite = Boolean(battleKey);
       let bg = null;
+
       if (!hasSprite) {
-        bg = this.add.rectangle(x, cy + 18, slotW - 8, 66, CLASS_COLORS[com.heroClass] || 0x445566)
+        bg = this.add.rectangle(x, y - 26, boxW - 10, 70, CLASS_COLORS[com.heroClass] || 0x445566)
           .setStrokeStyle(1, 0xcccccc);
         c.add(bg);
       }
+
       if (hasSprite) {
-        const battleImg = this.add.image(x, cy + 24, battleKey);
-        const scale = Math.min((slotW - 14) / battleImg.width, 66 / battleImg.height);
+        const battleImg = this.add.image(x, y, battleKey);
+        const scale = Math.min((boxW - 16) / battleImg.width, maxSpriteH / battleImg.height);
         battleImg.setScale(scale).setOrigin(0.5, 1).setFlipX(!isPlayerRow);
         c.add(battleImg);
       }
-      c.add(this.add.text(x, cy - 22, com.name.slice(0, 8),
-        { font: '11px monospace', fill: '#ffffff' }).setOrigin(0.5));
-      c.add(this.add.rectangle(x, cy + 40, barW, 8, 0x440000));
-      const hpBar = this.add.rectangle(x - barW / 2, cy + 40, barW, 8, 0x22cc55).setOrigin(0, 0.5);
-      const hpTxt = this.add.text(x, cy + 52, `${com.hp}`,
-        { font: '9px monospace', fill: '#aaffaa' }).setOrigin(0.5);
-      c.add(hpBar); c.add(hpTxt);
+
+      c.add(this.add.rectangle(x, y + 10, barW, 8, 0x440000));
+      const hpBar = this.add.rectangle(x - barW / 2, y + 10, barW, 8, 0x22cc55).setOrigin(0, 0.5);
+      const hpTxt = this.add.text(x, y + 22, `${com.hp}`, { font: '9px monospace', fill: '#aaffaa' }).setOrigin(0.5);
+      c.add(hpBar);
+      c.add(hpTxt);
       this._sprites[com.id] = { bg, hpBar, barMaxW: barW, hpTxt };
-    });
+    };
+
+    frontList.forEach((com, i) => drawAt(com, frontTargets[i], true));
+    backList.forEach((com, i) => drawAt(com, backTargets[i], false));
   }
 
   _drawUltBtns(heroes, c) {
