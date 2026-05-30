@@ -1,11 +1,11 @@
 {
-  "name": "arcane-academy",
+  "name": "darkness-kingdom",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "check": "npm run lint && npm run test && npm run build",
-    "lint": "node --check main.js src/data/*.js src/systems/*.js src/scenes/*.js",
+    "lint": "node --check main.js src/data/*.js src/systems/*.js src/scenes/*.js src/ui/*.js src/debug/*.js",
     "test": "echo 'No automated tests configured yet'",
     "build": "echo 'No build step configured yet'"
   }
