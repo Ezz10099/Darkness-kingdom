@@ -1,6 +1,6 @@
 import { CURRENCY } from '../data/constants.js';
 import CurrencyManager from './CurrencyManager.js';
-import AcademyGroundsManager from './AcademyGroundsManager.js';
+import ReserveTrainingManager from './ReserveTrainingManager.js';
 import ElderTreeManager from './ElderTreeManager.js';
 import HeroManager from './HeroManager.js';
 import { getStageById } from '../data/stageDefinitions.js';
@@ -34,7 +34,7 @@ const IdleManager = {
     const wholeXp = Math.floor(earnedXp);
     if (wholeGold > 0) CurrencyManager.add(CURRENCY.GOLD, wholeGold);
     if (wholeXp > 0) this._grantXp(wholeXp);
-    AcademyGroundsManager.tick(deltaMs, campaignProgress, activeSquad);
+    ReserveTrainingManager.tick(deltaMs, campaignProgress, activeSquad);
     return wholeGold;
   },
 
@@ -48,7 +48,7 @@ const IdleManager = {
     if (earnedGold > 0) CurrencyManager.add(CURRENCY.GOLD, earnedGold);
     if (earnedXp > 0) this._grantXp(earnedXp);
     if (earnedGold > 0 || earnedXp > 0) DailyCodexManager.increment('COLLECT_IDLE');
-    AcademyGroundsManager.processOffline(lastSaveTime, campaignProgress, activeSquad);
+    ReserveTrainingManager.processOffline(lastSaveTime, campaignProgress, activeSquad);
     return earnedGold;
   }
 };
