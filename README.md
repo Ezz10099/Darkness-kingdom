@@ -26,7 +26,7 @@ Also avoid academy/school/classroom terminology unless the user explicitly asks 
 Primary design documents live in `docs/`:
 
 - `docs/DARKNESS_KINGDOM_DESIGN_CONSTITUTION.md`
-- `docs/DARKNESS_KINGDOMS_FULL_GAME_DESIGN.md`
+- `docs/DARKNESS_KINGDOM_FULL_GAME_DESIGN.md`
 - `docs/project-identity-note.md`
 
 Use these documents before making major code, UI, asset, lore, or naming changes.
