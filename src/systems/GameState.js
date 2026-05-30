@@ -18,6 +18,8 @@ import LoginStreakManager from './LoginStreakManager.js';
 import HERO_DEFINITIONS from '../data/heroDefinitions.js';
 import { CLASS_DEFAULTS, CURRENCY, FORMATION_ROW } from '../data/constants.js';
 
+const FORMATION_ROW_LIMIT = Object.freeze({ FRONT: 2, BACK: 3 });
+
 const GameState = {
   activeSquad: [],
   campaignProgress: { regionCleared: 0, stageCleared: null },
@@ -91,7 +93,7 @@ const GameState = {
     for (const entry of normalized) {
       if (used.has(entry.heroId)) continue;
       if (out.length >= 5) break;
-      if (rowCount[entry.row] >= 3) continue;
+      if (rowCount[entry.row] >= FORMATION_ROW_LIMIT[entry.row]) continue;
       used.add(entry.heroId);
       rowCount[entry.row]++;
       out.push(entry);
@@ -114,10 +116,10 @@ const GameState = {
     for (const hero of heroes) {
       if (fallback.length >= 5) break;
       const defaultRow = CLASS_DEFAULTS[hero.heroClass]?.defaultRow || FORMATION_ROW.FRONT;
-      const row = rowCount[defaultRow] < 3
+      const row = rowCount[defaultRow] < FORMATION_ROW_LIMIT[defaultRow]
         ? defaultRow
         : (defaultRow === FORMATION_ROW.FRONT ? FORMATION_ROW.BACK : FORMATION_ROW.FRONT);
-      if (rowCount[row] >= 3) continue;
+      if (rowCount[row] >= FORMATION_ROW_LIMIT[row]) continue;
       rowCount[row]++;
       fallback.push({ heroId: hero.id, row });
     }
