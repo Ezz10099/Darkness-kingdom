@@ -15,7 +15,9 @@ export default class BattleEngine {
     this.playerFormation = { FRONT: [], BACK: [] };
     this.enemyFormation  = { FRONT: [], BACK: [] };
 
-    const activeHeroDefIds = playerSquad.map(entry => entry.hero.heroDefId).filter(Boolean);
+    const activeHeroDefIds = playerSquad
+      .map(entry => entry.hero.heroDefId || entry.hero.id)
+      .filter(Boolean);
 
     for (const entry of playerSquad) {
       const stats = entry.hero.computeStats();
@@ -26,14 +28,23 @@ export default class BattleEngine {
         damage: Math.floor(stats.damage * (1 + bondBonus))
       };
       const combatant = {
-        id: entry.hero.id, name: entry.hero.name, heroClass: entry.hero.heroClass,
-        affinity: entry.hero.affinity, range: entry.hero.range || 'melee',
-        hp: boostedStats.hp, maxHp: boostedStats.hp,
-        stats: boostedStats, ultimateCharge: 0, ultimateReadyNotified: false,
+        id: entry.hero.id,
+        heroDefId: entry.hero.heroDefId || null,
+        name: entry.hero.name,
+        heroClass: entry.hero.heroClass,
+        affinity: entry.hero.affinity,
+        range: entry.hero.range || 'melee',
+        hp: boostedStats.hp,
+        maxHp: boostedStats.hp,
+        stats: boostedStats,
+        ultimateCharge: 0,
+        ultimateReadyNotified: false,
         abilityIds: entry.hero.normalAbilityIds || [],
         ultimateAbilityId: entry.hero.ultimateAbilityId,
         ultimateAbilityId2: entry.hero.ultimateAbilityId2 || null,
-        isPlayer: true, row: entry.row, bondBonus
+        isPlayer: true,
+        row: entry.row,
+        bondBonus
       };
       this.playerFormation[entry.row].push(combatant);
     }
