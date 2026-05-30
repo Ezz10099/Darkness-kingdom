@@ -6,7 +6,7 @@ import { CURRENCY, CURRENCY_LABEL } from '../data/constants.js';
 const HEADER_H  = 90;
 const CARD_H    = 80;
 const CARD_GAP  = 6;
-const SECTIONS  = ['ECONOMY', 'ACADEMY'];
+const SECTIONS  = ['ECONOMY', 'WAR_COUNCIL'];
 
 export default class ElderTreeScene extends Phaser.Scene {
   constructor() { super('ElderTree'); }
@@ -34,7 +34,7 @@ export default class ElderTreeScene extends Phaser.Scene {
 
   _buildHeader(W) {
     this.add.rectangle(W / 2, HEADER_H / 2, W, HEADER_H, 0x060f08).setDepth(10);
-    this.add.text(W / 2, 26, '\u2767 ELDER TREE', { font: '22px monospace', fill: '#66ff88' })
+    this.add.text(W / 2, 26, '❧ ELDER TREE', { font: '22px monospace', fill: '#66ff88' })
       .setOrigin(0.5).setDepth(11);
     this.add.text(18, 26, '< BACK', { font: '14px monospace', fill: '#aaaaaa' })
       .setOrigin(0, 0.5).setDepth(11)
@@ -59,7 +59,7 @@ export default class ElderTreeScene extends Phaser.Scene {
 
     for (const section of SECTIONS) {
       const nodes = TREE_NODES.filter(n => n.section === section);
-      const academyLocked = section === 'ACADEMY' && !ElderTreeManager.isAcademyUnlocked();
+      const warCouncilLocked = section === 'WAR_COUNCIL' && !ElderTreeManager.isWarCouncilUnlocked();
 
       // Section header
       const bar = this.add.rectangle(W / 2, y + 14, W - 16, 28, 0x0c200f)
@@ -69,7 +69,7 @@ export default class ElderTreeScene extends Phaser.Scene {
       this._cont.add([bar, hdr]);
       y += 36;
 
-      if (academyLocked) {
+      if (warCouncilLocked) {
         const lockMsg = this.add.text(W / 2, y + 8, 'Unlocks after Region 3 completion',
           { font: '10px monospace', fill: '#776644' }).setOrigin(0.5);
         this._cont.add(lockMsg);
@@ -90,8 +90,8 @@ export default class ElderTreeScene extends Phaser.Scene {
     const owned   = ElderTreeManager.isPurchased(node.id);
     const canBuy  = ElderTreeManager.canPurchase(node.id);
     const prereqMet = !node.requires || ElderTreeManager.isPurchased(node.requires);
-    const academyLocked = node.section === 'ACADEMY' && !ElderTreeManager.isAcademyUnlocked();
-    const locked  = !owned && (!prereqMet || academyLocked);
+    const warCouncilLocked = node.section === 'WAR_COUNCIL' && !ElderTreeManager.isWarCouncilUnlocked();
+    const locked  = !owned && (!prereqMet || warCouncilLocked);
 
     const bgColor = owned ? 0x0a2e10 : locked ? 0x0d0d0d : 0x0f1e12;
     const border  = owned ? 0x33aa55 : locked ? 0x222222 : canBuy ? 0x44cc66 : 0x2a3a2a;
@@ -105,7 +105,7 @@ export default class ElderTreeScene extends Phaser.Scene {
     // Chain indent for nodes that have prerequisites
     const indX = node.requires ? 28 : 16;
     if (node.requires) {
-      const indent = this.add.text(16, y + CARD_H / 2 - 2, '\u2514',
+      const indent = this.add.text(16, y + CARD_H / 2 - 2, '└',
         { font: '14px monospace', fill: '#335533' }).setOrigin(0, 0.5).setAlpha(alpha);
       this._cont.add(indent);
     }
@@ -130,7 +130,7 @@ export default class ElderTreeScene extends Phaser.Scene {
 
     // Status badge / purchase button
     if (owned) {
-      const badge = this.add.text(W - 26, y + CARD_H / 2, '\u2713 OWNED',
+      const badge = this.add.text(W - 26, y + CARD_H / 2, '✓ OWNED',
         { font: '11px monospace', fill: '#33cc55' }).setOrigin(1, 0.5);
       this._cont.add(badge);
     } else if (!locked) {
@@ -152,7 +152,7 @@ export default class ElderTreeScene extends Phaser.Scene {
           .on('pointerup',   () => this._showConfirm(node));
       }
     } else {
-      const lock = this.add.text(W - 26, y + CARD_H / 2, '\uD83D\uDD12',
+      const lock = this.add.text(W - 26, y + CARD_H / 2, '🔒',
         { font: '14px monospace', fill: '#444444' }).setOrigin(1, 0.5);
       this._cont.add(lock);
     }
