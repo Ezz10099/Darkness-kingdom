@@ -1,7 +1,7 @@
 import GameState from '../systems/GameState.js';
 import HeroManager from '../systems/HeroManager.js';
 import CurrencyManager from '../systems/CurrencyManager.js';
-import AcademyGroundsManager from '../systems/AcademyGroundsManager.js';
+import ReserveTrainingManager from '../systems/ReserveTrainingManager.js';
 import { RARITY_ORDER, RARITY_CONFIG, CURRENCY } from '../data/constants.js';
 import createVerticalScroll from '../ui/ScrollPane.js';
 
@@ -174,8 +174,8 @@ export default class RosterScene extends Phaser.Scene {
     y += 116;
 
     if (!this._isActive(hero.id)) {
-      const xpRate = AcademyGroundsManager.getXpRate(GameState.campaignProgress).toFixed(1);
-      const capLvl = AcademyGroundsManager.getCapLevel(GameState.activeSquad);
+      const xpRate = ReserveTrainingManager.getXpRate(GameState.campaignProgress).toFixed(1);
+      const capLvl = ReserveTrainingManager.getCapLevel(GameState.activeSquad);
       detail.add(this.add.rectangle(W / 2, y + 22, 438, 44, 0x0d2218).setStrokeStyle(1, 0x226644));
       detail.add(this.add.text(W / 2, y + 22, `TRAINING +${xpRate} XP/sec · ${capLvl > 0 ? `cap LV${capLvl}` : 'no squad'}`,
         { font: '11px monospace', fill: '#33ccaa' }).setOrigin(0.5));
