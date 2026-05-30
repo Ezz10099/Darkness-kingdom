@@ -54,36 +54,36 @@ export const TREE_NODES = [
     desc: 'Idle cap: 35h → 45h (hard cap)',
     cost: 120000, requires: 'eco_9',
   },
-  // Academy branch (mid-game progression quality-of-life)
+  // War Council branch (mid-game progression quality-of-life)
   {
-    id: 'academy_arena_attempt', label: 'A1 • War Council', section: 'ACADEMY',
+    id: 'war_council_arena_attempt', label: 'A1 • War Council', section: 'WAR_COUNCIL',
     desc: '+1 Arena attempt per day',
     cost: 30000, requires: null,
   },
   {
-    id: 'academy_training', label: 'A2 • Lecture Cycle', section: 'ACADEMY',
-    desc: '+25% Academy Grounds passive XP rate',
-    cost: 45000, requires: 'academy_arena_attempt',
+    id: 'war_council_training', label: 'A2 • Lecture Cycle', section: 'WAR_COUNCIL',
+    desc: '+25% Reserve Training passive XP rate',
+    cost: 45000, requires: 'war_council_arena_attempt',
   },
   {
-    id: 'academy_guild_cooldown', label: 'A3 • Raid Logistics', section: 'ACADEMY',
+    id: 'war_council_guild_cooldown', label: 'A3 • Raid Logistics', section: 'WAR_COUNCIL',
     desc: 'Guild Boss attack cooldown -30 min',
-    cost: 60000, requires: 'academy_training',
+    cost: 60000, requires: 'war_council_training',
   },
   {
-    id: 'academy_guild_coin', label: 'A4 • Guild Diplomacy', section: 'ACADEMY',
+    id: 'war_council_guild_coin', label: 'A4 • Guild Diplomacy', section: 'WAR_COUNCIL',
     desc: '+20% Guild Coin earnings',
-    cost: 80000, requires: 'academy_guild_cooldown',
+    cost: 80000, requires: 'war_council_guild_cooldown',
   },
   {
-    id: 'academy_wishlist_slot', label: 'A5 • Curator Privilege', section: 'ACADEMY',
+    id: 'war_council_wishlist_slot', label: 'A5 • Curator Privilege', section: 'WAR_COUNCIL',
     desc: '+1 Wishlist slot',
-    cost: 100000, requires: 'academy_guild_coin',
+    cost: 100000, requires: 'war_council_guild_coin',
   },
   {
-    id: 'academy_world_boss_attempt', label: 'A6 • Rift Study', section: 'ACADEMY',
+    id: 'war_council_world_boss_attempt', label: 'A6 • Rift Study', section: 'WAR_COUNCIL',
     desc: '+1 World Boss attempt per day',
-    cost: 150000, requires: 'academy_wishlist_slot',
+    cost: 150000, requires: 'war_council_wishlist_slot',
   },
 ];
 
@@ -96,7 +96,7 @@ const ElderTreeManager = {
   canPurchase(id) {
     const node = TREE_NODES.find(n => n.id === id);
     if (!node || this._purchased.has(id)) return false;
-    if (node.section === 'ACADEMY' && !this.isAcademyUnlocked()) return false;
+    if (node.section === 'WAR_COUNCIL' && !this.isWarCouncilUnlocked()) return false;
     if (node.requires && !this._purchased.has(node.requires)) return false;
     return CurrencyManager.get(CURRENCY.GOLD) >= node.cost;
   },
@@ -104,14 +104,14 @@ const ElderTreeManager = {
   purchase(id) {
     const node = TREE_NODES.find(n => n.id === id);
     if (!node || this._purchased.has(id)) return false;
-    if (node.section === 'ACADEMY' && !this.isAcademyUnlocked()) return false;
+    if (node.section === 'WAR_COUNCIL' && !this.isWarCouncilUnlocked()) return false;
     if (node.requires && !this._purchased.has(node.requires)) return false;
     if (!CurrencyManager.spend(CURRENCY.GOLD, node.cost)) return false;
     this._purchased.add(id);
     return true;
   },
 
-  isAcademyUnlocked() {
+  isWarCouncilUnlocked() {
     return AchievementManager.isCompleted('prog_region_3');
   },
 
@@ -148,27 +148,27 @@ const ElderTreeManager = {
   },
 
   getArenaAttemptBonus() {
-    return this._purchased.has('academy_arena_attempt') ? 1 : 0;
+    return this._purchased.has('war_council_arena_attempt') ? 1 : 0;
   },
 
-  getAcademyXpMult() {
-    return this._purchased.has('academy_training') ? 1.25 : 1;
+  getReserveTrainingXpMult() {
+    return this._purchased.has('war_council_training') ? 1.25 : 1;
   },
 
   getGuildCoinMult() {
-    return this._purchased.has('academy_guild_coin') ? 1.20 : 1;
+    return this._purchased.has('war_council_guild_coin') ? 1.20 : 1;
   },
 
   getGuildCooldownMult() {
-    return this._purchased.has('academy_guild_cooldown') ? 0 : 1;
+    return this._purchased.has('war_council_guild_cooldown') ? 0 : 1;
   },
 
   getWishlistMaxSizeBonus() {
-    return this._purchased.has('academy_wishlist_slot') ? 1 : 0;
+    return this._purchased.has('war_council_wishlist_slot') ? 1 : 0;
   },
 
   getWorldBossAttemptBonus() {
-    return this._purchased.has('academy_world_boss_attempt') ? 1 : 0;
+    return this._purchased.has('war_council_world_boss_attempt') ? 1 : 0;
   },
 
   toJSON()  { return { purchased: [...this._purchased] }; },
@@ -188,8 +188,14 @@ const ElderTreeManager = {
       ['eco_idle_2', 'eco_8'],
       ['eco_idle_3', 'eco_9'],
       ['eco_idle_4', 'eco_10'],
-      ['academy_training_1', 'academy_training'],
-      ['academy_training_2', 'academy_training']
+      ['academy_arena_attempt', 'war_council_arena_attempt'],
+      ['academy_training', 'war_council_training'],
+      ['academy_guild_cooldown', 'war_council_guild_cooldown'],
+      ['academy_guild_coin', 'war_council_guild_coin'],
+      ['academy_wishlist_slot', 'war_council_wishlist_slot'],
+      ['academy_world_boss_attempt', 'war_council_world_boss_attempt'],
+      ['academy_training_1', 'war_council_training'],
+      ['academy_training_2', 'war_council_training']
     ];
     legacyToNew.forEach(([oldId, newId]) => {
       if (migrated.has(oldId)) migrated.add(newId);
