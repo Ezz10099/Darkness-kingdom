@@ -26,7 +26,7 @@ export const CURRENCY = Object.freeze({
 });
 
 export const CURRENCY_LABEL = Object.freeze({
-  GOLD: 'Arcane Marks',
+  GOLD: 'Crown Marks',
   CRYSTALS: 'Ether Shards',
   PREMIUM_CRYSTALS: 'Lumens',
   AWAKENING_SHARDS: 'Resonance',
