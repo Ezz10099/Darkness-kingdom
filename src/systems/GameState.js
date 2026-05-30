@@ -11,7 +11,7 @@ import AffinityTowerManager from './AffinityTowerManager.js';
 import DailyCodexManager from './DailyCodexManager.js';
 import GuildManager from './GuildManager.js';
 import GuildShopManager from './GuildShopManager.js';
-import AcademyGroundsManager from './AcademyGroundsManager.js';
+import ReserveTrainingManager from './ReserveTrainingManager.js';
 import AchievementManager from './AchievementManager.js';
 import ElderTreeManager from './ElderTreeManager.js';
 import LoginStreakManager from './LoginStreakManager.js';
@@ -140,7 +140,7 @@ const GameState = {
       dailyCodex:       DailyCodexManager.toJSON(),
       guild:            GuildManager.toJSON(),
       guildShop:        GuildShopManager.toJSON(),
-      academyGrounds:   AcademyGroundsManager.toJSON(),
+      reserveTraining:  ReserveTrainingManager.toJSON(),
       achievements:     AchievementManager.toJSON(),
       elderTree:        ElderTreeManager.toJSON(),
       loginStreak:      LoginStreakManager.toJSON(),
@@ -154,7 +154,7 @@ const GameState = {
     this.unlockedSystems  = new Set(data.unlockedSystems || []);
     this.lastSaveTime     = data.lastSaveTime     || Date.now();
     this.firstSession     = false;
-    // Achievements loaded first so hero/gear load checks don't re-trigger completed ones
+    // Achievements loaded first so hero/gear load checks do not re-trigger completed ones.
     if (data.achievements) AchievementManager.fromJSON(data.achievements);
     if (data.currencies)   CurrencyManager.fromJSON(data.currencies);
     if (data.heroes)       HeroManager.fromJSON(data.heroes);
@@ -167,11 +167,12 @@ const GameState = {
     if (data.dailyCodex)    DailyCodexManager.fromJSON(data.dailyCodex);
     if (data.guild)          GuildManager.fromJSON(data.guild);
     if (data.guildShop)      GuildShopManager.fromJSON(data.guildShop);
-    if (data.academyGrounds) AcademyGroundsManager.fromJSON(data.academyGrounds);
-    if (!data.achievements)  AchievementManager.fromJSON(null);
-    if (data.elderTree)      ElderTreeManager.fromJSON(data.elderTree);
-    if (data.loginStreak)    LoginStreakManager.fromJSON(data.loginStreak);
-    // Migration: grant starter crystals to existing saves that lack them
+    const reserveTrainingData = data.reserveTraining || data.academyGrounds;
+    if (reserveTrainingData)  ReserveTrainingManager.fromJSON(reserveTrainingData);
+    if (!data.achievements)   AchievementManager.fromJSON(null);
+    if (data.elderTree)       ElderTreeManager.fromJSON(data.elderTree);
+    if (data.loginStreak)     LoginStreakManager.fromJSON(data.loginStreak);
+    // Migration: grant starter crystals to existing saves that lack them.
     if (CurrencyManager.get(CURRENCY.CRYSTALS) === 0) {
       CurrencyManager.add(CURRENCY.CRYSTALS, 500);
     }
