@@ -246,18 +246,26 @@ export default class OnboardingScene extends Phaser.Scene {
     c.add(this.add.text(240, 275, '↓',
       { font: '48px monospace', fill: '#cc88ff' }).setOrigin(0.5));
 
+    let entered = false;
+    const enterSummon = () => {
+      if (entered) return;
+      entered = true;
+      GameState.addUnlockedSystem('BASIC_SUMMON');
+      CurrencyManager.add(CURRENCY.CRYSTALS, 100);
+      GameState.save();
+      this.scene.start('Summon');
+    };
+
     const btn = this.add.rectangle(240, 430, 300, 68, 0x2a1055)
       .setStrokeStyle(2, 0xcc88ff)
       .setInteractive({ useHandCursor: true })
-      .on('pointerup', () => {
-        GameState.addUnlockedSystem('BASIC_SUMMON');
-        CurrencyManager.add(CURRENCY.CRYSTALS, 100);
-        GameState.save();
-        this.cameras.main.fadeOut(400, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Summon'));
-      });
+      .on('pointerup', enterSummon);
     c.add(btn);
     c.add(this.add.text(240, 430, '[ ENTER SUMMON ]',
       { font: '16px monospace', fill: '#ffffff' }).setOrigin(0.5));
+
+    c.add(this.add.rectangle(240, 427, 480, 854, 0x000000, 0.001)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', enterSummon));
   }
 }
