@@ -201,15 +201,12 @@ export default class OnboardingScene extends Phaser.Scene {
     const c = this._stepCont;
     c.add(this.add.rectangle(240, 427, 480, 854, 0x0f1224));
 
-    const btn = this.add.rectangle(240, 360, 300, 120, 0xaa8800)
-      .setStrokeStyle(2, 0xffdd66)
-      .setInteractive({ useHandCursor: true });
-    c.add(btn);
-    c.add(this.add.text(240, 360, 'COLLECT IDLE GOLD',
-      { font: '17px monospace', fill: '#2a1a00' }).setOrigin(0.5));
-
-    btn.on('pointerup', () => {
+    let collected = false;
+    const collectIdleGold = () => {
+      if (collected) return;
+      collected = true;
       btn.disableInteractive();
+      fallbackTap.destroy();
       CurrencyManager.add(CURRENCY.GOLD, 200);
       const gain = this.add.text(240, 300, '+200 Gold',
         { font: '16px monospace', fill: '#66ff66' }).setOrigin(0.5);
@@ -229,7 +226,19 @@ export default class OnboardingScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .on('pointerup', advance);
       this.time.delayedCall(1500, () => { tap.destroy(); advance(); });
-    });
+    };
+
+    const btn = this.add.rectangle(240, 360, 300, 120, 0xaa8800)
+      .setStrokeStyle(2, 0xffdd66)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', collectIdleGold);
+    c.add(btn);
+    c.add(this.add.text(240, 360, 'COLLECT IDLE GOLD',
+      { font: '17px monospace', fill: '#2a1a00' }).setOrigin(0.5));
+
+    const fallbackTap = this.add.rectangle(240, 427, 480, 854, 0x000000, 0.001)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', collectIdleGold);
   }
 
   _showStep6() {
