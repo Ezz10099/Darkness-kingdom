@@ -147,10 +147,8 @@ export default class OnboardingScene extends Phaser.Scene {
         advanced = true;
         this._showStep4();
       };
-      const tap = this.add.rectangle(240, 427, 480, 854, 0x000000, 0.001)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerup', advance);
-      this.time.delayedCall(2000, () => { tap.destroy(); advance(); });
+      this._setTapAdvance(advance);
+      this.time.delayedCall(2000, advance);
     });
   }
 
@@ -222,10 +220,8 @@ export default class OnboardingScene extends Phaser.Scene {
         advanced = true;
         this._showStep6();
       };
-      const tap = this.add.rectangle(240, 427, 480, 854, 0x000000, 0.001)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerup', advance);
-      this.time.delayedCall(1500, () => { tap.destroy(); advance(); });
+      this._setTapAdvance(advance);
+      this.time.delayedCall(1500, advance);
     };
 
     const btn = this.add.rectangle(240, 360, 300, 120, 0xaa8800)
